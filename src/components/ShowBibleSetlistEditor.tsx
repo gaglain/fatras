@@ -286,13 +286,23 @@ export const ShowBibleSetlistEditor = ({ artistId }: ShowBibleSetlistEditorProps
                       {selectedSetlist.songs?.map((song, index) => (
                         <Draggable key={song.id} draggableId={song.id} index={index}>
                           {(provided, snapshot) => (
-                            <div ref={provided.innerRef} {...provided.draggableProps} className={`p-3 rounded-lg border bg-card ${snapshot.isDragging ? 'shadow-lg' : ''}`}>
-                              <div className="flex items-start gap-3">
-                                <div {...provided.dragHandleProps} className="mt-1"><GripVertical className="h-5 w-5 text-muted-foreground" /></div>
+                            <div ref={provided.innerRef} {...provided.draggableProps} className={`p-3 rounded-lg border bg-card overflow-hidden ${snapshot.isDragging ? 'shadow-lg' : ''}`}>
+                              <div className="flex flex-col sm:flex-row sm:items-start gap-2 sm:gap-3">
+                                <div className="flex items-center gap-2 sm:contents">
+                                  <div {...provided.dragHandleProps} className="sm:mt-1 shrink-0"><GripVertical className="h-5 w-5 text-muted-foreground" /></div>
+                                  <span className="text-sm text-muted-foreground sm:hidden">#{index + 1}</span>
+                                  <div className="flex gap-0.5 ml-auto sm:hidden">
+                                    <Button variant="ghost" size="sm" className="h-8 w-8 p-0" onClick={() => setPreviewSong(song)} title="Aperçu plein écran"><Eye className="h-4 w-4" /></Button>
+                                    <Button variant="ghost" size="sm" className="h-8 w-8 p-0" onClick={() => generateSongPDF({ title: song.title, duration: song.duration, tonality: song.tonality, bpm: song.bpm, notes: song.notes, lyrics: song.lyrics, sacem_number: (song as any).sacem_number }, selectedSetlist.title)} title="Exporter en PDF"><FileDown className="h-4 w-4" /></Button>
+                                    <Button variant="ghost" size="sm" className="h-8 w-8 p-0" onClick={() => handleShareSetlist(selectedSetlist, song.id)} title="Lien privé"><Link2 className="h-4 w-4" /></Button>
+                                    <Button variant="ghost" size="sm" className="h-8 w-8 p-0" onClick={() => { setEditingSong(song); setNewSongData({ title: song.title, duration: song.duration || '', notes: song.notes || '', tonality: song.tonality || '', bpm: song.bpm?.toString() || '', lyrics: song.lyrics || '', sacem_number: (song as any).sacem_number || '' }); }}><Edit className="h-4 w-4" /></Button>
+                                    <Button variant="ghost" size="sm" className="h-8 w-8 p-0" onClick={() => deleteSong(song.id)}><Trash2 className="h-4 w-4 text-destructive" /></Button>
+                                  </div>
+                                </div>
                                 <div className="flex-1 min-w-0">
                                   <div className="flex items-center gap-2 flex-wrap">
-                                    <span className="text-sm text-muted-foreground">#{index + 1}</span>
-                                    <h5 className="font-medium">{song.title}</h5>
+                                    <span className="text-sm text-muted-foreground hidden sm:inline">#{index + 1}</span>
+                                    <h5 className="font-medium break-words">{song.title}</h5>
                                     {song.duration && <span className="text-sm text-muted-foreground">({song.duration})</span>}
                                     {song.tonality && <Badge variant="outline" className="text-xs">{song.tonality}</Badge>}
                                     {song.bpm && <Badge variant="secondary" className="text-xs">{song.bpm} BPM</Badge>}
@@ -305,7 +315,7 @@ export const ShowBibleSetlistEditor = ({ artistId }: ShowBibleSetlistEditorProps
                                     </details>
                                   )}
                                 </div>
-                                <div className="flex gap-1">
+                                <div className="hidden sm:flex gap-1 shrink-0">
                                   <Button variant="ghost" size="sm" onClick={() => setPreviewSong(song)} title="Aperçu plein écran"><Eye className="h-4 w-4" /></Button>
                                   <Button variant="ghost" size="sm" onClick={() => generateSongPDF({ title: song.title, duration: song.duration, tonality: song.tonality, bpm: song.bpm, notes: song.notes, lyrics: song.lyrics, sacem_number: (song as any).sacem_number }, selectedSetlist.title)} title="Exporter en PDF"><FileDown className="h-4 w-4" /></Button>
                                   <Button variant="ghost" size="sm" onClick={() => handleShareSetlist(selectedSetlist, song.id)} title="Lien privé vers cette chanson"><Link2 className="h-4 w-4" /></Button>
