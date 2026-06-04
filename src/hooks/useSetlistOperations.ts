@@ -94,6 +94,7 @@ export async function duplicateSetlistOp(userId: string, id: string) {
 export async function addSongToLibraryOp(userId: string, song: {
   title: string; duration?: string; notes?: string; tonality?: string;
   bpm?: number; lyrics?: string; sacem_number?: string; artist_id?: string;
+  audio_url?: string; audio_name?: string;
 }): Promise<LibrarySong | null> {
   const existingQuery = supabase.from('artist_songs').select('*').eq('title', song.title);
   if (song.artist_id) existingQuery.eq('artist_id', song.artist_id);
@@ -107,6 +108,7 @@ export async function addSongToLibraryOp(userId: string, song: {
     if (song.bpm) updates.bpm = song.bpm;
     if (song.lyrics) updates.lyrics = song.lyrics;
     if (song.sacem_number) updates.sacem_number = song.sacem_number;
+    if (song.audio_url) { updates.audio_url = song.audio_url; updates.audio_name = song.audio_name || null; }
     if (Object.keys(updates).length > 0) {
       await supabase.from('artist_songs').update(updates).eq('id', existing.id);
     }
@@ -115,7 +117,7 @@ export async function addSongToLibraryOp(userId: string, song: {
 
   const { data: newSong, error } = await supabase
     .from('artist_songs')
-    .insert([{ user_id: userId, artist_id: song.artist_id || null, title: song.title, duration: song.duration || null, notes: song.notes || null, tonality: song.tonality || null, bpm: song.bpm || null, lyrics: song.lyrics || null, sacem_number: song.sacem_number || null }])
+    .insert([{ user_id: userId, artist_id: song.artist_id || null, title: song.title, duration: song.duration || null, notes: song.notes || null, tonality: song.tonality || null, bpm: song.bpm || null, lyrics: song.lyrics || null, sacem_number: song.sacem_number || null, audio_url: song.audio_url || null, audio_name: song.audio_name || null }])
     .select().single();
   if (error) throw error;
   return newSong as LibrarySong;
@@ -124,6 +126,7 @@ export async function addSongToLibraryOp(userId: string, song: {
 export async function addSongOp(userId: string, setlistId: string, song: {
   title: string; duration?: string; notes?: string; tonality?: string;
   bpm?: number; lyrics?: string; sacem_number?: string; library_song_id?: string;
+  audio_url?: string; audio_name?: string;
 }, setlistArtistId?: string) {
   const { data: songs } = await supabase.from('show_bible_setlist_songs').select('position').eq('setlist_id', setlistId).order('position', { ascending: false }).limit(1);
   const maxPosition = songs?.length ? songs[0].position : -1;
@@ -137,19 +140,20 @@ export async function addSongOp(userId: string, setlistId: string, song: {
   const { error } = await supabase.from('show_bible_setlist_songs').insert([{
     setlist_id: setlistId, title: song.title, duration: song.duration || null, notes: song.notes || null,
     tonality: song.tonality || null, bpm: song.bpm || null, lyrics: song.lyrics || null,
+    audio_url: song.audio_url || null, audio_name: song.audio_name || null,
     library_song_id: librarySongId || null, position: maxPosition + 1
   }]);
   if (error) throw error;
   toast.success('Chanson ajoutée');
 }
 
-export async function updateSongOp(songId: string, data: { title?: string; duration?: string; notes?: string; tonality?: string; bpm?: number; lyrics?: string }) {
+export async function updateSongOp(songId: string, data: { title?: string; duration?: string; notes?: string; tonality?: string; bpm?: number; lyrics?: string; audio_url?: string | null; audio_name?: string | null }) {
   const { error } = await supabase.from('show_bible_setlist_songs').update(data).eq('id', songId);
   if (error) throw error;
   toast.success('Chanson mise à jour');
 }
 
-export async function updateLibrarySongOp(songId: string, data: { title?: string; duration?: string; notes?: string; tonality?: string; bpm?: number; lyrics?: string; sacem_number?: string }) {
+export async function updateLibrarySongOp(songId: string, data: { title?: string; duration?: string; notes?: string; tonality?: string; bpm?: number; lyrics?: string; sacem_number?: string; audio_url?: string | null; audio_name?: string | null }) {
   const { error } = await supabase.from('artist_songs').update(data).eq('id', songId);
   if (error) throw error;
   toast.success('Chanson mise à jour dans la bibliothèque');
