@@ -79,27 +79,27 @@ export const useShowBibleSetlists = (artistId?: string) => {
   };
 
 
-  const addSongToLibrary = async (song: { title: string; duration?: string; notes?: string; tonality?: string; bpm?: number; lyrics?: string; sacem_number?: string; artist_id?: string }) => {
+  const addSongToLibrary = async (song: { title: string; duration?: string; notes?: string; tonality?: string; bpm?: number; lyrics?: string; sacem_number?: string; artist_id?: string; audio_url?: string; audio_name?: string }) => {
     if (!user) return null;
     try { const r = await addSongToLibraryOp(user.id, song); await fetchLibrarySongs(); return r; }
     catch (e) { logger.error('Error:', e); return null; }
   };
 
-  const addSong = async (setlistId: string, song: { title: string; duration?: string; notes?: string; tonality?: string; bpm?: number; lyrics?: string; sacem_number?: string; library_song_id?: string }, setlistArtistId?: string) => {
+  const addSong = async (setlistId: string, song: { title: string; duration?: string; notes?: string; tonality?: string; bpm?: number; lyrics?: string; sacem_number?: string; library_song_id?: string; audio_url?: string; audio_name?: string }, setlistArtistId?: string) => {
     if (!user) { toast.error('Vous devez être connecté'); return false; }
     try { await addSongOp(user.id, setlistId, song, setlistArtistId); await fetchSetlists(); return true; }
     catch (e) { logger.error('Error:', e); toast.error("Erreur ajout chanson"); return false; }
   };
 
   const addSongFromLibrary = async (setlistId: string, lib: LibrarySong) =>
-    addSong(setlistId, { title: lib.title, duration: lib.duration || undefined, notes: lib.notes || undefined, tonality: lib.tonality || undefined, bpm: lib.bpm || undefined, lyrics: lib.lyrics || undefined, library_song_id: lib.id });
+    addSong(setlistId, { title: lib.title, duration: lib.duration || undefined, notes: lib.notes || undefined, tonality: lib.tonality || undefined, bpm: lib.bpm || undefined, lyrics: lib.lyrics || undefined, audio_url: lib.audio_url || undefined, audio_name: lib.audio_name || undefined, library_song_id: lib.id });
 
-  const updateSong = async (songId: string, data: { title?: string; duration?: string; notes?: string; tonality?: string; bpm?: number; lyrics?: string }) => {
+  const updateSong = async (songId: string, data: { title?: string; duration?: string; notes?: string; tonality?: string; bpm?: number; lyrics?: string; audio_url?: string | null; audio_name?: string | null }) => {
     try { await updateSongOp(songId, data); await fetchSetlists(); return true; }
     catch (e) { logger.error('Error:', e); toast.error('Erreur mise à jour'); return false; }
   };
 
-  const updateLibrarySong = async (songId: string, data: { title?: string; duration?: string; notes?: string; tonality?: string; bpm?: number; lyrics?: string; sacem_number?: string }) => {
+  const updateLibrarySong = async (songId: string, data: { title?: string; duration?: string; notes?: string; tonality?: string; bpm?: number; lyrics?: string; sacem_number?: string; audio_url?: string | null; audio_name?: string | null }) => {
     try { await updateLibrarySongOp(songId, data); await fetchLibrarySongs(); return true; }
     catch (e) { logger.error('Error:', e); toast.error('Erreur mise à jour'); return false; }
   };
