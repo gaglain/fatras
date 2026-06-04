@@ -92,12 +92,15 @@ export const useRoadshowFinancialSummary = (
       }
 
       // Group expenses by stop
-      const expensesByStop: Record<string, { total: number; count: number }> = {};
-      expenses?.forEach(exp => {
+      const expensesByStop: Record<string, { total: number; totalHT: number; count: number }> = {};
+      expenses?.forEach((exp: any) => {
         if (!expensesByStop[exp.roadshow_stop_id]) {
-          expensesByStop[exp.roadshow_stop_id] = { total: 0, count: 0 };
+          expensesByStop[exp.roadshow_stop_id] = { total: 0, totalHT: 0, count: 0 };
         }
-        expensesByStop[exp.roadshow_stop_id].total += exp.amount || 0;
+        const amt = Number(exp.amount) || 0;
+        const rate = Number(exp.tax_rate ?? 20);
+        expensesByStop[exp.roadshow_stop_id].total += amt;
+        expensesByStop[exp.roadshow_stop_id].totalHT += amt / (1 + rate / 100);
         expensesByStop[exp.roadshow_stop_id].count += 1;
       });
 
@@ -123,7 +126,7 @@ export const useRoadshowFinancialSummary = (
 
       // Build per-stop summaries
       const summaries: StopFinancialSummary[] = stopsData.map(stop => {
-        const expData = expensesByStop[stop.id] || { total: 0, count: 0 };
+        const expData = expensesByStop[stop.id] || { total: 0, totalHT: 0, count: 0 };
         const quoteData = quotesByStop[stop.id] || { total: 0, count: 0 };
         const travel = travelByStop[stop.id] || stop.travelCost || 0;
         const totalCosts = expData.total + travel;
@@ -135,6 +138,7 @@ export const useRoadshowFinancialSummary = (
           venue: stop.venue,
           date: stop.date,
           totalExpenses: expData.total,
+          totalExpensesHT: expData.totalHT,
           totalQuotes: quoteData.total,
           travelCost: travel,
           margin,
