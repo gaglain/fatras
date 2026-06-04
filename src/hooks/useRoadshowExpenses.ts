@@ -106,7 +106,8 @@ export const useRoadshowExpenses = (roadshowStopId?: string) => {
     title: string,
     file: File,
     description?: string,
-    amount?: number
+    amount?: number,
+    taxRate?: number
   ) => {
     if (!user) return false;
 
