@@ -87,7 +87,7 @@ export const ShowBibleSetlistEditor = ({ artistId }: ShowBibleSetlistEditorProps
     return songs;
   }, [librarySongs, selectedSetlist?.artist_id, librarySearchQuery]);
 
-  const resetNewSongData = () => setNewSongData({ title: '', duration: '', notes: '', tonality: '', bpm: '', lyrics: '', sacem_number: '' });
+  const resetNewSongData = () => setNewSongData({ title: '', duration: '', notes: '', tonality: '', bpm: '', lyrics: '', sacem_number: '', audio_url: '', audio_name: '' });
 
   const handleCreateSetlist = async () => {
     if (!newSetlistData.title.trim()) { toast.error('Le titre est requis'); return; }
