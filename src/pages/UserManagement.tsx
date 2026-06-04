@@ -191,17 +191,17 @@ export const UserManagement: React.FC = () => {
                 {user.function_title && (<div className="text-xs sm:text-sm text-muted-foreground"><strong>Fonction:</strong> <span className="truncate">{user.function_title}</span></div>)}
                 {user.show_name && (<div className="text-xs sm:text-sm text-muted-foreground"><strong>Nom de scène:</strong> <span className="truncate">{user.show_name}</span></div>)}
               </div>
-              <div className="flex space-x-2">
-                <Button variant="outline" size="sm" onClick={() => handleEdit(user)} className="flex-1">
+              <div className="flex flex-wrap gap-2">
+                <Button variant="outline" size="sm" onClick={() => handleEdit(user)} className="flex-1 min-w-[80px]">
                   <Edit className="h-3 w-3 mr-1" /><span className="hidden sm:inline">Modifier</span><span className="sm:hidden">Edit</span>
                 </Button>
                 {!permissionsLoading && isSuperAdmin() && (
-                  <Button variant="outline" size="sm" onClick={() => exportSingleUserToPDF(user)} title="Exporter en PDF"><FileDown className="h-3 w-3" /></Button>
+                  <Button variant="outline" size="sm" onClick={() => exportSingleUserToPDF(user)} title="Exporter en PDF" className="flex-shrink-0"><FileDown className="h-3 w-3" /></Button>
                 )}
-                <Button variant="outline" size="sm" onClick={() => handleSendMagicLink(user.email, `${user.first_name || ''} ${user.last_name || ''}`)} title="Envoyer un lien de connexion" className="text-primary"><Link2 className="h-3 w-3" /></Button>
-                <Button variant="outline" size="sm" onClick={() => handleResetPassword(user.email)} title="Réinitialiser le mot de passe"><Save className="h-3 w-3" /></Button>
+                <Button variant="outline" size="sm" onClick={() => handleSendMagicLink(user.email, `${user.first_name || ''} ${user.last_name || ''}`)} title="Envoyer un lien de connexion" className="text-primary flex-shrink-0"><Link2 className="h-3 w-3" /></Button>
+                <Button variant="outline" size="sm" onClick={() => handleResetPassword(user.email)} title="Réinitialiser le mot de passe" className="flex-shrink-0"><Save className="h-3 w-3" /></Button>
                 {user.user_id !== currentUser?.id && (
-                  <Button variant="outline" size="sm" onClick={() => handleDelete(user.user_id || user.id)} className="text-destructive hover:text-destructive hover:bg-destructive/10"><Trash2 className="h-3 w-3" /></Button>
+                  <Button variant="outline" size="sm" onClick={() => handleDelete(user.user_id || user.id)} className="text-destructive hover:text-destructive hover:bg-destructive/10 flex-shrink-0"><Trash2 className="h-3 w-3" /></Button>
                 )}
               </div>
             </CardContent>
