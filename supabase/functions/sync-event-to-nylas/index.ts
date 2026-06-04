@@ -509,7 +509,7 @@ Deno.serve(async (req) => {
     } else {
       // Update existing Nylas event
       console.log(`Updating Nylas event ${nylas_event_id} for "${event.title}"...`)
-      const url = `${NYLAS_API_BASE}/grants/${grantId}/events/${nylas_event_id}?calendar_id=${encodeURIComponent(calendarId)}`
+      const url = `${NYLAS_API_BASE}/grants/${grantId}/events/${nylas_event_id}?calendar_id=${encodeURIComponent(calendarId)}&notify_participants=false`
       const response = await fetch(url, {
         method: 'PUT',
         headers: {
