@@ -51,7 +51,8 @@ export const ExpensesForm: React.FC<ExpensesFormProps> = ({ roadshowStopId }) =>
       title,
       selectedFile,
       description,
-      amount ? parseFloat(amount) : undefined
+      amount ? parseFloat(amount) : undefined,
+      taxRate ? parseFloat(taxRate) : 20
     );
 
     if (success) {
@@ -60,6 +61,7 @@ export const ExpensesForm: React.FC<ExpensesFormProps> = ({ roadshowStopId }) =>
       setTitle('');
       setDescription('');
       setAmount('');
+      setTaxRate('20');
       fetchExpenses();
     }
   };
