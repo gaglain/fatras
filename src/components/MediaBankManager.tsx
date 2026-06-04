@@ -253,7 +253,7 @@ export const MediaBankManager: React.FC = () => {
             {filteredImages.map((image) => (
               <div key={image.id} className="group relative bg-muted rounded-lg overflow-hidden aspect-square border border-border">
                 <MediaPreview image={image} variant="thumb" />
-                <div className="absolute top-2 left-2 flex flex-col gap-1">
+                <div className="absolute top-2 left-2 right-2 flex flex-wrap gap-1 pointer-events-none opacity-0 group-hover:opacity-100 transition-opacity">
                   <Badge className={`text-xs ${getCategoryColor(image.category || 'general')}`}>{getCategoryLabel(image.category || 'general')}</Badge>
                   {image.source_id && <Badge variant="secondary" className="text-xs"><Music className="h-3 w-3 mr-1" />{getArtistName(image.source_id)}</Badge>}
                 </div>
@@ -265,11 +265,12 @@ export const MediaBankManager: React.FC = () => {
                   <p className="text-white text-xs text-center px-2 truncate max-w-full">{image.name}</p>
                 </div>
                 {image.tags && image.tags.length > 0 && (
-                  <div className="absolute bottom-2 left-2 right-2 flex flex-wrap gap-1">
+                  <div className="absolute bottom-2 left-2 right-2 flex flex-wrap gap-1 pointer-events-none opacity-0 group-hover:opacity-100 transition-opacity">
                     {image.tags.slice(0, 2).map(tag => <Badge key={tag} variant="secondary" className="text-xs">{tag}</Badge>)}
                     {image.tags.length > 2 && <Badge variant="secondary" className="text-xs">+{image.tags.length - 2}</Badge>}
                   </div>
                 )}
+                <button onClick={() => setSelectedImage(image)} className="absolute inset-0 sm:hidden" aria-label="Aperçu" />
               </div>
             ))}
           </div>
