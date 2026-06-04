@@ -275,15 +275,16 @@ Deno.serve(async (req) => {
     }
 
     const { status, nylas_event_id } = event
-    let grantId = grant_id_override || event.nylas_grant_id
+    let grantId = await getCalendarCapableGrantId(supabase, event.user_id, grant_id_override || event.nylas_grant_id)
 
     // If no grant_id configured, try to find one from email_accounts
     if (!grantId) {
       const { data: account } = await supabase
         .from('email_accounts')
-        .select('grant_id')
+        .select('grant_id, provider')
         .eq('user_id', event.user_id)
         .eq('is_active', true)
+        .in('provider', CALENDAR_CAPABLE_PROVIDERS)
         .not('grant_id', 'is', null)
         .limit(1)
         .single()
