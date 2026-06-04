@@ -40,6 +40,7 @@ export interface TourStop {
   invitations: string;
   vehicleType?: string;
   distanceKm?: number;
+  estimatedExpenses?: number;
 }
 
 export interface Artist {

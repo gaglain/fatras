@@ -48,6 +48,7 @@ export interface RoadshowStop {
   longitude?: number;
   vehicle_type?: string;
   distance_km?: number;
+  estimated_expenses?: number;
   is_archived: boolean;
   created_at: string;
   updated_at: string;
@@ -101,6 +102,7 @@ export const transformStopFromDB = (stop: any): RoadshowStop => ({
   longitude: stop.longitude,
   vehicle_type: stop.vehicle_type,
   distance_km: stop.distance_km ? Number(stop.distance_km) : undefined,
+  estimated_expenses: stop.estimated_expenses != null ? Number(stop.estimated_expenses) : undefined,
   is_archived: stop.is_archived || false,
   created_at: stop.created_at,
   updated_at: stop.updated_at,
@@ -147,6 +149,7 @@ export const convertToTourStop = (stop: RoadshowStop): TourStop => ({
   invitations: stop.invitations || '',
   vehicleType: stop.vehicle_type,
   distanceKm: stop.distance_km,
+  estimatedExpenses: stop.estimated_expenses,
 });
 
 export const convertFromTourStop = (tourStop: Partial<TourStop>): Partial<RoadshowStop> => ({

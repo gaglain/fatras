@@ -262,6 +262,9 @@ export const TourStopRoadmapTab: React.FC<TourStopRoadmapTabProps> = ({
           </Button>
         </div>
 
+        <ExpensesSummary stop={stop} expenses={expenses} />
+
+
         {showAddExpense && (
           <div className="bg-gray-50 p-3 sm:p-4 rounded-lg mb-3 space-y-2 sm:space-y-3">
             <div className="grid grid-cols-2 gap-2 sm:gap-3">
@@ -309,6 +312,83 @@ export const TourStopRoadmapTab: React.FC<TourStopRoadmapTabProps> = ({
         ) : (
           <div className="text-center py-4 text-gray-500 bg-gray-50 rounded-lg">
             <FileText className="h-6 w-6 sm:h-10 sm:w-10 mx-auto mb-1 opacity-50" /><p className="text-xs sm:text-sm">Aucune note de frais</p>
+          </div>
+        )}
+      </div>
+    </div>
+  );
+};
+
+interface ExpensesSummaryProps {
+  stop: TourStop;
+  expenses: RoadshowExpense[];
+}
+
+const ExpensesSummary: React.FC<ExpensesSummaryProps> = ({ stop, expenses }) => {
+  const totalTTC = expenses.reduce((sum, e) => sum + (Number(e.amount) || 0), 0);
+  const totalHT = expenses.reduce((sum, e) => {
+    const amt = Number(e.amount) || 0;
+    const rate = Number(e.tax_rate ?? 20);
+    return sum + amt / (1 + rate / 100);
+  }, 0);
+
+  const [estimate, setEstimate] = React.useState<string>(
+    stop.estimatedExpenses != null ? String(stop.estimatedExpenses) : ''
+  );
+  const [saving, setSaving] = React.useState(false);
+
+  React.useEffect(() => {
+    setEstimate(stop.estimatedExpenses != null ? String(stop.estimatedExpenses) : '');
+  }, [stop.id, stop.estimatedExpenses]);
+
+  const saveEstimate = async () => {
+    const value = estimate === '' ? null : parseFloat(estimate);
+    if (value !== null && Number.isNaN(value)) return;
+    setSaving(true);
+    const { error } = await supabase
+      .from('roadshow_stops')
+      .update({ estimated_expenses: value })
+      .eq('id', stop.id);
+    setSaving(false);
+    if (error) toast.error('Erreur enregistrement estimation');
+    else toast.success('Estimation enregistrée');
+  };
+
+  const estimateNum = estimate === '' ? null : parseFloat(estimate);
+  const diff = estimateNum !== null && !Number.isNaN(estimateNum) ? totalTTC - estimateNum : null;
+
+  return (
+    <div className="bg-purple-50 border border-purple-100 rounded-lg p-3 mb-3 space-y-2">
+      <div className="grid grid-cols-2 gap-2 text-xs sm:text-sm">
+        <div>
+          <p className="text-gray-600">Total réel TTC</p>
+          <p className="font-bold text-purple-700 text-base sm:text-lg">{totalTTC.toFixed(2)} €</p>
+        </div>
+        <div>
+          <p className="text-gray-600">Total réel HT</p>
+          <p className="font-semibold text-gray-700 text-sm sm:text-base">{totalHT.toFixed(2)} €</p>
+        </div>
+      </div>
+      <div className="flex flex-col sm:flex-row sm:items-end gap-2 pt-2 border-t border-purple-100">
+        <div className="flex-1">
+          <Label className="text-xs sm:text-sm">Estimation des frais (TTC, €)</Label>
+          <Input
+            type="number"
+            step="0.01"
+            value={estimate}
+            onChange={(e) => setEstimate(e.target.value)}
+            onBlur={saveEstimate}
+            placeholder="0.00"
+            className="bg-white h-8 sm:h-10 text-sm"
+            disabled={saving}
+          />
+        </div>
+        {diff !== null && (
+          <div className="sm:w-40">
+            <p className="text-xs text-gray-600">Différence (réel - estim.)</p>
+            <p className={`font-bold text-sm sm:text-base ${diff > 0 ? 'text-red-600' : diff < 0 ? 'text-green-600' : 'text-gray-700'}`}>
+              {diff > 0 ? '+' : ''}{diff.toFixed(2)} €
+            </p>
           </div>
         )}
       </div>
