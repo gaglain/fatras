@@ -262,6 +262,9 @@ export const TourStopRoadmapTab: React.FC<TourStopRoadmapTabProps> = ({
           </Button>
         </div>
 
+        <ExpensesSummary stop={stop} expenses={expenses} />
+
+
         {showAddExpense && (
           <div className="bg-gray-50 p-3 sm:p-4 rounded-lg mb-3 space-y-2 sm:space-y-3">
             <div className="grid grid-cols-2 gap-2 sm:gap-3">
