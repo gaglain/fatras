@@ -126,6 +126,7 @@ export const useRoadshowExpenses = (roadshowStopId?: string) => {
           title,
           description,
           amount,
+          tax_rate: taxRate ?? 20,
           file_url: fileUrl,
           file_type: fileType
         });
