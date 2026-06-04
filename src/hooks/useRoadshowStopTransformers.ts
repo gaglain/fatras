@@ -149,6 +149,7 @@ export const convertToTourStop = (stop: RoadshowStop): TourStop => ({
   invitations: stop.invitations || '',
   vehicleType: stop.vehicle_type,
   distanceKm: stop.distance_km,
+  estimatedExpenses: stop.estimated_expenses,
 });
 
 export const convertFromTourStop = (tourStop: Partial<TourStop>): Partial<RoadshowStop> => ({
