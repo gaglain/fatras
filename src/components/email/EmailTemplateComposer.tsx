@@ -148,25 +148,45 @@ export const EmailTemplateComposer: React.FC<EmailTemplateComposerProps> = ({ de
     finally { setUploading(false); }
   };
 
+  const [open, setOpen] = useState(false);
+
+  const formProps = {
+    accounts, selectedAccount, onSelectedAccountChange: setSelectedAccount,
+    fromName, onFromNameChange: setFromName,
+    to, onToChange: setTo, subject, onSubjectChange: setSubject,
+    content, onContentChange: setContent,
+    selectedTemplate, onClearTemplate: () => { setSelectedTemplate(null); setSubject(''); setContent(''); },
+    templates: sortedTemplates, highlightedArtistIds: contactArtistIds, showTemplates, onShowTemplatesChange: setShowTemplates, onApplyTemplate: applyTemplate,
+    attachments, onFileSelect: (e: React.ChangeEvent<HTMLInputElement>) => { if (e.target.files) setAttachments(prev => [...prev, ...Array.from(e.target.files!)]); },
+    onRemoveAttachment: (i: number) => setAttachments(prev => prev.filter((_, idx) => idx !== i)),
+    onMediaBankSelect: handleMediaBankSelect, addingFromMediaBank,
+    includeSignature, onIncludeSignatureChange: setIncludeSignature,
+    signatureHtml: currentUser ? generateEmailSignature(currentUser) : undefined,
+    sending, uploading, onSend: async () => { await handleSend(); setOpen(false); },
+  };
+
   return (
     <Card>
-      <CardHeader><CardTitle className="flex items-center gap-2"><Mail className="h-5 w-5" />Composer un email</CardTitle></CardHeader>
-      <CardContent className="space-y-4">
-        <EmailComposerForm
-          accounts={accounts} selectedAccount={selectedAccount} onSelectedAccountChange={setSelectedAccount}
-          fromName={fromName} onFromNameChange={setFromName}
-          to={to} onToChange={setTo} subject={subject} onSubjectChange={setSubject}
-          content={content} onContentChange={setContent}
-          selectedTemplate={selectedTemplate} onClearTemplate={() => { setSelectedTemplate(null); setSubject(''); setContent(''); }}
-          templates={sortedTemplates} highlightedArtistIds={contactArtistIds} showTemplates={showTemplates} onShowTemplatesChange={setShowTemplates} onApplyTemplate={applyTemplate}
-          attachments={attachments} onFileSelect={(e) => { if (e.target.files) setAttachments(prev => [...prev, ...Array.from(e.target.files!)]); }}
-          onRemoveAttachment={(i) => setAttachments(prev => prev.filter((_, idx) => idx !== i))}
-          onMediaBankSelect={handleMediaBankSelect} addingFromMediaBank={addingFromMediaBank}
-          includeSignature={includeSignature} onIncludeSignatureChange={setIncludeSignature}
-          signatureHtml={currentUser ? generateEmailSignature(currentUser) : undefined}
-          sending={sending} uploading={uploading} onSend={handleSend}
-        />
+      <CardHeader>
+        <CardTitle className="flex items-center gap-2"><Mail className="h-5 w-5" />Composer un email</CardTitle>
+        <CardDescription>Rédigez et envoyez un email dans une fenêtre dédiée</CardDescription>
+      </CardHeader>
+      <CardContent>
+        <Dialog open={open} onOpenChange={setOpen}>
+          <DialogTrigger asChild>
+            <Button className="w-full sm:w-auto"><Mail className="h-4 w-4 mr-2" />Nouveau message</Button>
+          </DialogTrigger>
+          <DialogContent className="max-w-3xl w-[calc(100vw-1rem)] max-h-[95vh] overflow-y-auto p-4 sm:p-6">
+            <DialogHeader>
+              <DialogTitle className="flex items-center gap-2"><Mail className="h-5 w-5" />Composer un email</DialogTitle>
+            </DialogHeader>
+            <div className="mt-2">
+              <EmailComposerForm {...formProps} />
+            </div>
+          </DialogContent>
+        </Dialog>
       </CardContent>
     </Card>
   );
 };
+
