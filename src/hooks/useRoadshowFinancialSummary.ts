@@ -10,6 +10,7 @@ export interface StopFinancialSummary {
   venue: string;
   date: string;
   totalExpenses: number;
+  totalExpensesHT: number;
   totalQuotes: number;
   travelCost: number;
   margin: number;
@@ -20,6 +21,7 @@ export interface StopFinancialSummary {
 
 export interface GlobalFinancialSummary {
   totalExpenses: number;
+  totalExpensesHT: number;
   totalQuotes: number;
   totalTravelCosts: number;
   totalCosts: number; // expenses + travel
