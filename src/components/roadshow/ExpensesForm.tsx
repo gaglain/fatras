@@ -273,3 +273,90 @@ export const ExpensesForm: React.FC<ExpensesFormProps> = ({ roadshowStopId }) =>
     </div>
   );
 };
+
+interface ExpensesSummaryBlockProps {
+  stopId: string;
+  expenses: RoadshowExpense[];
+}
+
+const ExpensesSummaryBlock: React.FC<ExpensesSummaryBlockProps> = ({ stopId, expenses }) => {
+  const [estimate, setEstimate] = useState<string>('');
+  const [saving, setSaving] = useState(false);
+
+  useEffect(() => {
+    let active = true;
+    (async () => {
+      const { data } = await supabase
+        .from('roadshow_stops')
+        .select('estimated_expenses')
+        .eq('id', stopId)
+        .maybeSingle();
+      if (active && data?.estimated_expenses != null) {
+        setEstimate(String(data.estimated_expenses));
+      }
+    })();
+    return () => { active = false; };
+  }, [stopId]);
+
+  const totalTTC = expenses.reduce((s, e) => s + (Number(e.amount) || 0), 0);
+  const totalHT = expenses.reduce((s, e) => {
+    const a = Number(e.amount) || 0;
+    const r = Number(e.tax_rate ?? 20);
+    return s + a / (1 + r / 100);
+  }, 0);
+
+  const saveEstimate = async () => {
+    const v = estimate === '' ? null : parseFloat(estimate);
+    if (v !== null && Number.isNaN(v)) return;
+    setSaving(true);
+    const { error } = await supabase
+      .from('roadshow_stops')
+      .update({ estimated_expenses: v })
+      .eq('id', stopId);
+    setSaving(false);
+    if (error) toast.error('Erreur enregistrement estimation');
+    else toast.success('Estimation enregistrée');
+  };
+
+  const estNum = estimate === '' ? null : parseFloat(estimate);
+  const diff = estNum !== null && !Number.isNaN(estNum) ? totalTTC - estNum : null;
+
+  return (
+    <div className="rounded-lg border border-border bg-muted/30 p-4 space-y-3">
+      <div className="grid grid-cols-2 gap-3 text-sm">
+        <div>
+          <p className="text-muted-foreground text-xs">Total réel TTC</p>
+          <p className="font-bold text-lg">{totalTTC.toFixed(2)} €</p>
+        </div>
+        <div>
+          <p className="text-muted-foreground text-xs">Total réel HT</p>
+          <p className="font-semibold">{totalHT.toFixed(2)} €</p>
+        </div>
+      </div>
+      <div className="flex flex-col sm:flex-row sm:items-end gap-3 pt-3 border-t border-border">
+        <div className="flex-1">
+          <Label className="text-xs">Estimation des frais (TTC, €)</Label>
+          <Input
+            type="number"
+            step="0.01"
+            inputMode="decimal"
+            value={estimate}
+            onChange={(e) => setEstimate(e.target.value)}
+            onBlur={saveEstimate}
+            placeholder="0.00"
+            disabled={saving}
+            className="bg-background"
+          />
+        </div>
+        {diff !== null && (
+          <div className="sm:w-44">
+            <p className="text-xs text-muted-foreground">Différence (réel - estim.)</p>
+            <p className={`font-bold text-base ${diff > 0 ? 'text-destructive' : diff < 0 ? 'text-green-600' : ''}`}>
+              {diff > 0 ? '+' : ''}{diff.toFixed(2)} €
+            </p>
+          </div>
+        )}
+      </div>
+    </div>
+  );
+};
