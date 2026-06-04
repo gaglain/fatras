@@ -230,7 +230,11 @@ export const ResourcesOverview: React.FC<ResourcesOverviewProps> = ({ onNavigate
           ) : (
             <>
               {recentSetlists.map(setlist => (
-                <div key={setlist.id} className="flex items-center justify-between p-2 rounded-lg hover:bg-accent/20 border">
+                <button
+                  key={setlist.id}
+                  onClick={() => onNavigate('setlists')}
+                  className="w-full text-left flex items-center justify-between p-2 rounded-lg hover:bg-accent/20 border transition"
+                >
                   <div className="flex-1 min-w-0">
                     <p className="font-medium text-sm truncate">{setlist.title}</p>
                     <div className="flex items-center gap-2 text-xs text-muted-foreground">
@@ -242,7 +246,7 @@ export const ResourcesOverview: React.FC<ResourcesOverviewProps> = ({ onNavigate
                       )}
                     </div>
                   </div>
-                </div>
+                </button>
               ))}
               <div className="text-xs text-muted-foreground text-center pt-2 border-t">
                 {setlists.length} setlist{setlists.length > 1 ? 's' : ''} au total
