@@ -179,13 +179,14 @@ export const TourStopCard: React.FC<TourStopCardProps> = ({
               <div className="flex flex-wrap gap-1.5">
                 {stop.artistLineup.map((artistInfo) => {
                   const user = getUserById(artistInfo.userId);
+                  if (!user) return null;
                   return (
                     <Badge 
                       key={artistInfo.userId} 
                       variant={artistInfo.confirmed ? "default" : "secondary"}
                       className="text-xs px-2 py-0.5"
                     >
-                      {user?.name} {artistInfo.confirmed ? '✓' : '?'}
+                      {user.name} {artistInfo.confirmed ? '✓' : '?'}
                     </Badge>
                   );
                 })}
