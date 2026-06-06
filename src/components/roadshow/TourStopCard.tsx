@@ -200,9 +200,10 @@ export const TourStopCard: React.FC<TourStopCardProps> = ({
               <div className="flex flex-wrap gap-1.5">
                 {stop.crew.map((crewId) => {
                   const user = getUserById(crewId);
+                  if (!user) return null;
                   return (
                     <Badge key={crewId} variant="outline" className="text-xs px-2 py-0.5">
-                      {user?.name || 'Inconnu'}
+                      {user.name}
                     </Badge>
                   );
                 })}
