@@ -172,13 +172,17 @@ export const ContactDialog: React.FC<ContactDialogProps> = ({
         toast.success('Contact créé avec succès');
         if (data && data[0] && selectedArtistId) await updateContactArtistLink(data[0].id);
         if (data && data[0]) {
-          setCreatedContactId(data[0].id);
+          const newId = data[0].id;
+          setCreatedContactId(newId);
           clearDraft();
           onSave();
-          setShowCreationSuite(true);
           setLoading(false);
+          // Defer showing the creation suite so the first Dialog can fully unmount
+          // (avoids React removeChild crash from two Radix portals overlapping)
+          setTimeout(() => setShowCreationSuite(true), 250);
           return;
         }
+
       }
       if (!contact) clearDraft();
       onSave();
