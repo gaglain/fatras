@@ -175,22 +175,8 @@ export const ContactDialog: React.FC<ContactDialogProps> = ({
         if (error) throw error;
         toast.success('Contact créé avec succès');
         if (data && data[0] && selectedArtistId) await updateContactArtistLink(data[0].id);
-        if (data && data[0]) {
-          const newId = data[0].id;
-          setCreatedContactId(newId);
-          clearDraft();
-          onSave();
-          setLoading(false);
-          // Close the form dialog first, then mount the creation suite after
-          // Radix has finished its unmount/portal cleanup. Avoids React
-          // `removeChild` crash from two overlapping portals.
-          setFormDialogOpen(false);
-          setTimeout(() => setShowCreationSuite(true), 300);
-          return;
-        }
-
-
       }
+
       if (!contact) clearDraft();
       onSave();
       handleCloseDialog();
