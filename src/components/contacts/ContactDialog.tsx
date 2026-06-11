@@ -179,11 +179,14 @@ export const ContactDialog: React.FC<ContactDialogProps> = ({
           clearDraft();
           onSave();
           setLoading(false);
-          // Defer showing the creation suite so the first Dialog can fully unmount
-          // (avoids React removeChild crash from two Radix portals overlapping)
-          setTimeout(() => setShowCreationSuite(true), 250);
+          // Close the form dialog first, then mount the creation suite after
+          // Radix has finished its unmount/portal cleanup. Avoids React
+          // `removeChild` crash from two overlapping portals.
+          setFormDialogOpen(false);
+          setTimeout(() => setShowCreationSuite(true), 300);
           return;
         }
+
 
       }
       if (!contact) clearDraft();
