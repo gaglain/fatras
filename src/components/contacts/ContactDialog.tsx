@@ -39,6 +39,8 @@ export const ContactDialog: React.FC<ContactDialogProps> = ({
   const emailCheckTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const [showCreationSuite, setShowCreationSuite] = useState(false);
   const [createdContactId, setCreatedContactId] = useState<string | null>(null);
+  const [formDialogOpen, setFormDialogOpen] = useState(true);
+
   const prevIsOpenRef = useRef(false);
   const draftKey = contact?.id ? `contact-dialog-edit-${contact.id}` : 'contact-dialog-create-draft';
 
@@ -58,7 +60,9 @@ export const ContactDialog: React.FC<ContactDialogProps> = ({
   useEffect(() => {
     const justOpened = isOpen && !prevIsOpenRef.current;
     prevIsOpenRef.current = isOpen;
+    if (justOpened) setFormDialogOpen(true);
     if (!justOpened) return;
+
 
     let restored = false;
     if (!contact) {
@@ -171,15 +175,8 @@ export const ContactDialog: React.FC<ContactDialogProps> = ({
         if (error) throw error;
         toast.success('Contact créé avec succès');
         if (data && data[0] && selectedArtistId) await updateContactArtistLink(data[0].id);
-        if (data && data[0]) {
-          setCreatedContactId(data[0].id);
-          clearDraft();
-          onSave();
-          setShowCreationSuite(true);
-          setLoading(false);
-          return;
-        }
       }
+
       if (!contact) clearDraft();
       onSave();
       handleCloseDialog();
@@ -203,9 +200,10 @@ export const ContactDialog: React.FC<ContactDialogProps> = ({
   return (
     <>
       <Dialog
-        open={isOpen && !showCreationSuite}
-        onOpenChange={(open) => { if (!open && !showCreationSuite) handleCloseDialog(); }}
+        open={isOpen && formDialogOpen && !showCreationSuite}
+        onOpenChange={(open) => { if (!open && formDialogOpen && !showCreationSuite) handleCloseDialog(); }}
       >
+
         <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto" onInteractOutside={(e) => e.preventDefault()}>
           <DialogHeader>
             <DialogTitle>{contact?.id ? 'Modifier le contact' : 'Nouveau contact'}</DialogTitle>
