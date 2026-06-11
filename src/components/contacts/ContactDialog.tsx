@@ -202,40 +202,41 @@ export const ContactDialog: React.FC<ContactDialogProps> = ({
 
   return (
     <>
-      {!showCreationSuite && (
-        <Dialog open={isOpen} onOpenChange={(open) => { if (!open) handleCloseDialog(); }}>
-          <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto" onInteractOutside={(e) => e.preventDefault()}>
-            <DialogHeader>
-              <DialogTitle>{contact?.id ? 'Modifier le contact' : 'Nouveau contact'}</DialogTitle>
-            </DialogHeader>
+      <Dialog
+        open={isOpen && !showCreationSuite}
+        onOpenChange={(open) => { if (!open && !showCreationSuite) handleCloseDialog(); }}
+      >
+        <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto" onInteractOutside={(e) => e.preventDefault()}>
+          <DialogHeader>
+            <DialogTitle>{contact?.id ? 'Modifier le contact' : 'Nouveau contact'}</DialogTitle>
+          </DialogHeader>
 
-            <ContactDialogForm
-              formData={formData}
-              setFormData={setFormData}
-              selectedArtistId={selectedArtistId}
-              setSelectedArtistId={setSelectedArtistId}
-              selectedOwnerId={selectedOwnerId}
-              setSelectedOwnerId={setSelectedOwnerId}
-              newTag={newTag}
-              setNewTag={setNewTag}
-              contactTypes={contactTypes}
-              activeUsers={activeUsers}
-              duplicateWarning={duplicateWarning}
-              onEmailChange={handleEmailChange}
-              loading={loading}
-              isEditing={!!contact}
-              onSubmit={handleSubmit}
-              onCancel={handleCloseDialog}
-            />
-            
-            {formData.id && (
-              <div className="mt-6">
-                <ContactRelatedEntities contact={formData as Contact} />
-              </div>
-            )}
-          </DialogContent>
-        </Dialog>
-      )}
+          <ContactDialogForm
+            formData={formData}
+            setFormData={setFormData}
+            selectedArtistId={selectedArtistId}
+            setSelectedArtistId={setSelectedArtistId}
+            selectedOwnerId={selectedOwnerId}
+            setSelectedOwnerId={setSelectedOwnerId}
+            newTag={newTag}
+            setNewTag={setNewTag}
+            contactTypes={contactTypes}
+            activeUsers={activeUsers}
+            duplicateWarning={duplicateWarning}
+            onEmailChange={handleEmailChange}
+            loading={loading}
+            isEditing={!!contact}
+            onSubmit={handleSubmit}
+            onCancel={handleCloseDialog}
+          />
+
+          {formData.id && (
+            <div className="mt-6">
+              <ContactRelatedEntities contact={formData as Contact} />
+            </div>
+          )}
+        </DialogContent>
+      </Dialog>
 
       {showCreationSuite && createdContactId && (
         <ContactCreationSuite
@@ -252,3 +253,4 @@ export const ContactDialog: React.FC<ContactDialogProps> = ({
     </>
   );
 };
+
