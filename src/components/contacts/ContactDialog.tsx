@@ -60,7 +60,9 @@ export const ContactDialog: React.FC<ContactDialogProps> = ({
   useEffect(() => {
     const justOpened = isOpen && !prevIsOpenRef.current;
     prevIsOpenRef.current = isOpen;
+    if (justOpened) setFormDialogOpen(true);
     if (!justOpened) return;
+
 
     let restored = false;
     if (!contact) {
