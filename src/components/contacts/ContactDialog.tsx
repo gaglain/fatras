@@ -39,6 +39,8 @@ export const ContactDialog: React.FC<ContactDialogProps> = ({
   const emailCheckTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const [showCreationSuite, setShowCreationSuite] = useState(false);
   const [createdContactId, setCreatedContactId] = useState<string | null>(null);
+  const [formDialogOpen, setFormDialogOpen] = useState(true);
+
   const prevIsOpenRef = useRef(false);
   const draftKey = contact?.id ? `contact-dialog-edit-${contact.id}` : 'contact-dialog-create-draft';
 
