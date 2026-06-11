@@ -212,9 +212,10 @@ export const ContactDialog: React.FC<ContactDialogProps> = ({
   return (
     <>
       <Dialog
-        open={isOpen && !showCreationSuite}
-        onOpenChange={(open) => { if (!open && !showCreationSuite) handleCloseDialog(); }}
+        open={isOpen && formDialogOpen && !showCreationSuite}
+        onOpenChange={(open) => { if (!open && formDialogOpen && !showCreationSuite) handleCloseDialog(); }}
       >
+
         <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto" onInteractOutside={(e) => e.preventDefault()}>
           <DialogHeader>
             <DialogTitle>{contact?.id ? 'Modifier le contact' : 'Nouveau contact'}</DialogTitle>
