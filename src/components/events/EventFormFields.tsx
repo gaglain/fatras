@@ -38,7 +38,7 @@ export const EventFormFields: React.FC<Props> = ({ formData, onChange, eventType
       <div className="grid grid-cols-2 gap-4">
         <div>
           <Label>Type d'événement</Label>
-          <Select value={formData.event_type} onValueChange={setVal('event_type')}>
+          <Select value={formData.event_type || undefined} onValueChange={setVal('event_type')}>
             <SelectTrigger><SelectValue placeholder="Sélectionner un type" /></SelectTrigger>
             <SelectContent>
               {eventTypes.map(t => (
