@@ -172,64 +172,12 @@ export const Events: React.FC = () => {
     filterEvents();
   }, [events, searchTerm, statusFilter, typeFilter]);
 
-  // Release any residual scroll/inert locks after the dialog closes
-  useEffect(() => {
-    if (!dialogOpen) {
-      try {
-        const unlock = () => {
-          document.body.style.overflow = '';
-          document.documentElement.style.overflow = '';
-          document.body.style.pointerEvents = '';
-          document.documentElement.style.pointerEvents = '';
-
-          // Remove any lingering Radix overlays that might block clicks
-          document
-            .querySelectorAll('[data-radix-dialog-overlay]')
-            .forEach((el) => el.parentElement?.removeChild(el));
-
-          // Remove inert everywhere
-          document
-            .querySelectorAll('[inert]')
-            .forEach((el) => el.removeAttribute('inert'));
-
-          // Remove any aria-hidden flags left behind
-          document
-            .querySelectorAll('[aria-hidden]')
-            .forEach((el) => el.removeAttribute('aria-hidden'));
-
-          // Remove any custom scroll locks
-          document
-            .querySelectorAll('[data-scroll-locked]')
-            .forEach((el) => el.removeAttribute('data-scroll-locked'));
-        };
-
-        // Run immediately and on next tick (in case unmount happens after a frame)
-        unlock();
-        setTimeout(unlock, 0);
-      } catch {
-        // Scroll lock cleanup silently ignored
-      }
-    }
-
-    return () => {
-      // Ensure cleanup on unmount as well
-      try {
-        document
-          .querySelectorAll('[data-radix-dialog-overlay]')
-          .forEach((el) => el.parentElement?.removeChild(el));
-        document
-          .querySelectorAll('[aria-hidden]')
-          .forEach((el) => el.removeAttribute('aria-hidden'));
-        document
-          .querySelectorAll('[inert]')
-          .forEach((el) => el.removeAttribute('inert'));
-        document.body.style.overflow = '';
-        document.documentElement.style.overflow = '';
-        document.body.style.pointerEvents = '';
-        document.documentElement.style.pointerEvents = '';
-      } catch {}
-    };
-  }, [dialogOpen]);
+  // NOTE: A previous version of this file manually called
+  // `parentElement.removeChild(overlay)` on Radix dialog overlays to "unstick"
+  // scroll locks. That code raced with React's own reconciliation and caused
+  // a crash ("Failed to execute 'removeChild' on 'Node'") every time the
+  // "Nouveau" dialog was opened. Radix handles its own portal cleanup — no
+  // manual DOM manipulation is needed here.
 
   if (loading) {
     return <div className="flex justify-center p-8">Chargement des événements...</div>;
