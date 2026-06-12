@@ -6,7 +6,7 @@ import { useActiveUsers } from '@/hooks/useActiveUsers';
 import { toast } from 'sonner';
 import { Event } from '@/types/event.types';
 import { Contact } from '@/types/contact.types';
-import { EventDraftManager, useEventDraft } from './EventDraftManager';
+import { useEventDraft } from './EventDraftManager';
 import { EventFormFields } from './EventFormFields';
 import { logger } from '@/lib/logger';
 import { notifyMentionsIfNeeded } from '@/utils/mentionNotifier';
