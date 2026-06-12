@@ -38,19 +38,25 @@ export const EventFormFields: React.FC<Props> = ({ formData, onChange, eventType
       <div className="grid grid-cols-2 gap-4">
         <div>
           <Label>Type d'événement</Label>
-          <Select value={formData.event_type || undefined} onValueChange={setVal('event_type')}>
-            <SelectTrigger><SelectValue placeholder="Sélectionner un type" /></SelectTrigger>
-            <SelectContent>
-              {eventTypes.map(t => (
-                <SelectItem key={t.id} value={t.name}>
-                  <div className="flex items-center gap-2">
-                    <div className="w-3 h-3 rounded-full" style={{ backgroundColor: t.color }} />
-                    {t.name}
-                  </div>
-                </SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
+          {/* Garde: ne monte le Select Radix qu'une fois les options chargées,
+              sinon le Portal interne crash avec NotFoundError removeChild. */}
+          {eventTypes.length > 0 ? (
+            <Select value={formData.event_type || undefined} onValueChange={setVal('event_type')}>
+              <SelectTrigger><SelectValue placeholder="Sélectionner un type" /></SelectTrigger>
+              <SelectContent>
+                {eventTypes.map(t => (
+                  <SelectItem key={t.id} value={t.name}>
+                    <div className="flex items-center gap-2">
+                      <div className="w-3 h-3 rounded-full" style={{ backgroundColor: t.color }} />
+                      {t.name}
+                    </div>
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          ) : (
+            <Input value={formData.event_type} onChange={set('event_type')} placeholder="Chargement…" disabled />
+          )}
         </div>
         <div>
           <Label>Statut</Label>
@@ -97,17 +103,22 @@ export const EventFormFields: React.FC<Props> = ({ formData, onChange, eventType
       <div><Label>Lien de réservation</Label><Input type="url" placeholder="https://..." value={formData.booking_url} onChange={set('booking_url')} /></div>
       <div>
         <Label>Propriétaire</Label>
-        <Select value={formData.owner_id || 'none'} onValueChange={v => onChange({ owner_id: v === 'none' ? '' : v })}>
-          <SelectTrigger><SelectValue placeholder="Sélectionner un propriétaire" /></SelectTrigger>
-          <SelectContent>
-            <SelectItem value="none"><div className="flex items-center gap-2"><User className="h-4 w-4 text-muted-foreground" />Aucun propriétaire</div></SelectItem>
-            {activeUsers.map(u => (
-              <SelectItem key={u.user_id} value={u.user_id}>
-                <div className="flex items-center gap-2"><User className="h-4 w-4" />{u.first_name || u.last_name ? `${u.first_name || ''} ${u.last_name || ''}`.trim() : u.username || u.email}</div>
-              </SelectItem>
-            ))}
-          </SelectContent>
-        </Select>
+        {/* Même garde: attend que la liste des utilisateurs soit chargée. */}
+        {activeUsers.length > 0 ? (
+          <Select value={formData.owner_id || 'none'} onValueChange={v => onChange({ owner_id: v === 'none' ? '' : v })}>
+            <SelectTrigger><SelectValue placeholder="Sélectionner un propriétaire" /></SelectTrigger>
+            <SelectContent>
+              <SelectItem value="none"><div className="flex items-center gap-2"><User className="h-4 w-4 text-muted-foreground" />Aucun propriétaire</div></SelectItem>
+              {activeUsers.map(u => (
+                <SelectItem key={u.user_id} value={u.user_id}>
+                  <div className="flex items-center gap-2"><User className="h-4 w-4" />{u.first_name || u.last_name ? `${u.first_name || ''} ${u.last_name || ''}`.trim() : u.username || u.email}</div>
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+        ) : (
+          <Input value="" placeholder="Chargement…" disabled />
+        )}
       </div>
       <div className="flex justify-end gap-2">
         <Button type="button" variant="outline" onClick={onCancel}>Annuler</Button>

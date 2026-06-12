@@ -133,3 +133,5 @@ export const EventDialog: React.FC<EventDialogProps> = ({ open, onOpenChange, ev
     </Dialog>
   );
 };
+
+

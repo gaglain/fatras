@@ -124,6 +124,8 @@ export const Layout: React.FC<LayoutProps> = ({ children }) => {
         <ChatWidget />
         <PushNotificationPrompt />
         <OnboardingTour />
+
+
       </div>
     );
   }
@@ -151,6 +153,8 @@ export const Layout: React.FC<LayoutProps> = ({ children }) => {
       <ChatWidget />
       <PushNotificationPrompt />
       <OnboardingTour />
+
+
     </SidebarProvider>
   );
 };
