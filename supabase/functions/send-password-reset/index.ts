@@ -7,6 +7,32 @@ const corsHeaders = {
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
 }
 
+// Allowlist of domains permitted as password reset redirect targets.
+// Any caller-supplied resetUrl must match one of these origins, otherwise
+// we fall back to the default production URL.
+const ALLOWED_REDIRECT_ORIGINS = [
+  'https://booking.fatras.net',
+  'https://fatras.net',
+  'https://fatras.lovable.app',
+  'http://localhost:5173',
+  'http://localhost:3000',
+]
+const DEFAULT_RESET_URL = 'https://booking.fatras.net/auth/reset-password'
+
+function sanitizeResetUrl(input: unknown): string {
+  if (typeof input !== 'string' || !input) return DEFAULT_RESET_URL
+  try {
+    const u = new URL(input)
+    const origin = `${u.protocol}//${u.host}`
+    if (ALLOWED_REDIRECT_ORIGINS.includes(origin)) {
+      return u.toString()
+    }
+  } catch {
+    // fallthrough
+  }
+  return DEFAULT_RESET_URL
+}
+
 const handler = async (req: Request): Promise<Response> => {
   if (req.method === 'OPTIONS') {
     return new Response('ok', { headers: corsHeaders })
@@ -15,66 +41,53 @@ const handler = async (req: Request): Promise<Response> => {
   try {
     const { email, resetUrl } = await req.json()
 
-    if (!email) {
-      throw new Error('Email is required')
+    if (!email || typeof email !== 'string') {
+      return new Response(
+        JSON.stringify({ success: false, error: 'Email is required' }),
+        { headers: { ...corsHeaders, 'Content-Type': 'application/json' }, status: 400 }
+      )
     }
+
+    const safeResetUrl = sanitizeResetUrl(resetUrl)
 
     const supabaseAdmin = createClient(
       Deno.env.get('SUPABASE_URL') ?? '',
       Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? '',
-      {
-        auth: {
-          autoRefreshToken: false,
-          persistSession: false
-        }
-      }
+      { auth: { autoRefreshToken: false, persistSession: false } }
     )
 
-    // Generate password reset link with explicit redirectTo
+    // Generic response to avoid user enumeration and never leak the link.
+    const genericResponse = new Response(
+      JSON.stringify({
+        success: true,
+        message: 'Si un compte existe pour cet email, un lien de réinitialisation a été envoyé.',
+      }),
+      { headers: { ...corsHeaders, 'Content-Type': 'application/json' }, status: 200 }
+    )
+
     const { data, error } = await supabaseAdmin.auth.admin.generateLink({
       type: 'recovery',
-      email: email,
-      options: {
-        redirectTo: resetUrl || 'https://booking.fatras.net/auth/reset-password',
-      },
+      email,
+      options: { redirectTo: safeResetUrl },
     })
 
     if (error) {
-      // Handle user not found specifically
-      if (error.code === 'user_not_found') {
-        return new Response(
-          JSON.stringify({ 
-            success: false, 
-            error: `Aucun utilisateur trouvé avec l'email: ${email}` 
-          }),
-          { 
-            headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-            status: 404
-          }
-        )
-      }
-      throw error
+      console.warn(`Password reset generateLink failed for ${email}:`, error.message)
+      // Always respond generically (do not reveal whether the user exists).
+      return genericResponse
     }
 
     const resetLink = data.properties?.action_link
-    console.log(`✅ Password reset link generated for ${email}`)
+    if (!resetLink) {
+      console.error('No action_link returned from generateLink')
+      return genericResponse
+    }
 
-    // Send email via Resend
-    const resendApiKey = Deno.env.get("RESEND_API_KEY")
+    const resendApiKey = Deno.env.get('RESEND_API_KEY')
     if (!resendApiKey) {
-      console.error('RESEND_API_KEY not configured')
-      return new Response(
-        JSON.stringify({ 
-          success: true, 
-          message: 'Lien généré mais envoi email impossible (RESEND_API_KEY manquante)',
-          resetLink: resetLink,
-          emailSent: false
-        }),
-        { 
-          headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-          status: 200 
-        }
-      )
+      console.error('RESEND_API_KEY not configured — cannot send password reset email')
+      // Do NOT leak the link in the response body.
+      return genericResponse
     }
 
     const resend = new Resend(resendApiKey)
@@ -111,52 +124,24 @@ const handler = async (req: Request): Promise<Response> => {
     `
 
     try {
-      const emailResponse = await resend.emails.send({
-        from: "Fatras Booking <booking@fatras.net>",
+      await resend.emails.send({
+        from: 'Fatras Booking <booking@fatras.net>',
         to: [email],
-        subject: "Réinitialisation de votre mot de passe - Fatras Booking",
+        subject: 'Réinitialisation de votre mot de passe - Fatras Booking',
         html: emailHtml,
       })
-
-      console.log("✅ Password reset email sent:", emailResponse)
-
-      return new Response(
-        JSON.stringify({ 
-          success: true, 
-          message: 'Email de réinitialisation envoyé',
-          emailSent: true
-        }),
-        { 
-          headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-          status: 200 
-        }
-      )
+      console.log(`✅ Password reset email sent to ${email}`)
     } catch (emailError: any) {
-      console.error('❌ Error sending email via Resend:', emailError)
-      
-      // Return link if email fails
-      return new Response(
-        JSON.stringify({ 
-          success: true, 
-          message: 'Lien généré mais erreur envoi email',
-          resetLink: resetLink,
-          emailSent: false,
-          emailError: emailError.message
-        }),
-        { 
-          headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-          status: 200 
-        }
-      )
+      console.error('❌ Error sending password reset email:', emailError?.message ?? emailError)
+      // Still return generic response — never leak the reset link.
     }
+
+    return genericResponse
   } catch (error: any) {
-    console.error('❌ Error:', error)
+    console.error('❌ send-password-reset error:', error?.message ?? error)
     return new Response(
-      JSON.stringify({ error: error.message }),
-      { 
-        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-        status: 400
-      }
+      JSON.stringify({ success: false, error: 'Internal error' }),
+      { headers: { ...corsHeaders, 'Content-Type': 'application/json' }, status: 500 }
     )
   }
 }
