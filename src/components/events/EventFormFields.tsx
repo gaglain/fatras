@@ -73,14 +73,15 @@ export const EventFormFields: React.FC<Props> = ({ formData, onChange, eventType
       </div>
       <div className="grid grid-cols-2 gap-4">
         <div>
-          <Label>Contact associé</Label>
-          <UniversalSearch filterTypes={['contact']} selectedId={formData.contact_id} onSelect={(item: SearchItem) => onChange({ contact_id: item.id })} triggerText="Rechercher un contact" placeholder="Rechercher contact par nom, email, ID..." />
+          <Label>Contact associé (ID)</Label>
+          <Input value={formData.contact_id} onChange={set('contact_id')} placeholder="contact id" />
         </div>
         <div>
-          <Label>Spectacle associé</Label>
-          <UniversalSearch filterTypes={['artist']} selectedId={formData.artist_id} onSelect={(item: SearchItem) => onChange({ artist_id: item.id })} triggerText="Rechercher un spectacle" placeholder="Rechercher spectacle par nom, genre..." />
+          <Label>Spectacle associé (ID)</Label>
+          <Input value={formData.artist_id} onChange={set('artist_id')} placeholder="artist id" />
         </div>
       </div>
+
       <div><Label>Lieu</Label><Input value={formData.venue} onChange={set('venue')} /></div>
       <div><Label>Adresse</Label><Input value={formData.address} onChange={set('address')} /></div>
       <div className="grid grid-cols-2 gap-4">
