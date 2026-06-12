@@ -94,8 +94,9 @@ export const EventFormFields: React.FC<Props> = ({ formData, onChange, eventType
         <div><Label>Budget max (€)</Label><Input type="number" value={formData.budget_max} onChange={set('budget_max')} /></div>
         <div><Label>Nb participants</Label><Input type="number" value={formData.attendees_count} onChange={set('attendees_count')} /></div>
       </div>
-      <div><Label>Exigences techniques</Label><MentionableTextarea value={formData.requirements} onChange={setVal('requirements')} rows={3} placeholder="Tapez @ pour mentionner" /></div>
-      <div><Label>Notes</Label><MentionableTextarea value={formData.notes} onChange={setVal('notes')} rows={3} placeholder="Tapez @ pour mentionner" /></div>
+      <div><Label>Exigences techniques</Label><Input value={formData.requirements} onChange={set('requirements')} /></div>
+      <div><Label>Notes</Label><Input value={formData.notes} onChange={set('notes')} /></div>
+
       <div><Label>Lien de réservation</Label><Input type="url" placeholder="https://..." value={formData.booking_url} onChange={set('booking_url')} /></div>
       <div>
         <Label>Propriétaire</Label>
