@@ -152,7 +152,8 @@ export const Layout: React.FC<LayoutProps> = ({ children }) => {
       </div>
       <ChatWidget />
       <PushNotificationPrompt />
-      {/* <OnboardingTour /> temporairement désactivé pour debug crash removeChild */}
+      <OnboardingTour />
+
 
     </SidebarProvider>
   );
