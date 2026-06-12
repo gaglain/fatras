@@ -1,5 +1,6 @@
 import React from 'react';
 import { cn } from '@/lib/utils';
+import { sanitizeHtml } from '@/lib/sanitize';
 
 interface MentionRendererProps {
   content: string;
@@ -21,7 +22,7 @@ export const MentionRenderer: React.FC<MentionRendererProps> = ({ content, class
     return (
       <span
         className={className}
-        dangerouslySetInnerHTML={{ __html: content }}
+        dangerouslySetInnerHTML={{ __html: sanitizeHtml(content) }}
       />
     );
   }
