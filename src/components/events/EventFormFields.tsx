@@ -72,20 +72,8 @@ export const EventFormFields: React.FC<Props> = ({ formData, onChange, eventType
       <div><Label>Notes</Label><Input value={formData.notes} onChange={set('notes')} /></div>
 
       <div><Label>Lien de réservation</Label><Input type="url" placeholder="https://..." value={formData.booking_url} onChange={set('booking_url')} /></div>
-      <div>
-        <Label>Propriétaire</Label>
-        <Select value={formData.owner_id || 'none'} onValueChange={v => onChange({ owner_id: v === 'none' ? '' : v })}>
-          <SelectTrigger><SelectValue placeholder="Sélectionner un propriétaire" /></SelectTrigger>
-          <SelectContent>
-            <SelectItem value="none"><div className="flex items-center gap-2"><User className="h-4 w-4 text-muted-foreground" />Aucun propriétaire</div></SelectItem>
-            {activeUsers.map(u => (
-              <SelectItem key={u.user_id} value={u.user_id}>
-                <div className="flex items-center gap-2"><User className="h-4 w-4" />{u.first_name || u.last_name ? `${u.first_name || ''} ${u.last_name || ''}`.trim() : u.username || u.email}</div>
-              </SelectItem>
-            ))}
-          </SelectContent>
-        </Select>
-      </div>
+      <div><Label>Propriétaire (debug)</Label><Input value={formData.owner_id} onChange={set('owner_id')} /></div>
+
       <div className="flex justify-end gap-2">
         <Button type="button" variant="outline" onClick={onCancel}>Annuler</Button>
         <Button type="submit" disabled={loading}>{loading ? 'Enregistrement...' : (isEdit ? 'Modifier' : 'Créer')}</Button>
