@@ -37,7 +37,26 @@ export const EventFormFields: React.FC<Props> = ({ formData, onChange, eventType
       </div>
 
       <div className="grid grid-cols-2 gap-4">
-        <div><Label>Type d'événement (debug)</Label><Input value={formData.event_type} onChange={set('event_type')} /></div>
+        <div>
+          <Label>Type d'événement</Label>
+          {eventTypes.length > 0 ? (
+            <Select value={formData.event_type || undefined} onValueChange={setVal('event_type')}>
+              <SelectTrigger><SelectValue placeholder="Sélectionner un type" /></SelectTrigger>
+              <SelectContent>
+                {eventTypes.map(t => (
+                  <SelectItem key={t.id} value={t.name}>
+                    <div className="flex items-center gap-2">
+                      <div className="w-3 h-3 rounded-full" style={{ backgroundColor: t.color }} />
+                      {t.name}
+                    </div>
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          ) : (
+            <Input value={formData.event_type} onChange={set('event_type')} placeholder="Chargement…" disabled />
+          )}
+        </div>
         <div>
           <Label>Statut</Label>
           <Select value={formData.status} onValueChange={setVal('status')}>
@@ -52,6 +71,7 @@ export const EventFormFields: React.FC<Props> = ({ formData, onChange, eventType
           </Select>
         </div>
       </div>
+
 
 
 
