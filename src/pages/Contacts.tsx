@@ -185,15 +185,32 @@ export const Contacts: React.FC = () => {
 
   const confirmAction = useConfirm();
   const handleDelete = async (id: string) => {
-    const ok = await confirmAction({ title: 'Supprimer le contact', description: 'Êtes-vous sûr de vouloir supprimer ce contact ?', variant: 'destructive' });
+    const ok = await confirmAction({ title: 'Supprimer le contact', description: 'Êtes-vous sûr de vouloir supprimer ce contact ? Les événements, devis et tâches liés seront conservés mais désassociés.', variant: 'destructive' });
     if (!ok) return;
-    try { const { error } = await supabase.from('contacts').delete().eq('id', id); if (error) throw error; toast.success('Contact supprimé avec succès'); fetchContacts({ reset: true }); } catch { toast.error('Erreur lors de la suppression du contact'); }
+    try {
+      const { error } = await supabase.from('contacts').delete().eq('id', id);
+      if (error) throw error;
+      toast.success('Contact supprimé avec succès');
+      fetchContacts({ reset: true });
+    } catch (e: any) {
+      toast.error(`Erreur lors de la suppression : ${e?.message || 'inconnue'}`);
+    }
   };
 
   const handleBulkDelete = async () => {
     if (selectedContactIds.length === 0) return;
     setIsDeleting(true);
-    try { const { error } = await supabase.from('contacts').delete().in('id', selectedContactIds); if (error) throw error; toast.success(`${selectedContactIds.length} contact(s) supprimé(s) avec succès`); setSelectedContactIds([]); fetchContacts({ reset: true }); } catch { toast.error('Erreur lors de la suppression des contacts'); } finally { setIsDeleting(false); }
+    try {
+      const { error } = await supabase.from('contacts').delete().in('id', selectedContactIds);
+      if (error) throw error;
+      toast.success(`${selectedContactIds.length} contact(s) supprimé(s) avec succès`);
+      setSelectedContactIds([]);
+      fetchContacts({ reset: true });
+    } catch (e: any) {
+      toast.error(`Erreur lors de la suppression : ${e?.message || 'inconnue'}`);
+    } finally {
+      setIsDeleting(false);
+    }
   };
 
   const handleContact = (contact: Contact, method: 'email' | 'phone') => {
