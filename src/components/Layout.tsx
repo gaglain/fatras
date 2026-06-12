@@ -123,7 +123,8 @@ export const Layout: React.FC<LayoutProps> = ({ children }) => {
         <MobileBottomNav />
         <ChatWidget />
         <PushNotificationPrompt />
-        {/* <OnboardingTour /> temporairement désactivé pour debug crash removeChild */}
+        <OnboardingTour />
+
 
       </div>
     );
