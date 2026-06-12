@@ -33,8 +33,9 @@ export const EventFormFields: React.FC<Props> = ({ formData, onChange, eventType
       </div>
       <div>
         <Label>Description</Label>
-        <MentionableTextarea value={formData.description} onChange={setVal('description')} rows={3} placeholder="Tapez @ pour mentionner un utilisateur" />
+        <Input value={formData.description} onChange={set('description')} placeholder="Description" />
       </div>
+
       <div className="grid grid-cols-2 gap-4">
         <div>
           <Label>Type d'événement</Label>
