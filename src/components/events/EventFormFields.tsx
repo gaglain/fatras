@@ -37,9 +37,32 @@ export const EventFormFields: React.FC<Props> = ({ formData, onChange, eventType
       </div>
 
       <div className="grid grid-cols-2 gap-4">
-        <div><Label>Type d'événement (debug)</Label><Input value={formData.event_type} onChange={set('event_type')} /></div>
-        <div><Label>Statut (debug)</Label><Input value={formData.status} onChange={set('status')} /></div>
+        <div>
+          <Label>Type d'événement</Label>
+          <Select value={formData.event_type} onValueChange={setVal('event_type')}>
+            <SelectTrigger><SelectValue placeholder="Sélectionner un type" /></SelectTrigger>
+            <SelectContent>
+              {eventTypes.map(t => (
+                <SelectItem key={t.id} value={t.name}>{t.name}</SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+        </div>
+        <div>
+          <Label>Statut</Label>
+          <Select value={formData.status} onValueChange={setVal('status')}>
+            <SelectTrigger><SelectValue /></SelectTrigger>
+            <SelectContent>
+              <SelectItem value="pending">En attente</SelectItem>
+              <SelectItem value="option">Option</SelectItem>
+              <SelectItem value="confirmed">Confirmé</SelectItem>
+              <SelectItem value="cancelled">Annulé</SelectItem>
+              <SelectItem value="completed">Terminé</SelectItem>
+            </SelectContent>
+          </Select>
+        </div>
       </div>
+
 
       <div className="grid grid-cols-2 gap-4">
         <div><Label>Date de début</Label><Input type="datetime-local" value={formData.start_date} onChange={set('start_date')} /></div>
