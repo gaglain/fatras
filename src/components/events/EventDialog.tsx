@@ -126,10 +126,9 @@ export const EventDialog: React.FC<EventDialogProps> = ({ open, onOpenChange, ev
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
         <DialogHeader><DialogTitle>{event ? "Modifier l'événement" : 'Nouvel événement'}</DialogTitle></DialogHeader>
-        <EventFormFields formData={formData} onChange={patch => setFormData(p => ({ ...p, ...patch }))}
-          eventTypes={eventTypes} activeUsers={activeUsers} loading={loading}
-          isEdit={!!event} onSubmit={handleSubmit} onCancel={() => onOpenChange(false)} />
+        <div>Test isolation crash</div>
       </DialogContent>
     </Dialog>
   );
 };
+
