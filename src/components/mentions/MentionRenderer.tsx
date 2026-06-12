@@ -22,7 +22,7 @@ export const MentionRenderer: React.FC<MentionRendererProps> = ({ content, class
     return (
       <span
         className={className}
-        dangerouslySetInnerHTML={{ __html: content }}
+        dangerouslySetInnerHTML={{ __html: sanitizeHtml(content) }}
       />
     );
   }
