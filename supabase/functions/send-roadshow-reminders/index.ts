@@ -250,13 +250,15 @@ function buildEmailHtml(p: EmailParams): string {
       <h3 style="margin:20px 0 8px;font-size:16px;color:#1e293b;">⏰ Horaires</h3>
       <table style="width:100%;border-collapse:collapse;">
         ${timeRow("Rendez-vous équipe", p.meetingPointTime)}
-        ${timeRow("Départ", p.departureTime)}
+        ${timeRow("Départ vers le lieu", p.departureToShowTime)}
         ${timeRow("Arrivée / Check-in", p.checkInTime)}
         ${timeRow("Balance", p.soundcheckTime)}
         ${timeRow("Ouverture portes", p.doorsTime)}
         ${timeRow("Début show", p.showStartTime)}
         ${timeRow("Fin show", p.showEndTime)}
+        ${timeRow("Couvre-feu", p.curfewTime)}
         ${p.mealTime ? timeRow("🍽️ Repas", p.mealTime + (p.mealLocation ? ' - ' + p.mealLocation : '')) : ''}
+        ${timeRow("Départ retour", p.departureTime)}
       </table>
 
       ${(p.accommodation || p.transport || p.localContact) ? `
