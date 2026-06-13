@@ -198,6 +198,8 @@ interface EmailParams {
   eventTime: string | null;
   checkInTime: string | null;
   departureTime: string | null;
+  departureToShowTime: string | null;
+  curfewTime: string | null;
   meetingPointTime: string | null;
   meetingPointLocation: string | null;
   soundcheckTime: string | null;
