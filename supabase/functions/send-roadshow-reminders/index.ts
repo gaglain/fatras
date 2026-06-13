@@ -53,7 +53,7 @@ Deno.serve(async (req) => {
       // Fetch roadshow stops matching this target date
       const { data: stops, error: stopsError } = await supabase
         .from("roadshow_stops")
-        .select("id, city, venue, address, event_date, event_time, check_in_time, departure_time, meeting_point_time, meeting_point_location, departure_to_show_time, soundcheck_time, doors_time, show_start_time, show_end_time, curfew_time, accommodation, accommodation_address, transport, local_contact, local_contact_phone, artist_lineup, user_id, status")
+        .select("id, city, venue, address, event_date, event_time, check_in_time, departure_time, meeting_point_time, meeting_point_location, departure_to_show_time, soundcheck_time, doors_time, show_start_time, show_end_time, curfew_time, meal_time, meal_location, accommodation, accommodation_address, transport, local_contact, local_contact_phone, artist_lineup, user_id, status")
         .eq("event_date", targetDateStr)
         .neq("status", "cancelled");
 
@@ -116,6 +116,8 @@ Deno.serve(async (req) => {
             eventTime: stop.event_time,
             checkInTime: stop.check_in_time,
             departureTime: stop.departure_time,
+            departureToShowTime: stop.departure_to_show_time,
+            curfewTime: stop.curfew_time,
             meetingPointTime: stop.meeting_point_time,
             meetingPointLocation: stop.meeting_point_location,
             soundcheckTime: stop.soundcheck_time,
@@ -196,6 +198,8 @@ interface EmailParams {
   eventTime: string | null;
   checkInTime: string | null;
   departureTime: string | null;
+  departureToShowTime: string | null;
+  curfewTime: string | null;
   meetingPointTime: string | null;
   meetingPointLocation: string | null;
   soundcheckTime: string | null;
@@ -246,13 +250,15 @@ function buildEmailHtml(p: EmailParams): string {
       <h3 style="margin:20px 0 8px;font-size:16px;color:#1e293b;">⏰ Horaires</h3>
       <table style="width:100%;border-collapse:collapse;">
         ${timeRow("Rendez-vous équipe", p.meetingPointTime)}
-        ${timeRow("Départ", p.departureTime)}
+        ${timeRow("Départ vers le lieu", p.departureToShowTime)}
         ${timeRow("Arrivée / Check-in", p.checkInTime)}
         ${timeRow("Balance", p.soundcheckTime)}
         ${timeRow("Ouverture portes", p.doorsTime)}
         ${timeRow("Début show", p.showStartTime)}
         ${timeRow("Fin show", p.showEndTime)}
+        ${timeRow("Couvre-feu", p.curfewTime)}
         ${p.mealTime ? timeRow("🍽️ Repas", p.mealTime + (p.mealLocation ? ' - ' + p.mealLocation : '')) : ''}
+        ${timeRow("Départ retour", p.departureTime)}
       </table>
 
       ${(p.accommodation || p.transport || p.localContact) ? `
