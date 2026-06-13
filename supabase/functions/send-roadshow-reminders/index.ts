@@ -116,6 +116,8 @@ Deno.serve(async (req) => {
             eventTime: stop.event_time,
             checkInTime: stop.check_in_time,
             departureTime: stop.departure_time,
+            departureToShowTime: stop.departure_to_show_time,
+            curfewTime: stop.curfew_time,
             meetingPointTime: stop.meeting_point_time,
             meetingPointLocation: stop.meeting_point_location,
             soundcheckTime: stop.soundcheck_time,
