@@ -53,7 +53,7 @@ Deno.serve(async (req) => {
       // Fetch roadshow stops matching this target date
       const { data: stops, error: stopsError } = await supabase
         .from("roadshow_stops")
-        .select("id, city, venue, address, event_date, event_time, check_in_time, departure_time, meeting_point_time, meeting_point_location, departure_to_show_time, soundcheck_time, doors_time, show_start_time, show_end_time, curfew_time, accommodation, accommodation_address, transport, local_contact, local_contact_phone, artist_lineup, user_id, status")
+        .select("id, city, venue, address, event_date, event_time, check_in_time, departure_time, meeting_point_time, meeting_point_location, departure_to_show_time, soundcheck_time, doors_time, show_start_time, show_end_time, curfew_time, meal_time, meal_location, accommodation, accommodation_address, transport, local_contact, local_contact_phone, artist_lineup, user_id, status")
         .eq("event_date", targetDateStr)
         .neq("status", "cancelled");
 
