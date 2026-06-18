@@ -10,6 +10,7 @@ export interface ContactList {
   description?: string;
   artist_id?: string;
   event_id?: string;
+  is_exclusion?: boolean;
   centralized_artists?: {
     id: string;
     name: string;
