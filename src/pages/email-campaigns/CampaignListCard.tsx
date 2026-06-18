@@ -19,6 +19,13 @@ interface Campaign {
   sent_at?: string;
 }
 
+interface SequenceLink {
+  sequenceId: string;
+  sequenceName: string;
+  stepName: string;
+  position: number;
+}
+
 interface CampaignListCardProps {
   campaign: Campaign;
   onEdit: (campaign: Campaign) => void;
@@ -26,6 +33,8 @@ interface CampaignListCardProps {
   onDuplicate: (campaign: Campaign) => void;
   onViewContactStats: (campaign: Campaign) => void;
   onViewAnalytics: (campaign: Campaign) => void;
+  sequenceLinks?: SequenceLink[];
+  onOpenSequence?: (sequenceId: string) => void;
 }
 
 const getStatusColor = (status: string) => {
