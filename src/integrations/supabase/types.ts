@@ -374,18 +374,21 @@ export type Database = {
           contact_list_id: string
           created_at: string
           id: string
+          kind: string
         }
         Insert: {
           campaign_id: string
           contact_list_id: string
           created_at?: string
           id?: string
+          kind?: string
         }
         Update: {
           campaign_id?: string
           contact_list_id?: string
           created_at?: string
           id?: string
+          kind?: string
         }
         Relationships: [
           {
@@ -788,6 +791,7 @@ export type Database = {
           description: string | null
           event_id: string | null
           id: string
+          is_exclusion: boolean
           name: string
           updated_at: string
           user_id: string
@@ -798,6 +802,7 @@ export type Database = {
           description?: string | null
           event_id?: string | null
           id?: string
+          is_exclusion?: boolean
           name: string
           updated_at?: string
           user_id: string
@@ -808,6 +813,7 @@ export type Database = {
           description?: string | null
           event_id?: string | null
           id?: string
+          is_exclusion?: boolean
           name?: string
           updated_at?: string
           user_id?: string
