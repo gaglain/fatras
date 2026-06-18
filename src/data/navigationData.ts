@@ -19,7 +19,8 @@ import {
   UserCog,
   Briefcase,
   CalendarCheck,
-  ClipboardList
+  ClipboardList,
+  GitBranch
 } from 'lucide-react';
 
 export interface MenuItem {
