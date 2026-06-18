@@ -2,7 +2,7 @@ import React from 'react';
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import { Mail, Edit, Trash2, Eye, Users, MousePointer, TrendingDown, Copy } from 'lucide-react';
+import { Mail, Edit, Trash2, Eye, Users, MousePointer, TrendingDown, Copy, Workflow } from 'lucide-react';
 
 interface Campaign {
   id: string;
@@ -19,6 +19,13 @@ interface Campaign {
   sent_at?: string;
 }
 
+interface SequenceLink {
+  sequenceId: string;
+  sequenceName: string;
+  stepName: string;
+  position: number;
+}
+
 interface CampaignListCardProps {
   campaign: Campaign;
   onEdit: (campaign: Campaign) => void;
@@ -26,6 +33,8 @@ interface CampaignListCardProps {
   onDuplicate: (campaign: Campaign) => void;
   onViewContactStats: (campaign: Campaign) => void;
   onViewAnalytics: (campaign: Campaign) => void;
+  sequenceLinks?: SequenceLink[];
+  onOpenSequence?: (sequenceId: string) => void;
 }
 
 const getStatusColor = (status: string) => {
@@ -51,7 +60,7 @@ const getStatusLabel = (status: string) => {
 };
 
 export const CampaignListCard: React.FC<CampaignListCardProps> = ({
-  campaign, onEdit, onDelete, onDuplicate, onViewContactStats, onViewAnalytics
+  campaign, onEdit, onDelete, onDuplicate, onViewContactStats, onViewAnalytics, sequenceLinks, onOpenSequence
 }) => {
   return (
     <Card className="hover:shadow-lg transition-shadow">
@@ -64,6 +73,18 @@ export const CampaignListCard: React.FC<CampaignListCardProps> = ({
                 <Badge className={`${getStatusColor(campaign.status)} shrink-0 text-xs`}>
                   {getStatusLabel(campaign.status)}
                 </Badge>
+                {sequenceLinks?.map(link => (
+                  <Badge
+                    key={`${link.sequenceId}-${link.position}`}
+                    variant="outline"
+                    className="shrink-0 text-xs bg-primary/5 border-primary/30 text-primary cursor-pointer hover:bg-primary/10"
+                    title={`Étape ${link.position} — ${link.stepName}`}
+                    onClick={(e) => { e.stopPropagation(); onOpenSequence?.(link.sequenceId); }}
+                  >
+                    <Workflow className="h-3 w-3 mr-1" />
+                    Séquence : {link.sequenceName} (#{link.position})
+                  </Badge>
+                ))}
               </div>
               {campaign.subject && (
                 <p className="text-muted-foreground text-sm truncate">

@@ -8,7 +8,7 @@ import { Badge } from '@/components/ui/badge';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '@/components/ui/dialog';
 import { toast } from '@/hooks/use-toast';
 import { Plus, GitBranch, ArrowLeft, Archive, Trash2 } from 'lucide-react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useSearchParams } from 'react-router-dom';
 import { SequenceWorkflow } from './email-sequences/SequenceWorkflow';
 import { useAuthContext } from '@/contexts/UnifiedAuthContext';
 import { useConfirm } from '@/components/ui/confirm-dialog';
@@ -25,13 +25,20 @@ interface Sequence {
 export const EmailSequences: React.FC = () => {
   const { user } = useAuthContext();
   const navigate = useNavigate();
+  const [searchParams, setSearchParams] = useSearchParams();
   const confirm = useConfirm();
   const [sequences, setSequences] = useState<Sequence[]>([]);
   const [loading, setLoading] = useState(true);
-  const [selectedId, setSelectedId] = useState<string | null>(null);
+  const [selectedId, setSelectedId] = useState<string | null>(searchParams.get('sequenceId'));
   const [showCreate, setShowCreate] = useState(false);
   const [newName, setNewName] = useState('');
   const [newDesc, setNewDesc] = useState('');
+
+  useEffect(() => {
+    const qid = searchParams.get('sequenceId');
+    if (qid && qid !== selectedId) setSelectedId(qid);
+  }, [searchParams]);
+
 
   const load = async () => {
     setLoading(true);
@@ -70,8 +77,9 @@ export const EmailSequences: React.FC = () => {
   };
 
   if (selectedId) {
-    return <SequenceWorkflow sequenceId={selectedId} onBack={() => { setSelectedId(null); load(); }} />;
+    return <SequenceWorkflow sequenceId={selectedId} onBack={() => { setSelectedId(null); if (searchParams.get('sequenceId')) setSearchParams({}); load(); }} />;
   }
+
 
   return (
     <div className="container mx-auto p-4 md:p-6 max-w-6xl">

@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Card, CardContent } from '@/components/ui/card';
@@ -28,6 +29,7 @@ interface Campaign {
 
 export const EmailCampaigns: React.FC = () => {
   const confirm = useConfirm();
+  const navigate = useNavigate();
   const [campaigns, setCampaigns] = useState<Campaign[]>([]);
   const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState('');
@@ -37,6 +39,7 @@ export const EmailCampaigns: React.FC = () => {
   const [showContactStats, setShowContactStats] = useState(false);
   const [showEngagementDashboard, setShowEngagementDashboard] = useState(false);
   const [selectedCampaign, setSelectedCampaign] = useState<Campaign | null>(null);
+  const [sequenceLinksByCampaign, setSequenceLinksByCampaign] = useState<Record<string, Array<{ sequenceId: string; sequenceName: string; stepName: string; position: number }>>>({});
 
   const { contactLists } = useContactLists();
 
@@ -45,10 +48,28 @@ export const EmailCampaigns: React.FC = () => {
       const { data, error } = await supabase.from('email_campaigns').select('*').order('created_at', { ascending: false });
       if (error) throw error;
       setCampaigns(data || []);
+
+      // Fetch sequence step → campaign links (with sequence names)
+      const { data: stepData } = await supabase
+        .from('email_sequence_steps')
+        .select('campaign_id, name, position, sequence_id, email_sequences!inner(id, name)')
+        .not('campaign_id', 'is', null);
+      const map: Record<string, Array<{ sequenceId: string; sequenceName: string; stepName: string; position: number }>> = {};
+      (stepData as any[] | null)?.forEach(s => {
+        if (!s.campaign_id) return;
+        (map[s.campaign_id] ||= []).push({
+          sequenceId: s.sequence_id,
+          sequenceName: s.email_sequences?.name || 'Séquence',
+          stepName: s.name,
+          position: s.position,
+        });
+      });
+      setSequenceLinksByCampaign(map);
     } catch {
       toast({ title: "Erreur", description: "Impossible de charger les campagnes", variant: "destructive" });
     } finally { setLoading(false); }
   };
+
 
   useEffect(() => { fetchCampaigns(); }, []);
 
@@ -161,7 +182,10 @@ export const EmailCampaigns: React.FC = () => {
         {filteredCampaigns.map((campaign: any) => (
           <CampaignListCard key={campaign.id} campaign={campaign} onEdit={handleEditCampaign} onDelete={handleDeleteCampaign} onDuplicate={handleDuplicateCampaign}
             onViewContactStats={(c) => { setSelectedCampaign(c); setShowContactStats(true); }}
-            onViewAnalytics={(c) => { setSelectedCampaign(c); setShowAnalytics(true); }} />
+            onViewAnalytics={(c) => { setSelectedCampaign(c); setShowAnalytics(true); }}
+            sequenceLinks={sequenceLinksByCampaign[campaign.id]}
+            onOpenSequence={(sequenceId) => navigate(`/email-sequences?sequenceId=${sequenceId}`)} />
+
         ))}
         {filteredCampaigns.length === 0 && (
           <Card><CardContent className="p-6 text-center"><Mail className="h-12 w-12 text-muted-foreground mx-auto mb-4" /><h3 className="text-lg font-semibold mb-2">Aucune campagne trouvée</h3><p className="text-muted-foreground mb-4">{campaigns.length === 0 ? "Commencez par créer votre première campagne email." : "Aucune campagne ne correspond à votre recherche."}</p><Button onClick={handleCreateCampaign}><Plus className="h-4 w-4 mr-2" />Créer une campagne</Button></CardContent></Card>
