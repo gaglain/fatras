@@ -10,6 +10,7 @@ export interface ContactList {
   description?: string;
   artist_id?: string;
   event_id?: string;
+  is_exclusion?: boolean;
   centralized_artists?: {
     id: string;
     name: string;
@@ -114,6 +115,7 @@ export const useContactLists = () => {
       description?: string;
       artist_id?: string;
       event_id?: string;
+      is_exclusion?: boolean;
       contactIds: string[];
     }) => {
       const { data: { user: authUser } } = await supabase.auth.getUser();
@@ -126,6 +128,7 @@ export const useContactLists = () => {
           description: listData.description,
           artist_id: listData.artist_id || null,
           event_id: listData.event_id || null,
+          is_exclusion: !!listData.is_exclusion,
           user_id: authUser.id
         })
         .select()
@@ -164,18 +167,21 @@ export const useContactLists = () => {
         description?: string;
         artist_id?: string | null;
         event_id?: string | null;
+        is_exclusion?: boolean;
         contactIds?: string[];
       };
     }) => {
       if (updates.name !== undefined || updates.description !== undefined ||
-        updates.artist_id !== undefined || updates.event_id !== undefined) {
+        updates.artist_id !== undefined || updates.event_id !== undefined ||
+        updates.is_exclusion !== undefined) {
         const { error: updateError } = await supabase
           .from('contact_lists')
           .update({
             ...(updates.name !== undefined && { name: updates.name }),
             ...(updates.description !== undefined && { description: updates.description }),
             ...(updates.artist_id !== undefined && { artist_id: updates.artist_id }),
-            ...(updates.event_id !== undefined && { event_id: updates.event_id })
+            ...(updates.event_id !== undefined && { event_id: updates.event_id }),
+            ...(updates.is_exclusion !== undefined && { is_exclusion: updates.is_exclusion })
           })
           .eq('id', listId);
         if (updateError) throw updateError;
@@ -272,6 +278,7 @@ export const useContactLists = () => {
     description?: string;
     artist_id?: string | null;
     event_id?: string | null;
+    is_exclusion?: boolean;
     contactIds?: string[];
   }) => {
     return updateMutation.mutateAsync({ listId, updates });

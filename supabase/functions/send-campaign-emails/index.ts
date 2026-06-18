@@ -48,24 +48,34 @@ const handler = async (req: Request): Promise<Response> => {
 
     console.log('Campaign found:', campaign.name);
 
-    // Get campaign contact lists
+    // Get campaign contact lists (include + exclude)
     const { data: campaignLists, error: listsError } = await supabase
       .from('campaign_contact_lists')
-      .select(`
-        contact_list_id,
-        contact_lists!inner(
-          id,
-          name
-        )
-      `)
+      .select(`contact_list_id, kind`)
       .eq('campaign_id', campaignId);
 
     if (listsError) {
       throw new Error('Failed to fetch contact lists');
     }
 
-    // Get all contacts from the selected lists
-    const listIds = campaignLists.map(cl => cl.contact_list_id);
+    const includeListIds = (campaignLists || [])
+      .filter((cl: any) => (cl.kind || 'include') === 'include')
+      .map((cl: any) => cl.contact_list_id);
+    const perCampaignExcludeIds = (campaignLists || [])
+      .filter((cl: any) => cl.kind === 'exclude')
+      .map((cl: any) => cl.contact_list_id);
+
+    // Global exclusion lists owned by the campaign user
+    const { data: globalExcludeLists } = await supabase
+      .from('contact_lists')
+      .select('id')
+      .eq('user_id', campaign.user_id)
+      .eq('is_exclusion', true);
+    const globalExcludeIds = (globalExcludeLists || []).map((l: any) => l.id);
+
+    const excludeListIds = Array.from(new Set([...perCampaignExcludeIds, ...globalExcludeIds]));
+
+    // Get all contacts from include lists
     const { data: contactMembers, error: contactsError } = await supabase
       .from('contact_list_members')
       .select(`
@@ -78,20 +88,37 @@ const handler = async (req: Request): Promise<Response> => {
           accepts_marketing_emails
         )
       `)
-      .in('contact_list_id', listIds);
+      .in('contact_list_id', includeListIds.length > 0 ? includeListIds : ['00000000-0000-0000-0000-000000000000']);
 
     if (contactsError) {
       throw new Error('Failed to fetch contacts');
     }
 
-    // Filter contacts that accept marketing emails and have valid emails
-    const validContacts = contactMembers
-      .filter(cm => 
-        cm.contacts.accepts_marketing_emails && 
+    // Fetch excluded contact ids/emails
+    const excludedIds = new Set<string>();
+    const excludedEmails = new Set<string>();
+    if (excludeListIds.length > 0) {
+      const { data: excludedMembers } = await supabase
+        .from('contact_list_members')
+        .select('contact_id, contacts!inner(id, email)')
+        .in('contact_list_id', excludeListIds);
+      for (const m of (excludedMembers || []) as any[]) {
+        if (m.contacts?.id) excludedIds.add(m.contacts.id);
+        if (m.contacts?.email) excludedEmails.add(String(m.contacts.email).toLowerCase());
+      }
+      console.log(`Exclusion: ${excludedIds.size} contact(s) ignoré(s) via ${excludeListIds.length} liste(s) d'exclusion.`);
+    }
+
+    // Filter contacts that accept marketing emails, have valid emails, and not excluded
+    const validContacts = (contactMembers || [])
+      .filter((cm: any) =>
+        cm.contacts.accepts_marketing_emails &&
         cm.contacts.email &&
-        cm.contacts.email.includes('@')
+        cm.contacts.email.includes('@') &&
+        !excludedIds.has(cm.contacts.id) &&
+        !excludedEmails.has(String(cm.contacts.email).toLowerCase())
       )
-      .map(cm => cm.contacts);
+      .map((cm: any) => cm.contacts);
 
     // Remove duplicates
     const uniqueContacts = validContacts.filter((contact, index, self) =>

@@ -4,6 +4,7 @@ import { Input } from '@/components/ui/input';
 import { Card, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
+import { Checkbox } from '@/components/ui/checkbox';
 import { Plus, Users, Edit, Trash2, Search, Loader2, UserPlus, X } from 'lucide-react';
 import { useContactLists } from '@/hooks/useContactLists';
 import { ContactListMemberManager } from '@/components/contacts/ContactListMemberManager';
@@ -21,22 +22,22 @@ export const ContactLists: React.FC = () => {
   const [creating, setCreating] = useState(false);
   const [selectedArtist, setSelectedArtist] = useState<SearchItem | null>(null);
   const [selectedEvent, setSelectedEvent] = useState<SearchItem | null>(null);
-  const [formData, setFormData] = useState({ name: '', description: '', selectedContacts: [] as string[] });
+  const [formData, setFormData] = useState({ name: '', description: '', selectedContacts: [] as string[], is_exclusion: false });
 
-  const resetForm = () => { setFormData({ name: '', description: '', selectedContacts: [] }); setSelectedArtist(null); setSelectedEvent(null); };
+  const resetForm = () => { setFormData({ name: '', description: '', selectedContacts: [], is_exclusion: false }); setSelectedArtist(null); setSelectedEvent(null); };
 
   const handleCreateList = async () => {
     if (!formData.name.trim()) return;
     setCreating(true);
     try {
-      await createContactList({ name: formData.name, description: formData.description || undefined, artist_id: selectedArtist?.id, event_id: selectedEvent?.id, contactIds: formData.selectedContacts });
+      await createContactList({ name: formData.name, description: formData.description || undefined, artist_id: selectedArtist?.id, event_id: selectedEvent?.id, is_exclusion: formData.is_exclusion, contactIds: formData.selectedContacts });
       setShowCreateDialog(false); resetForm();
     } catch {} finally { setCreating(false); }
   };
 
   const handleEditList = (list: any) => {
     setSelectedList(list);
-    setFormData({ name: list.name, description: list.description || '', selectedContacts: [] });
+    setFormData({ name: list.name, description: list.description || '', selectedContacts: [], is_exclusion: !!list.is_exclusion });
     setSelectedArtist(list.centralized_artists ? { id: list.centralized_artists.id, type: 'artist', title: list.centralized_artists.name, subtitle: '', data: list.centralized_artists } : null);
     setSelectedEvent(list.events ? { id: list.events.id, type: 'event', title: list.events.title, subtitle: '', data: list.events } : null);
     setShowEditDialog(true);
@@ -45,7 +46,7 @@ export const ContactLists: React.FC = () => {
   const handleUpdateList = async () => {
     if (!selectedList || !formData.name.trim()) return;
     try {
-      await updateContactList(selectedList.id, { name: formData.name, description: formData.description || undefined, artist_id: selectedArtist?.id || null, event_id: selectedEvent?.id || null });
+      await updateContactList(selectedList.id, { name: formData.name, description: formData.description || undefined, artist_id: selectedArtist?.id || null, event_id: selectedEvent?.id || null, is_exclusion: formData.is_exclusion });
       setShowEditDialog(false); setSelectedList(null); resetForm();
     } catch {}
   };
@@ -84,6 +85,7 @@ export const ContactLists: React.FC = () => {
                     <Users className="h-4 w-4 md:h-5 md:w-5 text-primary flex-shrink-0" />
                     <h3 className="text-base md:text-lg font-semibold truncate">{list.name}</h3>
                     <Badge variant="outline" className="text-xs flex-shrink-0">{list.contactCount || 0} contacts</Badge>
+                    {list.is_exclusion && <Badge variant="destructive" className="text-xs flex-shrink-0">Exclusion</Badge>}
                   </div>
                   <div className="flex gap-1 md:gap-2 flex-shrink-0">
                     <Button variant="outline" size="icon" className="h-8 w-8" onClick={() => { setSelectedList(list); setShowMemberManager(true); }}><UserPlus className="h-4 w-4" /></Button>
@@ -132,6 +134,12 @@ export const ContactLists: React.FC = () => {
                 <h3 className="font-semibold">Informations</h3>
                 <div><label className="block text-sm font-medium mb-2">Nom</label><Input value={formData.name} onChange={(e) => setFormData({...formData, name: e.target.value})} /></div>
                 <div><label className="block text-sm font-medium mb-2">Description</label><Input value={formData.description} onChange={(e) => setFormData({...formData, description: e.target.value})} /></div>
+                <div className="flex items-start gap-2 p-2 border rounded bg-destructive/5">
+                  <Checkbox id="edit-is-exclusion" checked={!!formData.is_exclusion} onCheckedChange={(c) => setFormData({...formData, is_exclusion: !!c})} className="mt-0.5" />
+                  <label htmlFor="edit-is-exclusion" className="text-xs cursor-pointer">
+                    <span className="font-medium">Liste d'exclusion</span> — les contacts ne recevront aucune campagne email.
+                  </label>
+                </div>
                 <Button onClick={handleUpdateList} disabled={!formData.name.trim()} className="w-full">Sauvegarder les infos</Button>
               </div>
             </div>

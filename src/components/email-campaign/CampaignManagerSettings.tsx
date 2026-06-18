@@ -19,6 +19,7 @@ interface ContactList {
   id: string;
   name: string;
   contactCount?: number;
+  is_exclusion?: boolean;
 }
 
 interface CampaignData {
@@ -26,6 +27,7 @@ interface CampaignData {
   subject: string;
   content: any[];
   selectedLists: string[];
+  excludedLists?: string[];
   templateId: string;
   artistId: string | null;
   eventId: string | null;
@@ -99,11 +101,11 @@ export const CampaignManagerSettings: React.FC<CampaignManagerSettingsProps> = (
       </Card>
 
       <Card>
-        <CardHeader><CardTitle>Listes de contacts</CardTitle></CardHeader>
+        <CardHeader><CardTitle>Listes destinataires</CardTitle></CardHeader>
         <CardContent className="space-y-4">
-          {contactLists.map(list => (
+          {contactLists.filter(l => !l.is_exclusion).map(list => (
             <div key={list.id} className="flex items-center space-x-2">
-              <Checkbox id={list.id} checked={campaignData.selectedLists.includes(list.id)}
+              <Checkbox id={`inc-${list.id}`} checked={campaignData.selectedLists.includes(list.id)}
                 onCheckedChange={(checked) => {
                   setCampaignData(prev => ({
                     ...prev,
@@ -113,7 +115,45 @@ export const CampaignManagerSettings: React.FC<CampaignManagerSettingsProps> = (
                   }));
                 }} />
               <div className="flex-1">
-                <Label htmlFor={list.id} className="font-medium">{list.name}</Label>
+                <Label htmlFor={`inc-${list.id}`} className="font-medium">{list.name}</Label>
+                <p className="text-sm text-muted-foreground">{list.contactCount} contacts</p>
+              </div>
+            </div>
+          ))}
+          {contactLists.filter(l => !l.is_exclusion).length === 0 && (
+            <p className="text-sm text-muted-foreground">Aucune liste disponible. Créez-en une depuis Listes de contacts.</p>
+          )}
+        </CardContent>
+      </Card>
+
+      <Card>
+        <CardHeader>
+          <CardTitle>Listes d'exclusion</CardTitle>
+          <p className="text-sm text-muted-foreground mt-1">
+            Les contacts présents dans ces listes ne recevront pas cette campagne. Les listes marquées comme "Exclusion" globalement sont toujours appliquées automatiquement.
+          </p>
+        </CardHeader>
+        <CardContent className="space-y-4">
+          {contactLists.map(list => (
+            <div key={`ex-${list.id}`} className="flex items-center space-x-2">
+              <Checkbox
+                id={`exc-${list.id}`}
+                checked={list.is_exclusion ? true : (campaignData.excludedLists || []).includes(list.id)}
+                disabled={list.is_exclusion}
+                onCheckedChange={(checked) => {
+                  setCampaignData(prev => ({
+                    ...prev,
+                    excludedLists: checked
+                      ? [...(prev.excludedLists || []), list.id]
+                      : (prev.excludedLists || []).filter(id => id !== list.id)
+                  }));
+                }}
+              />
+              <div className="flex-1">
+                <Label htmlFor={`exc-${list.id}`} className="font-medium">
+                  {list.name}
+                  {list.is_exclusion && <span className="ml-2 text-xs text-destructive">(exclusion globale)</span>}
+                </Label>
                 <p className="text-sm text-muted-foreground">{list.contactCount} contacts</p>
               </div>
             </div>
