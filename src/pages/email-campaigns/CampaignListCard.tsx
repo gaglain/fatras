@@ -93,7 +93,7 @@ export const CampaignListCard: React.FC<CampaignListCardProps> = ({
               )}
             </div>
             <div className="flex gap-1 shrink-0">
-              {campaign.status === 'sent' && (
+              {(campaign.status === 'sent' || campaign.status === 'sending') && (
                 <>
                   <Button variant="outline" size="icon" className="h-8 w-8" title="Stats par contact"
                     onClick={() => onViewContactStats(campaign)}>
@@ -119,7 +119,7 @@ export const CampaignListCard: React.FC<CampaignListCardProps> = ({
             </div>
           </div>
 
-          {campaign.status === 'sent' && (
+          {(campaign.status === 'sent' || campaign.status === 'sending') && (
             <div className="flex flex-wrap gap-1.5">
               <Badge variant="secondary" className="flex items-center gap-1 text-xs">
                 <Mail className="h-3 w-3" />
