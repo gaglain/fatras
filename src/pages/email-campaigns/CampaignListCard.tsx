@@ -119,7 +119,7 @@ export const CampaignListCard: React.FC<CampaignListCardProps> = ({
             </div>
           </div>
 
-          {campaign.status === 'sent' && (
+          {(campaign.status === 'sent' || campaign.status === 'sending') && (
             <div className="flex flex-wrap gap-1.5">
               <Badge variant="secondary" className="flex items-center gap-1 text-xs">
                 <Mail className="h-3 w-3" />
