@@ -70,6 +70,17 @@ export const EmailCampaignManager: React.FC<EmailCampaignManagerProps> = ({ camp
   const [sendingTest, setSendingTest] = useState(false);
   const [testEmails, setTestEmails] = useState('');
 
+  const insertCampaignLists = async (finalId: string) => {
+    const rows = [
+      ...campaignData.selectedLists.map(listId => ({ campaign_id: finalId, contact_list_id: listId, kind: 'include' })),
+      ...(campaignData.excludedLists || []).map(listId => ({ campaign_id: finalId, contact_list_id: listId, kind: 'exclude' })),
+    ];
+    if (rows.length > 0) {
+      const { error } = await supabase.from('campaign_contact_lists').insert(rows);
+      if (error) throw error;
+    }
+  };
+
   const handleSave = async () => {
     if (!campaignData.name || !campaignData.subject) { toast.error('Nom et sujet requis'); return; }
     try {
@@ -77,10 +88,7 @@ export const EmailCampaignManager: React.FC<EmailCampaignManagerProps> = ({ camp
       let finalId = campaignId;
       if (campaignId) { await updateCampaign(campaignId, payload); await supabase.from('campaign_contact_lists').delete().eq('campaign_id', campaignId); }
       else { const campaign = await createCampaign(payload); finalId = (campaign as any).id; }
-      if (finalId && campaignData.selectedLists.length > 0) {
-        const { error } = await supabase.from('campaign_contact_lists').insert(campaignData.selectedLists.map(listId => ({ campaign_id: finalId, contact_list_id: listId })));
-        if (error) throw error;
-      }
+      if (finalId) await insertCampaignLists(finalId);
       toast.success(campaignId ? 'Campagne mise à jour' : 'Campagne créée');
       if (!campaignId) onBack?.();
     } catch { toast.error('Erreur lors de la sauvegarde'); }
@@ -99,7 +107,8 @@ export const EmailCampaignManager: React.FC<EmailCampaignManagerProps> = ({ camp
     try {
       let finalId = campaignId;
       if (!finalId) { const campaign = await createCampaign({ name: campaignData.name, subject: campaignData.subject, content: JSON.stringify(campaignData.content), status: 'scheduled', artist_id: campaignData.artistId || null, event_id: campaignData.eventId || null, include_signature: !!campaignData.includeSignature } as any); finalId = (campaign as any).id; }
-      for (const listId of campaignData.selectedLists) { await supabase.from('campaign_contact_lists').insert({ campaign_id: finalId, contact_list_id: listId }); }
+      else { await supabase.from('campaign_contact_lists').delete().eq('campaign_id', finalId); }
+      if (finalId) await insertCampaignLists(finalId);
       await supabase.from('email_campaigns').update({ status: 'scheduled', scheduled_for: scheduledFor.toISOString(), auto_send: autoSend }).eq('id', finalId);
     } catch (error: any) { throw new Error('Erreur lors de la programmation: ' + error.message); }
   };
@@ -111,7 +120,7 @@ export const EmailCampaignManager: React.FC<EmailCampaignManagerProps> = ({ camp
       let finalId = campaignId;
       if (!finalId) { const campaign = await createCampaign({ name: campaignData.name, subject: campaignData.subject, content: JSON.stringify(campaignData.content), status: 'draft', include_signature: !!campaignData.includeSignature } as any); finalId = campaign.id; }
       else { await supabase.from('email_campaigns').update({ name: campaignData.name, subject: campaignData.subject, content: JSON.stringify(campaignData.content), status: 'draft', include_signature: !!campaignData.includeSignature }).eq('id', finalId); await supabase.from('campaign_contact_lists').delete().eq('campaign_id', finalId); }
-      for (const listId of campaignData.selectedLists) { await supabase.from('campaign_contact_lists').insert({ campaign_id: finalId, contact_list_id: listId }); }
+      if (finalId) await insertCampaignLists(finalId);
       const { invokeEdgeFunction } = await import('@/lib/edgeFunctionClient');
       const result = await invokeEdgeFunction({ functionName: 'send-campaign-emails', body: { campaignId: finalId } });
       if (!result.success) throw new Error(result.error || 'Erreur envoi campagne');
