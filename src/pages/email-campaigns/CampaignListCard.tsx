@@ -2,7 +2,7 @@ import React from 'react';
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import { Mail, Edit, Trash2, Eye, Users, MousePointer, TrendingDown, Copy } from 'lucide-react';
+import { Mail, Edit, Trash2, Eye, Users, MousePointer, TrendingDown, Copy, Workflow } from 'lucide-react';
 
 interface Campaign {
   id: string;
