@@ -4,6 +4,7 @@ import { Input } from '@/components/ui/input';
 import { Card, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
+import { Checkbox } from '@/components/ui/checkbox';
 import { Plus, Users, Edit, Trash2, Search, Loader2, UserPlus, X } from 'lucide-react';
 import { useContactLists } from '@/hooks/useContactLists';
 import { ContactListMemberManager } from '@/components/contacts/ContactListMemberManager';
