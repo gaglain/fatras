@@ -278,6 +278,7 @@ export const useContactLists = () => {
     description?: string;
     artist_id?: string | null;
     event_id?: string | null;
+    is_exclusion?: boolean;
     contactIds?: string[];
   }) => {
     return updateMutation.mutateAsync({ listId, updates });
