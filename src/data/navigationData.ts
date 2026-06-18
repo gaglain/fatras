@@ -19,7 +19,8 @@ import {
   UserCog,
   Briefcase,
   CalendarCheck,
-  ClipboardList
+  ClipboardList,
+  GitBranch
 } from 'lucide-react';
 
 export interface MenuItem {
@@ -91,6 +92,7 @@ export const navigationData: MenuItem[] = [
     children: [
       { name: 'Email', href: '/email', icon: Mail, visible: true },
       { name: 'Campagnes email', href: '/email-campaigns', icon: Mail, visible: true },
+      { name: 'Séquences email', href: '/email-sequences', icon: GitBranch, visible: true },
       { name: 'Messagerie', href: '/messagerie', icon: MessageSquare, visible: true },
       { name: 'Formulaires', href: '/forms', icon: FileText, visible: true },
       { name: 'Calendrier de publication', href: '/publication-calendar', icon: CalendarCheck, visible: true }
