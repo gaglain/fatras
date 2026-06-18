@@ -63,6 +63,7 @@ const ShowBible = lazy(() => import("./pages/ShowBible").then(m => ({ default: m
 const Contracts = lazy(() => import("./pages/Contracts").then(m => ({ default: m.Contracts })));
 const Email = lazy(() => import("./pages/EmailSimple"));
 const EmailCampaigns = lazy(() => import("./pages/EmailCampaigns").then(m => ({ default: m.EmailCampaigns })));
+const EmailSequences = lazy(() => import("./pages/EmailSequences").then(m => ({ default: m.EmailSequences })));
 const Opportunities = lazy(() => import("./pages/Opportunities").then(m => ({ default: m.Opportunities })));
 const OpportunityDetail = lazy(() => import("./pages/OpportunityDetail").then(m => ({ default: m.OpportunityDetail })));
 const EventTypes = lazy(() => import("./pages/EventTypes").then(m => ({ default: m.EventTypes })));
