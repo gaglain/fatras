@@ -37,6 +37,7 @@ export const EmailCampaigns: React.FC = () => {
   const [showContactStats, setShowContactStats] = useState(false);
   const [showEngagementDashboard, setShowEngagementDashboard] = useState(false);
   const [selectedCampaign, setSelectedCampaign] = useState<Campaign | null>(null);
+  const [sequenceLinksByCampaign, setSequenceLinksByCampaign] = useState<Record<string, Array<{ sequenceId: string; sequenceName: string; stepName: string; position: number }>>>({});
 
   const { contactLists } = useContactLists();
 
@@ -45,10 +46,28 @@ export const EmailCampaigns: React.FC = () => {
       const { data, error } = await supabase.from('email_campaigns').select('*').order('created_at', { ascending: false });
       if (error) throw error;
       setCampaigns(data || []);
+
+      // Fetch sequence step → campaign links (with sequence names)
+      const { data: stepData } = await supabase
+        .from('email_sequence_steps')
+        .select('campaign_id, name, position, sequence_id, email_sequences!inner(id, name)')
+        .not('campaign_id', 'is', null);
+      const map: Record<string, Array<{ sequenceId: string; sequenceName: string; stepName: string; position: number }>> = {};
+      (stepData as any[] | null)?.forEach(s => {
+        if (!s.campaign_id) return;
+        (map[s.campaign_id] ||= []).push({
+          sequenceId: s.sequence_id,
+          sequenceName: s.email_sequences?.name || 'Séquence',
+          stepName: s.name,
+          position: s.position,
+        });
+      });
+      setSequenceLinksByCampaign(map);
     } catch {
       toast({ title: "Erreur", description: "Impossible de charger les campagnes", variant: "destructive" });
     } finally { setLoading(false); }
   };
+
 
   useEffect(() => { fetchCampaigns(); }, []);
 
