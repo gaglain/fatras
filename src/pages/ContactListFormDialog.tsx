@@ -12,7 +12,7 @@ interface ContactListFormDialogProps {
   open: boolean;
   onOpenChange: (v: boolean) => void;
   title: string;
-  formData: { name: string; description: string; selectedContacts: string[] };
+  formData: { name: string; description: string; selectedContacts: string[]; is_exclusion?: boolean };
   setFormData: (data: any) => void;
   selectedArtist: SearchItem | null;
   setSelectedArtist: (v: SearchItem | null) => void;
