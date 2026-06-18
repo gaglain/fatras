@@ -10,7 +10,7 @@ import { toast } from '@/hooks/use-toast';
 import { Plus, GitBranch, ArrowLeft, Archive, Trash2 } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { SequenceWorkflow } from './email-sequences/SequenceWorkflow';
-import { useAuth } from '@/contexts/AuthContext';
+import { useAuthContext } from '@/contexts/UnifiedAuthContext';
 import { useConfirm } from '@/components/ui/confirm-dialog';
 
 interface Sequence {
