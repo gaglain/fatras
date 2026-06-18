@@ -1312,6 +1312,147 @@ export type Database = {
           },
         ]
       }
+      email_sequence_segments: {
+        Row: {
+          contact_count: number
+          created_at: string
+          id: string
+          list_id: string
+          segment_type: string
+          step_id: string
+        }
+        Insert: {
+          contact_count?: number
+          created_at?: string
+          id?: string
+          list_id: string
+          segment_type: string
+          step_id: string
+        }
+        Update: {
+          contact_count?: number
+          created_at?: string
+          id?: string
+          list_id?: string
+          segment_type?: string
+          step_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "email_sequence_segments_list_id_fkey"
+            columns: ["list_id"]
+            isOneToOne: false
+            referencedRelation: "contact_lists"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "email_sequence_segments_step_id_fkey"
+            columns: ["step_id"]
+            isOneToOne: false
+            referencedRelation: "email_sequence_steps"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      email_sequence_steps: {
+        Row: {
+          campaign_id: string | null
+          created_at: string
+          delay_label: string | null
+          excluded_list_ids: string[]
+          id: string
+          name: string
+          notes: string | null
+          position: number
+          recipient_count: number
+          segmented_at: string | null
+          sent_at: string | null
+          sequence_id: string
+          source_list_ids: string[]
+          status: string
+          updated_at: string
+        }
+        Insert: {
+          campaign_id?: string | null
+          created_at?: string
+          delay_label?: string | null
+          excluded_list_ids?: string[]
+          id?: string
+          name: string
+          notes?: string | null
+          position: number
+          recipient_count?: number
+          segmented_at?: string | null
+          sent_at?: string | null
+          sequence_id: string
+          source_list_ids?: string[]
+          status?: string
+          updated_at?: string
+        }
+        Update: {
+          campaign_id?: string | null
+          created_at?: string
+          delay_label?: string | null
+          excluded_list_ids?: string[]
+          id?: string
+          name?: string
+          notes?: string | null
+          position?: number
+          recipient_count?: number
+          segmented_at?: string | null
+          sent_at?: string | null
+          sequence_id?: string
+          source_list_ids?: string[]
+          status?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "email_sequence_steps_campaign_id_fkey"
+            columns: ["campaign_id"]
+            isOneToOne: false
+            referencedRelation: "email_campaigns"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "email_sequence_steps_sequence_id_fkey"
+            columns: ["sequence_id"]
+            isOneToOne: false
+            referencedRelation: "email_sequences"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      email_sequences: {
+        Row: {
+          created_at: string
+          description: string | null
+          id: string
+          name: string
+          status: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          description?: string | null
+          id?: string
+          name: string
+          status?: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          description?: string | null
+          id?: string
+          name?: string
+          status?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       email_templates: {
         Row: {
           artist_id: string | null

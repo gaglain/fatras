@@ -24,7 +24,7 @@ import { openChatWithChannel, openChatWithChannelId, openChatWithRoadshowStop } 
 
 const adminRoutes = [
   '/admin', '/dashboard', '/artists', '/events', '/agenda', '/contacts',
-  '/contact-lists', '/contact-types', '/contracts', '/tasks', '/roadshow', '/road-show', '/email', '/email-campaigns',
+  '/contact-lists', '/contact-types', '/contracts', '/tasks', '/roadshow', '/road-show', '/email', '/email-campaigns', '/email-sequences',
   '/messagerie', '/forms', '/merchandise', '/show-bible', '/opportunities', '/event-types',
   '/user-management', '/preferences', '/application', '/publication-calendar', '/website', '/website-editor', '/assignments'
 ];
