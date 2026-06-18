@@ -265,6 +265,7 @@ const App = () => {
                         <Route path="/contracts" element={<ProtectedRoute><Layout><Contracts /></Layout></ProtectedRoute>} />
                         <Route path="/email" element={<ProtectedRoute><Layout><Email /></Layout></ProtectedRoute>} />
                         <Route path="/email-campaigns" element={<ProtectedRoute><Layout><EmailCampaigns /></Layout></ProtectedRoute>} />
+                        <Route path="/email-sequences" element={<ProtectedRoute><Layout><EmailSequences /></Layout></ProtectedRoute>} />
                         <Route path="/contact-lists" element={<ProtectedRoute><Layout><ContactLists /></Layout></ProtectedRoute>} />
                         <Route path="/opportunities" element={<ProtectedRoute><Layout><Opportunities /></Layout></ProtectedRoute>} />
                         <Route path="/opportunities/:id" element={<ProtectedRoute><Layout><OpportunityDetail /></Layout></ProtectedRoute>} />
