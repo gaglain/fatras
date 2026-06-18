@@ -23,7 +23,7 @@ interface Sequence {
 }
 
 export const EmailSequences: React.FC = () => {
-  const { user } = useAuth();
+  const { user } = useAuthContext();
   const navigate = useNavigate();
   const confirm = useConfirm();
   const [sequences, setSequences] = useState<Sequence[]>([]);
