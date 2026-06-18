@@ -77,8 +77,9 @@ export const EmailSequences: React.FC = () => {
   };
 
   if (selectedId) {
-    return <SequenceWorkflow sequenceId={selectedId} onBack={() => { setSelectedId(null); load(); }} />;
+    return <SequenceWorkflow sequenceId={selectedId} onBack={() => { setSelectedId(null); if (searchParams.get('sequenceId')) setSearchParams({}); load(); }} />;
   }
+
 
   return (
     <div className="container mx-auto p-4 md:p-6 max-w-6xl">
