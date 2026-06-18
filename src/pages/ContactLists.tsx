@@ -84,6 +84,7 @@ export const ContactLists: React.FC = () => {
                     <Users className="h-4 w-4 md:h-5 md:w-5 text-primary flex-shrink-0" />
                     <h3 className="text-base md:text-lg font-semibold truncate">{list.name}</h3>
                     <Badge variant="outline" className="text-xs flex-shrink-0">{list.contactCount || 0} contacts</Badge>
+                    {list.is_exclusion && <Badge variant="destructive" className="text-xs flex-shrink-0">Exclusion</Badge>}
                   </div>
                   <div className="flex gap-1 md:gap-2 flex-shrink-0">
                     <Button variant="outline" size="icon" className="h-8 w-8" onClick={() => { setSelectedList(list); setShowMemberManager(true); }}><UserPlus className="h-4 w-4" /></Button>
