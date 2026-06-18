@@ -21,15 +21,15 @@ export const ContactLists: React.FC = () => {
   const [creating, setCreating] = useState(false);
   const [selectedArtist, setSelectedArtist] = useState<SearchItem | null>(null);
   const [selectedEvent, setSelectedEvent] = useState<SearchItem | null>(null);
-  const [formData, setFormData] = useState({ name: '', description: '', selectedContacts: [] as string[] });
+  const [formData, setFormData] = useState({ name: '', description: '', selectedContacts: [] as string[], is_exclusion: false });
 
-  const resetForm = () => { setFormData({ name: '', description: '', selectedContacts: [] }); setSelectedArtist(null); setSelectedEvent(null); };
+  const resetForm = () => { setFormData({ name: '', description: '', selectedContacts: [], is_exclusion: false }); setSelectedArtist(null); setSelectedEvent(null); };
 
   const handleCreateList = async () => {
     if (!formData.name.trim()) return;
     setCreating(true);
     try {
-      await createContactList({ name: formData.name, description: formData.description || undefined, artist_id: selectedArtist?.id, event_id: selectedEvent?.id, contactIds: formData.selectedContacts });
+      await createContactList({ name: formData.name, description: formData.description || undefined, artist_id: selectedArtist?.id, event_id: selectedEvent?.id, is_exclusion: formData.is_exclusion, contactIds: formData.selectedContacts });
       setShowCreateDialog(false); resetForm();
     } catch {} finally { setCreating(false); }
   };
