@@ -117,6 +117,20 @@ export const SequenceWorkflow: React.FC<Props> = ({ sequenceId, onBack }) => {
     });
     if (!ok) return;
 
+    // Synchroniser les listes de l'étape vers la campagne avant l'envoi
+    await supabase.from('campaign_contact_lists').delete().eq('campaign_id', step.campaign_id);
+    const rows = [
+      ...(step.source_list_ids || []).map((id) => ({ campaign_id: step.campaign_id!, contact_list_id: id, kind: 'include' })),
+      ...(step.excluded_list_ids || []).map((id) => ({ campaign_id: step.campaign_id!, contact_list_id: id, kind: 'exclude' })),
+    ];
+    if (rows.length > 0) {
+      const { error: linkErr } = await supabase.from('campaign_contact_lists').insert(rows);
+      if (linkErr) {
+        toast({ title: 'Erreur synchro listes', description: linkErr.message, variant: 'destructive' });
+        return;
+      }
+    }
+
     await supabase.from('email_sequence_steps').update({ status: 'sending', sent_at: new Date().toISOString() }).eq('id', step.id);
     const { error } = await supabase.functions.invoke('send-campaign-emails', { body: { campaignId: step.campaign_id } });
     if (error) {
