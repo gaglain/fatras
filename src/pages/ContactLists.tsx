@@ -36,7 +36,7 @@ export const ContactLists: React.FC = () => {
 
   const handleEditList = (list: any) => {
     setSelectedList(list);
-    setFormData({ name: list.name, description: list.description || '', selectedContacts: [] });
+    setFormData({ name: list.name, description: list.description || '', selectedContacts: [], is_exclusion: !!list.is_exclusion });
     setSelectedArtist(list.centralized_artists ? { id: list.centralized_artists.id, type: 'artist', title: list.centralized_artists.name, subtitle: '', data: list.centralized_artists } : null);
     setSelectedEvent(list.events ? { id: list.events.id, type: 'event', title: list.events.title, subtitle: '', data: list.events } : null);
     setShowEditDialog(true);
@@ -45,7 +45,7 @@ export const ContactLists: React.FC = () => {
   const handleUpdateList = async () => {
     if (!selectedList || !formData.name.trim()) return;
     try {
-      await updateContactList(selectedList.id, { name: formData.name, description: formData.description || undefined, artist_id: selectedArtist?.id || null, event_id: selectedEvent?.id || null });
+      await updateContactList(selectedList.id, { name: formData.name, description: formData.description || undefined, artist_id: selectedArtist?.id || null, event_id: selectedEvent?.id || null, is_exclusion: formData.is_exclusion });
       setShowEditDialog(false); setSelectedList(null); resetForm();
     } catch {}
   };
