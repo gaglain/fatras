@@ -51,9 +51,13 @@ export const EmailCampaignManager: React.FC<EmailCampaignManagerProps> = ({ camp
     const loadContactLists = async () => {
       if (!campaignId) return;
       try {
-        const { data, error } = await supabase.from('campaign_contact_lists').select('contact_list_id').eq('campaign_id', campaignId);
+        const { data, error } = await supabase.from('campaign_contact_lists').select('contact_list_id, kind').eq('campaign_id', campaignId);
         if (error) throw error;
-        if (data) setCampaignData(prev => ({ ...prev, selectedLists: data.map(item => item.contact_list_id) }));
+        if (data) setCampaignData(prev => ({
+          ...prev,
+          selectedLists: data.filter((i: any) => (i.kind || 'include') === 'include').map((i: any) => i.contact_list_id),
+          excludedLists: data.filter((i: any) => i.kind === 'exclude').map((i: any) => i.contact_list_id),
+        }));
       } catch {}
     };
     loadContactLists();
