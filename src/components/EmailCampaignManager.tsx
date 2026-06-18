@@ -26,7 +26,7 @@ export const EmailCampaignManager: React.FC<EmailCampaignManagerProps> = ({ camp
   const existingCampaign = campaignId ? campaigns.find(c => c.id === campaignId) : null;
 
   const [campaignData, setCampaignData] = useState({
-    name: '', subject: '', content: [] as any[], selectedLists: [] as string[], templateId: '', artistId: '' as string | null, eventId: '' as string | null, includeSignature: false,
+    name: '', subject: '', content: [] as any[], selectedLists: [] as string[], excludedLists: [] as string[], templateId: '', artistId: '' as string | null, eventId: '' as string | null, includeSignature: false,
   });
 
   useEffect(() => {
