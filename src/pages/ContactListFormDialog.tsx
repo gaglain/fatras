@@ -65,6 +65,22 @@ export const ContactListFormDialog: React.FC<ContactListFormDialogProps> = ({
                 <UniversalSearch filterTypes={['event']} placeholder="Rechercher un spectacle..." triggerText="Sélectionner un spectacle" onSelect={(item) => setSelectedEvent(item)} />
               )}
             </div>
+            <div className="flex items-start gap-3 p-3 border rounded-lg bg-destructive/5">
+              <Checkbox
+                id="is-exclusion"
+                checked={!!formData.is_exclusion}
+                onCheckedChange={(checked) => setFormData({ ...formData, is_exclusion: !!checked })}
+                className="mt-0.5"
+              />
+              <div className="flex-1">
+                <label htmlFor="is-exclusion" className="text-sm font-medium cursor-pointer">
+                  Liste d'exclusion (désinscription)
+                </label>
+                <p className="text-xs text-muted-foreground mt-1">
+                  Les contacts de cette liste ne recevront plus aucune campagne email, peu importe les autres listes auxquelles ils appartiennent.
+                </p>
+              </div>
+            </div>
           </div>
 
           {showContacts && (
