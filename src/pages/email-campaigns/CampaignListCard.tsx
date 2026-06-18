@@ -93,7 +93,7 @@ export const CampaignListCard: React.FC<CampaignListCardProps> = ({
               )}
             </div>
             <div className="flex gap-1 shrink-0">
-              {campaign.status === 'sent' && (
+              {(campaign.status === 'sent' || campaign.status === 'sending') && (
                 <>
                   <Button variant="outline" size="icon" className="h-8 w-8" title="Stats par contact"
                     onClick={() => onViewContactStats(campaign)}>
