@@ -182,7 +182,10 @@ export const EmailCampaigns: React.FC = () => {
         {filteredCampaigns.map((campaign: any) => (
           <CampaignListCard key={campaign.id} campaign={campaign} onEdit={handleEditCampaign} onDelete={handleDeleteCampaign} onDuplicate={handleDuplicateCampaign}
             onViewContactStats={(c) => { setSelectedCampaign(c); setShowContactStats(true); }}
-            onViewAnalytics={(c) => { setSelectedCampaign(c); setShowAnalytics(true); }} />
+            onViewAnalytics={(c) => { setSelectedCampaign(c); setShowAnalytics(true); }}
+            sequenceLinks={sequenceLinksByCampaign[campaign.id]}
+            onOpenSequence={(sequenceId) => navigate(`/email-sequences?sequenceId=${sequenceId}`)} />
+
         ))}
         {filteredCampaigns.length === 0 && (
           <Card><CardContent className="p-6 text-center"><Mail className="h-12 w-12 text-muted-foreground mx-auto mb-4" /><h3 className="text-lg font-semibold mb-2">Aucune campagne trouvée</h3><p className="text-muted-foreground mb-4">{campaigns.length === 0 ? "Commencez par créer votre première campagne email." : "Aucune campagne ne correspond à votre recherche."}</p><Button onClick={handleCreateCampaign}><Plus className="h-4 w-4 mr-2" />Créer une campagne</Button></CardContent></Card>
