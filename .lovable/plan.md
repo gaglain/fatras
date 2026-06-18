@@ -1,66 +1,100 @@
+# Séquences emailing avec re-segmentation par engagement
+
 ## Objectif
 
-Te donner la main, depuis **Préférences**, sur les emails automatiques liés aux feuilles de route :
-1. **Invitation** — envoyée quand tu ajoutes un artiste/équipier au casting
-2. **Rappels** — J-15, J-7, J-1 avant la date
-3. **Modification** — envoyé aux personnes du casting quand une feuille de route est modifiée (nouveau)
-
-Tu pourras pour chacun :
-- Activer / désactiver l'envoi
-- Choisir les jours de rappel (J-15, J-7, J-3, J-1, jour J)
-- Personnaliser **le sujet** et **le texte d'introduction**
-- Choisir d'inclure ou non les destinataires confirmés / non confirmés
-- Pour la modification : choisir un délai anti-spam (1 email max toutes les X minutes par feuille)
+Permettre de créer une **séquence de campagnes** (4 emails ou plus) où, après chaque envoi, les contacts sont automatiquement triés en sous-listes selon leur comportement (bounced / opened / clicked / not opened), et tu lances manuellement l'étape suivante en choisissant quels segments cibler avec quel contenu.
 
 ---
 
-## Ce que je vais construire
+## Ce qui sera construit
 
-### 1. Stockage des préférences
-Stocker les réglages dans la table existante `app_settings`, sous des clés `roadshow_email_*` (JSON). Pas de nouvelle table.
+### 1. Nouveau module "Séquences" dans la section Campagnes
 
-Exemples de clés :
-- `roadshow_email_invitation` → `{ enabled, subject, intro }`
-- `roadshow_email_reminders` → `{ enabled, days: [15,7,1], subject, intro }`
-- `roadshow_email_update` → `{ enabled, throttle_minutes, subject, intro, notify_unconfirmed_only }`
+Une séquence = un parent qui contient plusieurs **étapes** (Email 1, Email 2, Email 3, Email 4…).
 
-### 2. Nouvel onglet « Feuilles de route » dans Préférences
-- 3 sections (Invitation / Rappels / Modification)
-- Chaque section : toggle d'activation + champs sujet/intro + options spécifiques
-- Aperçu du sujet en direct
-- Bouton « Envoyer un email de test » (à mon adresse)
+**Vue Workflow visuelle** : arbre interactif qui affiche chaque étape comme une carte, avec des branches conditionnelles entre elles.
 
-### 3. Email de modification (nouveau)
-- Nouvelle edge function `send-roadshow-update-email`
-- Déclenchée depuis `updateStop` quand des champs significatifs changent (date, horaires, lieu, logistique, contact)
-- Liste les changements clés dans l'email
-- Respecte le throttle (anti-spam) et l'activation depuis Préférences
+```text
+        ┌─ Email 1 (1247 envoyés) ─┐
+        │                          │
+   ┌────┼──────┬──────────┬────────┤
+   ▼    ▼      ▼          ▼        ▼
+ Bounced Clicked Opened  Not opened
+  (23)   (89)    (210)    (925)
+   ✗      │       │         │
+          ▼       ▼         ▼
+       Email 2A Email 2B  Email 2C
+       "chaud"  "tiède"   "relance"
+```
 
-### 4. Refactor des edge functions existantes
-- `send-roadshow-assignment-email` et `send-roadshow-reminders` lisent les réglages depuis `app_settings` avant d'envoyer
-- Si désactivé → no-op silencieux
-- Sujet/intro repris des réglages (avec valeurs par défaut sensées)
-- Les jours de rappel deviennent dynamiques
+Chaque carte montre : nom de l'étape, statut (brouillon / programmé / envoyé), nb de destinataires, taux d'ouverture/clic une fois envoyé.
 
-### 5. UI roadshow
-- Petit badge dans le formulaire de feuille de route indiquant l'état des envois (« Invitation activée », « 3 rappels programmés », « Notif. modif activée ») pour transparence
+### 2. Re-segmentation automatique après chaque envoi
+
+Dès qu'une étape est envoyée, le système crée automatiquement **4 sous-listes** liées à cette étape :
+- `[Étape 1] Bounced` — emails invalides (exclus définitivement de toute la séquence)
+- `[Étape 1] Clicked` — ont cliqué au moins un lien
+- `[Étape 1] Opened` — ont ouvert mais pas cliqué
+- `[Étape 1] Not opened` — n'ont pas ouvert (après 48h minimum)
+
+Ces listes sont réutilisables comme n'importe quelle liste de contacts existante (visibles dans la section Listes).
+
+### 3. Création de l'étape suivante
+
+Bouton **"+ Ajouter une étape"** sur la vue Workflow. Pour chaque nouvelle étape tu choisis :
+- **Source** : une ou plusieurs sous-listes issues d'étapes précédentes (ex: "Clicked Étape 1" + "Opened Étape 2")
+- **Exclusions automatiques** : tous les Bounced de la séquence sont toujours exclus
+- **Template email** : depuis ta bibliothèque existante, ou nouveau
+- **Délai indicatif** : champ texte libre ("J+7", "Dans 2 semaines") — purement informatif puisque tu lances manuellement
+
+### 4. Lancement manuel par étape
+
+Pour chaque étape en statut "Prêt", un bouton **"Lancer cette étape"** ouvre un récapitulatif :
+- Nombre de destinataires finaux après dédoublonnage et exclusions
+- Aperçu du contenu
+- Estimation du nb de jours (à 200/jour max)
+- Bouton de confirmation
+
+Une fois lancé, l'envoi entre dans la file existante (batch 200/jour) et la re-segmentation se déclenche dès la fin de l'envoi.
+
+### 5. Dashboard de la séquence
+
+Vue d'ensemble : entonnoir global de la séquence (combien de contacts à l'étape 1 vs étape 4), taux d'engagement cumulé, contacts les plus engagés (ont cliqué à plusieurs étapes).
 
 ---
 
 ## Détails techniques
 
-- **Pas de changement de schéma DB** (réutilise `app_settings`).
-- Les valeurs par défaut sont injectées si la clé est absente, donc rétro-compatible.
-- L'edge function `send-roadshow-update-email` diffère les notifs `route_sheet_updated` Nylas (déjà existantes) : ces dernières mettent à jour le calendrier, la nouvelle envoie un email aux humains.
-- Détection « changement significatif » : diff entre `oldStop` et `newStop` sur un set de champs whitelisté.
-- Throttle : table déjà existante `roadshow_reminder_logs` étendue avec un type `update` et vérifié par horodatage.
+**Tables à ajouter** :
+- `email_sequences` (id, name, status, created_by, created_at)
+- `email_sequence_steps` (id, sequence_id, position, name, template_id, status, sent_at, source_list_ids[], excluded_list_ids[])
+- `email_sequence_segments` (id, step_id, segment_type [bounced/opened/clicked/not_opened], list_id, contact_count)
+
+**Edge functions à ajouter** :
+- `compute-sequence-segments` : appelée 48h après la fin d'un envoi, lit `email_analytics` + Resend webhooks, crée les 4 listes auto et les remplit
+- Réutilisation de la fonction d'envoi de campagne existante (batch 200/jour)
+
+**Re-segmentation** : basée sur `email_analytics` (déjà alimentée par les webhooks Resend `delivered` / `opened` / `clicked` / `bounced` / `complained`). Un contact qui a cliqué est aussi compté comme opened mais sera classé dans Clicked (priorité la plus forte).
+
+**Sécurité** : RLS standard, accès limité aux utilisateurs authentifiés du CRM collaboratif.
 
 ---
 
-## Hors scope (à confirmer si tu veux les ajouter)
+## Ce que cela ne fait PAS (volontairement)
 
-- Éditeur WYSIWYG complet du HTML (je propose des champs simples sujet + intro car le reste du gabarit visuel reste cohérent avec la charte Fatras)
-- Personnalisation différente par feuille de route individuelle (les réglages sont globaux)
-- Réglages par utilisateur destinataire (tous les utilisateurs reçoivent selon les mêmes règles)
+- Pas d'envoi automatique entre étapes (tu valides chaque lancement)
+- Pas de A/B testing par étape (peut être ajouté plus tard)
+- Pas de modification du système d'envoi par lots existant (200/jour reste la règle)
+- Pas de templates d'email préfaits — tu utilises ta bibliothèque actuelle
 
-Dis-moi si tu valides ou si tu veux ajuster (par exemple : édition HTML complète, ou réglages par feuille).
+---
+
+## Livraison estimée
+
+Module construit en une seule passe :
+1. Migration DB (3 tables + RLS)
+2. Edge function de segmentation
+3. UI Workflow visuelle (page Séquences + builder de séquence + vue détail étape)
+4. Intégration avec le système d'envoi existant
+
+Une fois validé, je commence par la migration.
