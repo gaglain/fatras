@@ -8,7 +8,7 @@ import { Badge } from '@/components/ui/badge';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '@/components/ui/dialog';
 import { toast } from '@/hooks/use-toast';
 import { Plus, GitBranch, ArrowLeft, Archive, Trash2 } from 'lucide-react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useSearchParams } from 'react-router-dom';
 import { SequenceWorkflow } from './email-sequences/SequenceWorkflow';
 import { useAuthContext } from '@/contexts/UnifiedAuthContext';
 import { useConfirm } from '@/components/ui/confirm-dialog';
