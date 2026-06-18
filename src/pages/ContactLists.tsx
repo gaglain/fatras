@@ -134,6 +134,12 @@ export const ContactLists: React.FC = () => {
                 <h3 className="font-semibold">Informations</h3>
                 <div><label className="block text-sm font-medium mb-2">Nom</label><Input value={formData.name} onChange={(e) => setFormData({...formData, name: e.target.value})} /></div>
                 <div><label className="block text-sm font-medium mb-2">Description</label><Input value={formData.description} onChange={(e) => setFormData({...formData, description: e.target.value})} /></div>
+                <div className="flex items-start gap-2 p-2 border rounded bg-destructive/5">
+                  <Checkbox id="edit-is-exclusion" checked={!!formData.is_exclusion} onCheckedChange={(c) => setFormData({...formData, is_exclusion: !!c})} className="mt-0.5" />
+                  <label htmlFor="edit-is-exclusion" className="text-xs cursor-pointer">
+                    <span className="font-medium">Liste d'exclusion</span> — les contacts ne recevront aucune campagne email.
+                  </label>
+                </div>
                 <Button onClick={handleUpdateList} disabled={!formData.name.trim()} className="w-full">Sauvegarder les infos</Button>
               </div>
             </div>
