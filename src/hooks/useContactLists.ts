@@ -115,6 +115,7 @@ export const useContactLists = () => {
       description?: string;
       artist_id?: string;
       event_id?: string;
+      is_exclusion?: boolean;
       contactIds: string[];
     }) => {
       const { data: { user: authUser } } = await supabase.auth.getUser();
@@ -127,6 +128,7 @@ export const useContactLists = () => {
           description: listData.description,
           artist_id: listData.artist_id || null,
           event_id: listData.event_id || null,
+          is_exclusion: !!listData.is_exclusion,
           user_id: authUser.id
         })
         .select()
