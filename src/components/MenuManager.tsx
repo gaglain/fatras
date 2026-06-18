@@ -64,6 +64,7 @@ const defaultMenuItems: MenuItem[] = [
     children: [
       { id: '7a', name: 'Email', href: '/email', icon: 'Mail', visible: true, order: 1 },
       { id: '7b', name: 'Campagnes email', href: '/email-campaigns', icon: 'Mail', visible: true, order: 2 },
+      { id: '7e', name: 'Séquences email', href: '/email-sequences', icon: 'GitBranch', visible: true, order: 5 },
       { id: '7c', name: 'Messagerie', href: '/messagerie', icon: 'MessageSquare', visible: true, order: 3 },
       { id: '7d', name: 'Formulaires', href: '/forms', icon: 'FileText', visible: true, order: 4 }
     ]
