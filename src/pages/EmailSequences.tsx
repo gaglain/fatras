@@ -25,13 +25,20 @@ interface Sequence {
 export const EmailSequences: React.FC = () => {
   const { user } = useAuthContext();
   const navigate = useNavigate();
+  const [searchParams, setSearchParams] = useSearchParams();
   const confirm = useConfirm();
   const [sequences, setSequences] = useState<Sequence[]>([]);
   const [loading, setLoading] = useState(true);
-  const [selectedId, setSelectedId] = useState<string | null>(null);
+  const [selectedId, setSelectedId] = useState<string | null>(searchParams.get('sequenceId'));
   const [showCreate, setShowCreate] = useState(false);
   const [newName, setNewName] = useState('');
   const [newDesc, setNewDesc] = useState('');
+
+  useEffect(() => {
+    const qid = searchParams.get('sequenceId');
+    if (qid && qid !== selectedId) setSelectedId(qid);
+  }, [searchParams]);
+
 
   const load = async () => {
     setLoading(true);
