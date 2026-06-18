@@ -19,6 +19,7 @@ interface ContactList {
   id: string;
   name: string;
   contactCount?: number;
+  is_exclusion?: boolean;
 }
 
 interface CampaignData {
@@ -26,6 +27,7 @@ interface CampaignData {
   subject: string;
   content: any[];
   selectedLists: string[];
+  excludedLists?: string[];
   templateId: string;
   artistId: string | null;
   eventId: string | null;
