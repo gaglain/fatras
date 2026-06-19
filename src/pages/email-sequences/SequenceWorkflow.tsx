@@ -8,7 +8,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Checkbox } from '@/components/ui/checkbox';
 import { toast } from '@/hooks/use-toast';
-import { ArrowLeft, Plus, Send, Sparkles, Mail, AlertCircle, CheckCircle2, Loader2, Trash2 } from 'lucide-react';
+import { ArrowLeft, Plus, Send, Sparkles, Mail, AlertCircle, CheckCircle2, Loader2, Trash2, CalendarClock, X } from 'lucide-react';
 import { useConfirm } from '@/components/ui/confirm-dialog';
 
 interface Step {
