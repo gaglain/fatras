@@ -24,6 +24,7 @@ interface Step {
   sent_at: string | null;
   segmented_at: string | null;
   recipient_count: number;
+  scheduled_at: string | null;
 }
 
 interface Segment {
