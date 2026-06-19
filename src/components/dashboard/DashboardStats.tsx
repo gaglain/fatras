@@ -126,7 +126,7 @@ export const DashboardStats: React.FC<DashboardStatsProps> = ({ selectedArtist }
   const stats = [
     {
       title: 'Contacts',
-      value: contacts.length.toString(),
+      value: contactsCount.toString(),
       icon: Users,
       description: 'Contacts actifs',
       color: 'text-blue-600'
