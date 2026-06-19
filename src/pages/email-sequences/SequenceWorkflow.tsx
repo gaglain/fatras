@@ -146,6 +146,33 @@ export const SequenceWorkflow: React.FC<Props> = ({ sequenceId, onBack }) => {
     load();
   };
 
+  const scheduleStep = async () => {
+    if (!schedulingFor || !scheduleValue) return;
+    if (!schedulingFor.campaign_id) {
+      toast({ title: 'Aucune campagne liée', variant: 'destructive' });
+      return;
+    }
+    const iso = new Date(scheduleValue).toISOString();
+    const { error } = await supabase
+      .from('email_sequence_steps')
+      .update({ scheduled_at: iso, status: 'ready' })
+      .eq('id', schedulingFor.id);
+    if (error) {
+      toast({ title: 'Erreur', description: error.message, variant: 'destructive' });
+      return;
+    }
+    toast({ title: 'Envoi programmé', description: `Envoi prévu le ${new Date(iso).toLocaleString('fr-FR')}.` });
+    setSchedulingFor(null);
+    setScheduleValue('');
+    load();
+  };
+
+  const cancelSchedule = async (step: Step) => {
+    await supabase.from('email_sequence_steps').update({ scheduled_at: null }).eq('id', step.id);
+    toast({ title: 'Programmation annulée' });
+    load();
+  };
+
   const deleteStep = async (step: Step) => {
     const ok = await confirm({ title: 'Supprimer cette étape ?', confirmText: 'Supprimer', variant: 'destructive' });
     if (!ok) return;
