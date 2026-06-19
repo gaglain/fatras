@@ -315,6 +315,34 @@ export const SequenceWorkflow: React.FC<Props> = ({ sequenceId, onBack }) => {
         autoExcludeBounced={allBouncedListIds}
         onSaved={() => { setShowAddStep(false); setEditingStep(null); load(); }}
       />
+
+      <Dialog open={!!schedulingFor} onOpenChange={(v) => { if (!v) { setSchedulingFor(null); setScheduleValue(''); } }}>
+        <DialogContent className="max-w-md">
+          <DialogHeader>
+            <DialogTitle>Programmer l'envoi</DialogTitle>
+          </DialogHeader>
+          <div className="space-y-3">
+            <p className="text-sm text-muted-foreground">
+              Choisis la date et l'heure d'envoi pour « {schedulingFor?.name} ». L'envoi se déclenchera automatiquement à l'heure indiquée (vérification toutes les minutes).
+            </p>
+            <div>
+              <label className="text-sm font-medium">Date et heure d'envoi</label>
+              <Input
+                type="datetime-local"
+                value={scheduleValue}
+                onChange={(e) => setScheduleValue(e.target.value)}
+              />
+              <p className="text-xs text-muted-foreground mt-1">Fuseau horaire local : {Intl.DateTimeFormat().resolvedOptions().timeZone}</p>
+            </div>
+          </div>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => { setSchedulingFor(null); setScheduleValue(''); }}>Annuler</Button>
+            <Button onClick={scheduleStep} disabled={!scheduleValue}>
+              <CalendarClock className="w-4 h-4 mr-1" /> Programmer
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 };
