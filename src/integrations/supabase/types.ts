@@ -1371,6 +1371,7 @@ export type Database = {
           notes: string | null
           position: number
           recipient_count: number
+          scheduled_at: string | null
           segmented_at: string | null
           sent_at: string | null
           sequence_id: string
@@ -1388,6 +1389,7 @@ export type Database = {
           notes?: string | null
           position: number
           recipient_count?: number
+          scheduled_at?: string | null
           segmented_at?: string | null
           sent_at?: string | null
           sequence_id: string
@@ -1405,6 +1407,7 @@ export type Database = {
           notes?: string | null
           position?: number
           recipient_count?: number
+          scheduled_at?: string | null
           segmented_at?: string | null
           sent_at?: string | null
           sequence_id?: string
