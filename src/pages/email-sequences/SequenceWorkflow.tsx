@@ -8,7 +8,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Checkbox } from '@/components/ui/checkbox';
 import { toast } from '@/hooks/use-toast';
-import { ArrowLeft, Plus, Send, Sparkles, Mail, AlertCircle, CheckCircle2, Loader2, Trash2 } from 'lucide-react';
+import { ArrowLeft, Plus, Send, Sparkles, Mail, AlertCircle, CheckCircle2, Loader2, Trash2, CalendarClock, X } from 'lucide-react';
 import { useConfirm } from '@/components/ui/confirm-dialog';
 
 interface Step {
@@ -24,6 +24,7 @@ interface Step {
   sent_at: string | null;
   segmented_at: string | null;
   recipient_count: number;
+  scheduled_at: string | null;
 }
 
 interface Segment {
@@ -58,6 +59,8 @@ export const SequenceWorkflow: React.FC<Props> = ({ sequenceId, onBack }) => {
   const [showAddStep, setShowAddStep] = useState(false);
   const [editingStep, setEditingStep] = useState<Step | null>(null);
   const [computingFor, setComputingFor] = useState<string | null>(null);
+  const [schedulingFor, setSchedulingFor] = useState<Step | null>(null);
+  const [scheduleValue, setScheduleValue] = useState<string>('');
 
   const load = async () => {
     setLoading(true);
@@ -143,6 +146,33 @@ export const SequenceWorkflow: React.FC<Props> = ({ sequenceId, onBack }) => {
     load();
   };
 
+  const scheduleStep = async () => {
+    if (!schedulingFor || !scheduleValue) return;
+    if (!schedulingFor.campaign_id) {
+      toast({ title: 'Aucune campagne liée', variant: 'destructive' });
+      return;
+    }
+    const iso = new Date(scheduleValue).toISOString();
+    const { error } = await supabase
+      .from('email_sequence_steps')
+      .update({ scheduled_at: iso, status: 'ready' })
+      .eq('id', schedulingFor.id);
+    if (error) {
+      toast({ title: 'Erreur', description: error.message, variant: 'destructive' });
+      return;
+    }
+    toast({ title: 'Envoi programmé', description: `Envoi prévu le ${new Date(iso).toLocaleString('fr-FR')}.` });
+    setSchedulingFor(null);
+    setScheduleValue('');
+    load();
+  };
+
+  const cancelSchedule = async (step: Step) => {
+    await supabase.from('email_sequence_steps').update({ scheduled_at: null }).eq('id', step.id);
+    toast({ title: 'Programmation annulée' });
+    load();
+  };
+
   const deleteStep = async (step: Step) => {
     const ok = await confirm({ title: 'Supprimer cette étape ?', confirmText: 'Supprimer', variant: 'destructive' });
     if (!ok) return;
@@ -192,6 +222,12 @@ export const SequenceWorkflow: React.FC<Props> = ({ sequenceId, onBack }) => {
                             <StatusBadge status={step.status} />
                             {step.delay_label && <Badge variant="outline" className="text-xs">⏱ {step.delay_label}</Badge>}
                             {campaign && <Badge variant="secondary" className="text-xs">📧 {campaign.name}</Badge>}
+                            {step.scheduled_at && (step.status === 'draft' || step.status === 'ready') && (
+                              <Badge variant="outline" className="text-xs bg-blue-50 text-blue-700 border-blue-300">
+                                <CalendarClock className="w-3 h-3 mr-1" />
+                                Programmé : {new Date(step.scheduled_at).toLocaleString('fr-FR', { dateStyle: 'short', timeStyle: 'short' })}
+                              </Badge>
+                            )}
                           </div>
                         </div>
                       </div>
@@ -208,9 +244,25 @@ export const SequenceWorkflow: React.FC<Props> = ({ sequenceId, onBack }) => {
 
                     <div className="flex gap-2 flex-wrap">
                       {(step.status === 'draft' || step.status === 'ready') && step.campaign_id && (
-                        <Button size="sm" onClick={() => launchStep(step)}>
-                          <Send className="w-4 h-4 mr-1" /> Lancer l'envoi
-                        </Button>
+                        <>
+                          <Button size="sm" onClick={() => launchStep(step)}>
+                            <Send className="w-4 h-4 mr-1" /> Envoyer maintenant
+                          </Button>
+                          <Button size="sm" variant="outline" onClick={() => {
+                            setSchedulingFor(step);
+                            const init = step.scheduled_at ? new Date(step.scheduled_at) : new Date(Date.now() + 60 * 60 * 1000);
+                            const pad = (n: number) => String(n).padStart(2, '0');
+                            setScheduleValue(`${init.getFullYear()}-${pad(init.getMonth() + 1)}-${pad(init.getDate())}T${pad(init.getHours())}:${pad(init.getMinutes())}`);
+                          }}>
+                            <CalendarClock className="w-4 h-4 mr-1" />
+                            {step.scheduled_at ? 'Modifier la date' : 'Programmer'}
+                          </Button>
+                          {step.scheduled_at && (
+                            <Button size="sm" variant="ghost" onClick={() => cancelSchedule(step)}>
+                              <X className="w-4 h-4 mr-1" /> Annuler la programmation
+                            </Button>
+                          )}
+                        </>
                       )}
                       {!step.campaign_id && (
                         <div className="flex items-center text-sm text-amber-700 gap-1">
@@ -263,6 +315,34 @@ export const SequenceWorkflow: React.FC<Props> = ({ sequenceId, onBack }) => {
         autoExcludeBounced={allBouncedListIds}
         onSaved={() => { setShowAddStep(false); setEditingStep(null); load(); }}
       />
+
+      <Dialog open={!!schedulingFor} onOpenChange={(v) => { if (!v) { setSchedulingFor(null); setScheduleValue(''); } }}>
+        <DialogContent className="max-w-md">
+          <DialogHeader>
+            <DialogTitle>Programmer l'envoi</DialogTitle>
+          </DialogHeader>
+          <div className="space-y-3">
+            <p className="text-sm text-muted-foreground">
+              Choisis la date et l'heure d'envoi pour « {schedulingFor?.name} ». L'envoi se déclenchera automatiquement à l'heure indiquée (vérification toutes les minutes).
+            </p>
+            <div>
+              <label className="text-sm font-medium">Date et heure d'envoi</label>
+              <Input
+                type="datetime-local"
+                value={scheduleValue}
+                onChange={(e) => setScheduleValue(e.target.value)}
+              />
+              <p className="text-xs text-muted-foreground mt-1">Fuseau horaire local : {Intl.DateTimeFormat().resolvedOptions().timeZone}</p>
+            </div>
+          </div>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => { setSchedulingFor(null); setScheduleValue(''); }}>Annuler</Button>
+            <Button onClick={scheduleStep} disabled={!scheduleValue}>
+              <CalendarClock className="w-4 h-4 mr-1" /> Programmer
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 };
