@@ -222,6 +222,12 @@ export const SequenceWorkflow: React.FC<Props> = ({ sequenceId, onBack }) => {
                             <StatusBadge status={step.status} />
                             {step.delay_label && <Badge variant="outline" className="text-xs">⏱ {step.delay_label}</Badge>}
                             {campaign && <Badge variant="secondary" className="text-xs">📧 {campaign.name}</Badge>}
+                            {step.scheduled_at && (step.status === 'draft' || step.status === 'ready') && (
+                              <Badge variant="outline" className="text-xs bg-blue-50 text-blue-700 border-blue-300">
+                                <CalendarClock className="w-3 h-3 mr-1" />
+                                Programmé : {new Date(step.scheduled_at).toLocaleString('fr-FR', { dateStyle: 'short', timeStyle: 'short' })}
+                              </Badge>
+                            )}
                           </div>
                         </div>
                       </div>
