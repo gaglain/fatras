@@ -124,7 +124,7 @@ export const DashboardStatsCards: React.FC = () => {
   });
 
   // Calculs des statistiques en temps réel avec les vraies données
-  const activeContacts = contacts.length;
+  const activeContacts = contactsTotal;
   const thisMonthEvents = events.filter(e => {
     if (!e.start_date) return false;
     const eventDate = new Date(e.start_date);
@@ -133,7 +133,7 @@ export const DashboardStatsCards: React.FC = () => {
   }).length;
   
   const pendingQuotes = quotes.filter(q => q.status === 'pending' || q.status === 'draft').length;
-  const activeArtists = contacts.filter(c => c.role === 'artist').length;
+  const activeArtists = artistsTotal;
   const sentCampaigns = campaigns.filter(c => c.status === 'sent').length;
   
   // Calcul des revenus HT et TTC des devis acceptés
