@@ -10,30 +10,35 @@ interface DashboardStatsProps {
 }
 
 export const DashboardStats: React.FC<DashboardStatsProps> = ({ selectedArtist }) => {
-  // Récupération des données réelles depuis Supabase avec refetch automatique
-  const { data: contacts = [], refetch: refetchContacts } = useQuery({
-    queryKey: ['dashboard-contacts', selectedArtist],
+  // Comptage des contacts (count exact pour dépasser la limite de 1000 lignes)
+  const { data: contactsCount = 0 } = useQuery({
+    queryKey: ['dashboard-contacts-count', selectedArtist],
     queryFn: async () => {
-      let query = supabase.from('contacts').select('*');
-      
       if (selectedArtist !== 'all') {
-        // Filtrer les contacts liés à l'artiste via la table contact_artists
-        const { data: contactArtists } = await supabase
-          .from('contact_artists')
-          .select('contact_id')
-          .eq('artist_id', selectedArtist);
-        
-        const contactIds = contactArtists?.map(ca => ca.contact_id) || [];
-        if (contactIds.length > 0) {
-          query = query.in('id', contactIds);
-        } else {
-          return [];
+        // Récupérer tous les contact_id liés à l'artiste (paginé pour dépasser 1000)
+        let allIds: string[] = [];
+        let from = 0;
+        const PAGE = 1000;
+        while (true) {
+          const { data, error } = await supabase
+            .from('contact_artists')
+            .select('contact_id')
+            .eq('artist_id', selectedArtist)
+            .range(from, from + PAGE - 1);
+          if (error) throw error;
+          const ids = (data || []).map(ca => ca.contact_id);
+          allIds = allIds.concat(ids);
+          if (ids.length < PAGE) break;
+          from += PAGE;
         }
+        return allIds.length;
       }
-      
-      const { data, error } = await query;
+
+      const { count, error } = await supabase
+        .from('contacts')
+        .select('id', { count: 'exact', head: true });
       if (error) throw error;
-      return data || [];
+      return count || 0;
     },
     refetchInterval: 30000,
   });
@@ -121,7 +126,7 @@ export const DashboardStats: React.FC<DashboardStatsProps> = ({ selectedArtist }
   const stats = [
     {
       title: 'Contacts',
-      value: contacts.length.toString(),
+      value: contactsCount.toString(),
       icon: Users,
       description: 'Contacts actifs',
       color: 'text-blue-600'

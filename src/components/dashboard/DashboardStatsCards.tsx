@@ -11,20 +11,36 @@ export const DashboardStatsCards: React.FC = () => {
   const navigate = useNavigate();
   const { user } = useAuth();
 
-  // Récupération des contacts depuis Supabase
-  const { data: contacts = [] } = useQuery({
-    queryKey: ['contacts', user?.id],
+  // Comptage total des contacts (count exact pour dépasser la limite de 1000)
+  const { data: contactsTotal = 0 } = useQuery({
+    queryKey: ['contacts-total-count', user?.id],
     queryFn: async () => {
-      if (!user?.id) return [];
-      const { data, error } = await supabase
+      if (!user?.id) return 0;
+      const { count, error } = await supabase
         .from('contacts')
-        .select('id, role');
-      
+        .select('id', { count: 'exact', head: true });
       if (error) {
-        console.error('Error fetching contacts:', error);
-        return [];
+        console.error('Error counting contacts:', error);
+        return 0;
       }
-      return data || [];
+      return count || 0;
+    },
+    enabled: !!user?.id,
+    staleTime: 30000,
+    refetchOnWindowFocus: true,
+  });
+
+  // Comptage des artistes actifs (rôle = 'artist')
+  const { data: artistsTotal = 0 } = useQuery({
+    queryKey: ['contacts-artists-count', user?.id],
+    queryFn: async () => {
+      if (!user?.id) return 0;
+      const { count, error } = await supabase
+        .from('contacts')
+        .select('id', { count: 'exact', head: true })
+        .eq('role', 'artist');
+      if (error) return 0;
+      return count || 0;
     },
     enabled: !!user?.id,
     staleTime: 30000,
@@ -108,7 +124,7 @@ export const DashboardStatsCards: React.FC = () => {
   });
 
   // Calculs des statistiques en temps réel avec les vraies données
-  const activeContacts = contacts.length;
+  const activeContacts = contactsTotal;
   const thisMonthEvents = events.filter(e => {
     if (!e.start_date) return false;
     const eventDate = new Date(e.start_date);
@@ -117,7 +133,7 @@ export const DashboardStatsCards: React.FC = () => {
   }).length;
   
   const pendingQuotes = quotes.filter(q => q.status === 'pending' || q.status === 'draft').length;
-  const activeArtists = contacts.filter(c => c.role === 'artist').length;
+  const activeArtists = artistsTotal;
   const sentCampaigns = campaigns.filter(c => c.status === 'sent').length;
   
   // Calcul des revenus HT et TTC des devis acceptés
