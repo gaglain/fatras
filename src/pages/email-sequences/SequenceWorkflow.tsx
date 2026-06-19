@@ -244,9 +244,25 @@ export const SequenceWorkflow: React.FC<Props> = ({ sequenceId, onBack }) => {
 
                     <div className="flex gap-2 flex-wrap">
                       {(step.status === 'draft' || step.status === 'ready') && step.campaign_id && (
-                        <Button size="sm" onClick={() => launchStep(step)}>
-                          <Send className="w-4 h-4 mr-1" /> Lancer l'envoi
-                        </Button>
+                        <>
+                          <Button size="sm" onClick={() => launchStep(step)}>
+                            <Send className="w-4 h-4 mr-1" /> Envoyer maintenant
+                          </Button>
+                          <Button size="sm" variant="outline" onClick={() => {
+                            setSchedulingFor(step);
+                            const init = step.scheduled_at ? new Date(step.scheduled_at) : new Date(Date.now() + 60 * 60 * 1000);
+                            const pad = (n: number) => String(n).padStart(2, '0');
+                            setScheduleValue(`${init.getFullYear()}-${pad(init.getMonth() + 1)}-${pad(init.getDate())}T${pad(init.getHours())}:${pad(init.getMinutes())}`);
+                          }}>
+                            <CalendarClock className="w-4 h-4 mr-1" />
+                            {step.scheduled_at ? 'Modifier la date' : 'Programmer'}
+                          </Button>
+                          {step.scheduled_at && (
+                            <Button size="sm" variant="ghost" onClick={() => cancelSchedule(step)}>
+                              <X className="w-4 h-4 mr-1" /> Annuler la programmation
+                            </Button>
+                          )}
+                        </>
                       )}
                       {!step.campaign_id && (
                         <div className="flex items-center text-sm text-amber-700 gap-1">
