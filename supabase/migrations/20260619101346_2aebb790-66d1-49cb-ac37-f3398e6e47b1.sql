@@ -1,0 +1,2 @@
+ALTER TABLE public.email_sequence_steps ADD COLUMN IF NOT EXISTS scheduled_at timestamptz;
+CREATE INDEX IF NOT EXISTS idx_sequence_steps_scheduled ON public.email_sequence_steps(scheduled_at) WHERE scheduled_at IS NOT NULL;
