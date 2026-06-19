@@ -59,6 +59,8 @@ export const SequenceWorkflow: React.FC<Props> = ({ sequenceId, onBack }) => {
   const [showAddStep, setShowAddStep] = useState(false);
   const [editingStep, setEditingStep] = useState<Step | null>(null);
   const [computingFor, setComputingFor] = useState<string | null>(null);
+  const [schedulingFor, setSchedulingFor] = useState<Step | null>(null);
+  const [scheduleValue, setScheduleValue] = useState<string>('');
 
   const load = async () => {
     setLoading(true);
