@@ -165,13 +165,24 @@ const handler = async (req: Request): Promise<Response> => {
       }
     } catch (_) { /* defaults */ }
 
-    // Contacts déjà envoyés POUR CETTE CAMPAGNE (lors d'exécutions précédentes)
-    const { data: alreadySentRows } = await supabase
-      .from('email_analytics')
-      .select('contact_id')
-      .eq('campaign_id', campaign.id)
-      .eq('event_type', 'sent');
-    const alreadySentIds = new Set((alreadySentRows || []).map((r: any) => r.contact_id));
+    // Contacts déjà envoyés POUR CETTE CAMPAGNE (paginé pour dépasser la limite 1000)
+    const alreadySentIds = new Set<string>();
+    {
+      let from = 0;
+      while (true) {
+        const { data, error } = await supabase
+          .from('email_analytics')
+          .select('contact_id')
+          .eq('campaign_id', campaign.id)
+          .eq('event_type', 'sent')
+          .range(from, from + PAGE_SIZE - 1);
+        if (error) { console.error('alreadySent fetch error:', error); break; }
+        const rows = data || [];
+        for (const r of rows as any[]) if (r.contact_id) alreadySentIds.add(r.contact_id);
+        if (rows.length < PAGE_SIZE) break;
+        from += PAGE_SIZE;
+      }
+    }
 
     // Total envoyé AUJOURD'HUI par cet utilisateur (toutes campagnes confondues)
     const todayStart = new Date();
