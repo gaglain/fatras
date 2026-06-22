@@ -125,16 +125,30 @@ const handler = async (req: Request): Promise<Response> => {
       console.log(`Exclusion: ${excludedIds.size} contact(s) ignoré(s) via ${excludeListIds.length} liste(s) d'exclusion.`);
     }
 
+    // Resend rejette TOUT le batch si UN seul email contient des caractères non-ASCII.
+    // On filtre donc en amont les adresses non-ASCII (et on log pour audit).
+    // eslint-disable-next-line no-control-regex
+    const isAsciiEmail = (e: string) => /^[\x00-\x7F]+$/.test(e);
+
     // Filter contacts that accept marketing emails, have valid emails, and not excluded
+    const rejectedNonAscii: string[] = [];
     const validContacts = (contactMembers || [])
-      .filter((cm: any) =>
-        cm.contacts.accepts_marketing_emails &&
-        cm.contacts.email &&
-        cm.contacts.email.includes('@') &&
-        !excludedIds.has(cm.contacts.id) &&
-        !excludedEmails.has(String(cm.contacts.email).toLowerCase())
-      )
+      .filter((cm: any) => {
+        const email = cm.contacts?.email;
+        if (!cm.contacts?.accepts_marketing_emails) return false;
+        if (!email || !email.includes('@')) return false;
+        if (excludedIds.has(cm.contacts.id)) return false;
+        if (excludedEmails.has(String(email).toLowerCase())) return false;
+        if (!isAsciiEmail(email)) {
+          rejectedNonAscii.push(email);
+          return false;
+        }
+        return true;
+      })
       .map((cm: any) => cm.contacts);
+    if (rejectedNonAscii.length > 0) {
+      console.warn(`⚠️ ${rejectedNonAscii.length} email(s) rejeté(s) (caractères non-ASCII):`, rejectedNonAscii.slice(0, 20));
+    }
 
     // Remove duplicates
     const uniqueContacts = validContacts.filter((contact, index, self) =>
