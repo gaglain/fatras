@@ -75,34 +75,50 @@ const handler = async (req: Request): Promise<Response> => {
 
     const excludeListIds = Array.from(new Set([...perCampaignExcludeIds, ...globalExcludeIds]));
 
-    // Get all contacts from include lists
-    const { data: contactMembers, error: contactsError } = await supabase
-      .from('contact_list_members')
-      .select(`
-        contact_id,
-        contacts!inner(
-          id,
-          email,
-          first_name,
-          last_name,
-          accepts_marketing_emails
-        )
-      `)
-      .in('contact_list_id', includeListIds.length > 0 ? includeListIds : ['00000000-0000-0000-0000-000000000000']);
-
-    if (contactsError) {
-      throw new Error('Failed to fetch contacts');
+    // Helper to paginate beyond Supabase's default 1000-row limit
+    const PAGE_SIZE = 1000;
+    async function fetchAllListMembers(listIds: string[], selectFields: string): Promise<any[]> {
+      if (!listIds.length) return [];
+      const all: any[] = [];
+      let from = 0;
+      // Loop until a page returns fewer rows than the page size
+      while (true) {
+        const { data, error } = await supabase
+          .from('contact_list_members')
+          .select(selectFields)
+          .in('contact_list_id', listIds)
+          .range(from, from + PAGE_SIZE - 1);
+        if (error) throw error;
+        const rows = data || [];
+        all.push(...rows);
+        if (rows.length < PAGE_SIZE) break;
+        from += PAGE_SIZE;
+      }
+      return all;
     }
 
-    // Fetch excluded contact ids/emails
+    // Get all contacts from include lists (paginated)
+    let contactMembers: any[] = [];
+    try {
+      contactMembers = await fetchAllListMembers(
+        includeListIds.length > 0 ? includeListIds : ['00000000-0000-0000-0000-000000000000'],
+        `contact_id, contacts!inner(id, email, first_name, last_name, accepts_marketing_emails)`
+      );
+    } catch (e) {
+      console.error('Failed to fetch contacts:', e);
+      throw new Error('Failed to fetch contacts');
+    }
+    console.log(`Fetched ${contactMembers.length} list member rows from ${includeListIds.length} include list(s).`);
+
+    // Fetch excluded contact ids/emails (paginated)
     const excludedIds = new Set<string>();
     const excludedEmails = new Set<string>();
     if (excludeListIds.length > 0) {
-      const { data: excludedMembers } = await supabase
-        .from('contact_list_members')
-        .select('contact_id, contacts!inner(id, email)')
-        .in('contact_list_id', excludeListIds);
-      for (const m of (excludedMembers || []) as any[]) {
+      const excludedMembers = await fetchAllListMembers(
+        excludeListIds,
+        'contact_id, contacts!inner(id, email)'
+      );
+      for (const m of excludedMembers as any[]) {
         if (m.contacts?.id) excludedIds.add(m.contacts.id);
         if (m.contacts?.email) excludedEmails.add(String(m.contacts.email).toLowerCase());
       }
