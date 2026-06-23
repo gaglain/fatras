@@ -413,6 +413,36 @@ const handler = async (req: Request): Promise<Response> => {
       console.log(`Campaign fully sent: ${cumulativeSent}/${uniqueContacts.length} (${successCount} dans cette exécution, ${failCount} échecs).`);
     }
 
+    // Si cette campagne appartient à une séquence, rafraîchir les segments après chaque lot quotidien.
+    // Cela évite que les listes restent figées entre deux clics manuels sur “Calculer les segments”.
+    try {
+      const { data: sequenceStep } = await supabase
+        .from('email_sequence_steps')
+        .select('id')
+        .eq('campaign_id', campaign.id)
+        .maybeSingle();
+
+      if (sequenceStep?.id) {
+        const resp = await fetch(`${Deno.env.get('SUPABASE_URL')}/functions/v1/compute-sequence-segments`, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            Authorization: `Bearer ${Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')}`,
+            apikey: Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? '',
+          },
+          body: JSON.stringify({ stepId: sequenceStep.id }),
+        });
+        const body = await resp.text();
+        if (!resp.ok) {
+          console.warn('Sequence segmentation refresh failed:', body);
+        } else {
+          console.log('Sequence segmentation refreshed:', body);
+        }
+      }
+    } catch (segmentationError) {
+      console.warn('Unable to refresh sequence segmentation:', segmentationError);
+    }
+
     return new Response(JSON.stringify({
       success: true,
       totalSent: successCount,

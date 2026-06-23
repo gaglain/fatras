@@ -11,6 +11,29 @@ const supabase = createClient(
   Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") ?? "",
 );
 
+const PAGE_SIZE = 1000;
+
+async function fetchAllRows(table: string, selectFields: string, buildQuery: (query: any) => any): Promise<any[]> {
+  const all: any[] = [];
+  let from = 0;
+  while (true) {
+    const { data, error } = await buildQuery(
+      supabase.from(table).select(selectFields).range(from, from + PAGE_SIZE - 1),
+    );
+    if (error) throw error;
+    const rows = data ?? [];
+    all.push(...rows);
+    if (rows.length < PAGE_SIZE) break;
+    from += PAGE_SIZE;
+  }
+  return all;
+}
+
+async function fetchListMembers(listIds: string[], selectFields: string): Promise<any[]> {
+  if (!listIds.length) return [];
+  return fetchAllRows("contact_list_members", selectFields, (query) => query.in("contact_list_id", listIds));
+}
+
 serve(async (req) => {
   if (req.method === "OPTIONS") return new Response(null, { headers: corsHeaders });
 
@@ -30,30 +53,56 @@ serve(async (req) => {
     const userId = (step as any).email_sequences.user_id;
     const sequenceName = (step as any).email_sequences.name;
 
-    // 2. Gather all recipient contacts (from source lists minus excluded)
+    // 2. Gather actual eligible recipients with the same rules used by send-campaign-emails
     const sourceIds: string[] = step.source_list_ids ?? [];
-    const excludedIds: string[] = step.excluded_list_ids ?? [];
+    const stepExcludedIds: string[] = step.excluded_list_ids ?? [];
 
-    const { data: sourceMembers } = await supabase
-      .from("contact_list_members")
-      .select("contact_id")
-      .in("contact_list_id", sourceIds.length ? sourceIds : ["00000000-0000-0000-0000-000000000000"]);
-    const sourceContactIds = new Set((sourceMembers ?? []).map((m: any) => m.contact_id));
+    const { data: globalExcludeLists } = await supabase
+      .from("contact_lists")
+      .select("id")
+      .eq("user_id", userId)
+      .eq("is_exclusion", true);
+    const globalExcludedIds = (globalExcludeLists ?? []).map((list: any) => list.id);
+    const excludedListIds = Array.from(new Set([...stepExcludedIds, ...globalExcludedIds]));
 
-    if (excludedIds.length) {
-      const { data: exMembers } = await supabase
-        .from("contact_list_members")
-        .select("contact_id")
-        .in("contact_list_id", excludedIds);
-      for (const m of exMembers ?? []) sourceContactIds.delete((m as any).contact_id);
+    const excludedContactIds = new Set<string>();
+    const excludedEmails = new Set<string>();
+    const excludedMembers = await fetchListMembers(excludedListIds, "contact_id, contacts!inner(id, email)");
+    for (const member of excludedMembers) {
+      if (member.contacts?.id) excludedContactIds.add(member.contacts.id);
+      if (member.contacts?.email) excludedEmails.add(String(member.contacts.email).toLowerCase());
     }
 
-    // 3. Read analytics for this campaign
-    const { data: analytics } = await supabase
-      .from("email_analytics")
-      .select("contact_id, event_type")
-      .eq("campaign_id", step.campaign_id);
+    // eslint-disable-next-line no-control-regex
+    const isAsciiEmail = (email: string) => /^[\x00-\x7F]+$/.test(email);
+    const sourceMembers = await fetchListMembers(
+      sourceIds,
+      "contact_id, contacts!inner(id, email, accepts_marketing_emails)",
+    );
+    const uniqueContacts = (sourceMembers ?? [])
+      .filter((member: any) => {
+        const contact = member.contacts;
+        const email = contact?.email;
+        if (!contact?.accepts_marketing_emails) return false;
+        if (!email || !String(email).includes("@")) return false;
+        if (!isAsciiEmail(String(email))) return false;
+        if (excludedContactIds.has(contact.id)) return false;
+        if (excludedEmails.has(String(email).toLowerCase())) return false;
+        return true;
+      })
+      .map((member: any) => member.contacts)
+      .filter((contact: any, index: number, self: any[]) =>
+        index === self.findIndex((candidate: any) => candidate.email === contact.email),
+      );
 
+    // 3. Read all analytics for this campaign. Supabase defaults to 1,000 rows, so paginate.
+    const analytics = await fetchAllRows(
+      "email_analytics",
+      "contact_id, event_type",
+      (query) => query.eq("campaign_id", step.campaign_id).not("contact_id", "is", null),
+    );
+
+    const sent = new Set<string>();
     const bounced = new Set<string>();
     const opened = new Set<string>();
     const clicked = new Set<string>();
@@ -61,17 +110,19 @@ serve(async (req) => {
       const cid = (ev as any).contact_id;
       if (!cid) continue;
       const type = (ev as any).event_type;
+      if (type === "sent") sent.add(cid);
       if (type === "bounced" || type === "complained") bounced.add(cid);
       if (type === "opened") opened.add(cid);
       if (type === "clicked") { clicked.add(cid); opened.add(cid); }
     }
 
-    const allRecipients = Array.from(sourceContactIds) as string[];
+    const allRecipients = uniqueContacts.map((contact: any) => contact.id) as string[];
+    const sentRecipients = allRecipients.filter((contactId) => sent.has(contactId));
     const segments: Record<string, string[]> = {
-      bounced: allRecipients.filter((c) => bounced.has(c)),
-      clicked: allRecipients.filter((c) => clicked.has(c)),
-      opened: allRecipients.filter((c) => opened.has(c) && !clicked.has(c) && !bounced.has(c)),
-      not_opened: allRecipients.filter((c) => !opened.has(c) && !bounced.has(c)),
+      bounced: sentRecipients.filter((c) => bounced.has(c)),
+      clicked: sentRecipients.filter((c) => clicked.has(c) && !bounced.has(c)),
+      opened: sentRecipients.filter((c) => opened.has(c) && !clicked.has(c) && !bounced.has(c)),
+      not_opened: sentRecipients.filter((c) => !opened.has(c) && !clicked.has(c) && !bounced.has(c)),
     };
 
     // 4. Create / update lists for each segment
