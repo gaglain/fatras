@@ -3,7 +3,8 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Checkbox } from '@/components/ui/checkbox';
-import { Loader2, MailWarning, RefreshCw, Trash2, Eraser, Download } from 'lucide-react';
+import { Input } from '@/components/ui/input';
+import { Loader2, MailWarning, RefreshCw, Trash2, Eraser, Download, Check, X, Pencil } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { useConfirm } from '@/components/ui/confirm-dialog';
 import { toast } from 'sonner';
@@ -51,6 +52,8 @@ export const ContactEmailValidator: React.FC = () => {
   const [totalChecked, setTotalChecked] = useState(0);
   const [invalid, setInvalid] = useState<InvalidContact[]>([]);
   const [selected, setSelected] = useState<Set<string>>(new Set());
+  const [editing, setEditing] = useState<Record<string, string>>({});
+  const [savingId, setSavingId] = useState<string | null>(null);
   const [working, setWorking] = useState(false);
   const confirm = useConfirm();
 
@@ -183,6 +186,30 @@ export const ContactEmailValidator: React.FC = () => {
     link.click();
   };
 
+  const startEdit = (id: string, current: string) => {
+    setEditing((p) => ({ ...p, [id]: current }));
+  };
+  const cancelEdit = (id: string) => {
+    setEditing((p) => { const n = { ...p }; delete n[id]; return n; });
+  };
+  const saveEdit = async (id: string) => {
+    const raw = (editing[id] ?? '').trim();
+    const newVal = raw === '' ? null : raw;
+    setSavingId(id);
+    const { error } = await supabase.from('contacts').update({ email: newVal }).eq('id', id);
+    setSavingId(null);
+    if (error) { toast.error(error.message); return; }
+    toast.success('Email mis à jour');
+    cancelEdit(id);
+    // Re-analyse local sans rescan complet
+    setInvalid((prev) => {
+      if (!newVal) return prev.filter((p) => p.id !== id);
+      const res = analyse(newVal);
+      if (res.ok) return prev.filter((p) => p.id !== id);
+      return prev.map((p) => p.id === id ? { ...p, email: newVal, reason: res.reason, suggestion: res.suggestion } : p);
+    });
+  };
+
   const selectedAuto = invalid.filter((i) => selected.has(i.id) && i.suggestion).length;
 
   return (
@@ -255,10 +282,13 @@ export const ContactEmailValidator: React.FC = () => {
                     <th className="p-2 text-left">Email</th>
                     <th className="p-2 text-left">Problème</th>
                     <th className="p-2 text-left">Correction proposée</th>
+                    <th className="p-2 text-left w-32">Actions</th>
                   </tr>
                 </thead>
                 <tbody>
-                  {invalid.map((i) => (
+                  {invalid.map((i) => {
+                    const isEditing = editing[i.id] !== undefined;
+                    return (
                     <tr key={i.id} className="border-t">
                       <td className="p-2">
                         <Checkbox
@@ -267,11 +297,49 @@ export const ContactEmailValidator: React.FC = () => {
                         />
                       </td>
                       <td className="p-2">{[i.first_name, i.last_name].filter(Boolean).join(' ') || '—'}</td>
-                      <td className="p-2 font-mono text-xs break-all">{i.email}</td>
+                      <td className="p-2 font-mono text-xs break-all">
+                        {isEditing ? (
+                          <Input
+                            value={editing[i.id]}
+                            onChange={(e) => setEditing((p) => ({ ...p, [i.id]: e.target.value }))}
+                            onKeyDown={(e) => {
+                              if (e.key === 'Enter') saveEdit(i.id);
+                              if (e.key === 'Escape') cancelEdit(i.id);
+                            }}
+                            className="h-8 text-xs font-mono"
+                            autoFocus
+                          />
+                        ) : i.email}
+                      </td>
                       <td className="p-2"><Badge variant="outline">{i.reason}</Badge></td>
-                      <td className="p-2 font-mono text-xs text-green-700">{i.suggestion || '—'}</td>
+                      <td className="p-2 font-mono text-xs text-green-700">
+                        {i.suggestion ? (
+                          <button
+                            className="underline hover:text-green-900"
+                            onClick={() => startEdit(i.id, i.suggestion!)}
+                            title="Utiliser cette correction"
+                          >{i.suggestion}</button>
+                        ) : '—'}
+                      </td>
+                      <td className="p-2">
+                        {isEditing ? (
+                          <div className="flex gap-1">
+                            <Button size="sm" variant="default" className="h-7 px-2" onClick={() => saveEdit(i.id)} disabled={savingId === i.id}>
+                              {savingId === i.id ? <Loader2 className="h-3 w-3 animate-spin" /> : <Check className="h-3 w-3" />}
+                            </Button>
+                            <Button size="sm" variant="outline" className="h-7 px-2" onClick={() => cancelEdit(i.id)}>
+                              <X className="h-3 w-3" />
+                            </Button>
+                          </div>
+                        ) : (
+                          <Button size="sm" variant="ghost" className="h-7 px-2" onClick={() => startEdit(i.id, i.email)}>
+                            <Pencil className="h-3 w-3 mr-1" /> Modifier
+                          </Button>
+                        )}
+                      </td>
                     </tr>
-                  ))}
+                    );
+                  })}
                 </tbody>
               </table>
             </div>
