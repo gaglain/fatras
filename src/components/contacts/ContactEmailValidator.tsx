@@ -52,6 +52,8 @@ export const ContactEmailValidator: React.FC = () => {
   const [totalChecked, setTotalChecked] = useState(0);
   const [invalid, setInvalid] = useState<InvalidContact[]>([]);
   const [selected, setSelected] = useState<Set<string>>(new Set());
+  const [editing, setEditing] = useState<Record<string, string>>({});
+  const [savingId, setSavingId] = useState<string | null>(null);
   const [working, setWorking] = useState(false);
   const confirm = useConfirm();
 
