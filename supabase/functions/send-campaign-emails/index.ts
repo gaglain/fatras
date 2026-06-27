@@ -125,29 +125,44 @@ const handler = async (req: Request): Promise<Response> => {
       console.log(`Exclusion: ${excludedIds.size} contact(s) ignoré(s) via ${excludeListIds.length} liste(s) d'exclusion.`);
     }
 
-    // Resend rejette TOUT le batch si UN seul email contient des caractères non-ASCII.
-    // On filtre donc en amont les adresses non-ASCII (et on log pour audit).
+    // Resend rejette TOUT le batch si UN seul email est invalide.
+    // On filtre donc en amont les adresses non-ASCII ET mal formées.
     // eslint-disable-next-line no-control-regex
     const isAsciiEmail = (e: string) => /^[\x00-\x7F]+$/.test(e);
+    // Format strict user@domain.tld (sans espace, sans préfixe mailto:, TLD ≥ 2 lettres)
+    const isValidEmailFormat = (e: string) =>
+      /^[A-Za-z0-9._%+\-]+@[A-Za-z0-9.\-]+\.[A-Za-z]{2,}$/.test(e);
 
     // Filter contacts that accept marketing emails, have valid emails, and not excluded
     const rejectedNonAscii: string[] = [];
+    const rejectedFormat: string[] = [];
     const validContacts = (contactMembers || [])
       .filter((cm: any) => {
-        const email = cm.contacts?.email;
+        const rawEmail = cm.contacts?.email;
         if (!cm.contacts?.accepts_marketing_emails) return false;
-        if (!email || !email.includes('@')) return false;
+        if (!rawEmail || typeof rawEmail !== 'string') return false;
+        const email = rawEmail.trim();
+        if (!email.includes('@')) return false;
         if (excludedIds.has(cm.contacts.id)) return false;
-        if (excludedEmails.has(String(email).toLowerCase())) return false;
+        if (excludedEmails.has(email.toLowerCase())) return false;
         if (!isAsciiEmail(email)) {
           rejectedNonAscii.push(email);
           return false;
         }
+        if (!isValidEmailFormat(email)) {
+          rejectedFormat.push(email);
+          return false;
+        }
+        // Normalise (trim) l'email avant envoi
+        cm.contacts.email = email;
         return true;
       })
       .map((cm: any) => cm.contacts);
     if (rejectedNonAscii.length > 0) {
       console.warn(`⚠️ ${rejectedNonAscii.length} email(s) rejeté(s) (caractères non-ASCII):`, rejectedNonAscii.slice(0, 20));
+    }
+    if (rejectedFormat.length > 0) {
+      console.warn(`⚠️ ${rejectedFormat.length} email(s) rejeté(s) (format invalide):`, rejectedFormat.slice(0, 20));
     }
 
     // Remove duplicates
