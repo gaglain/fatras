@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { Plus, Upload, Download, Mail, List, Grid, LayoutList, Loader2, Merge, Users } from 'lucide-react';
+import { Plus, Upload, Download, Mail, List, Grid, LayoutList, Loader2, Merge, Users, MailWarning } from 'lucide-react';
 import { useConfirm } from '@/components/ui/confirm-dialog';
 import { ContactCard } from '@/components/contacts/ContactCard';
 import { ContactDialog } from '@/components/contacts/ContactDialog';
@@ -12,6 +12,7 @@ import { ContactFilters } from '@/components/contacts/ContactFilters';
 import { BulkContactActions } from '@/components/contacts/BulkContactActions';
 import { BulkContactListAssignment } from '@/components/contacts/BulkContactListAssignment';
 import { ContactDuplicateScanner } from '@/components/contacts/ContactDuplicateScanner';
+import { ContactEmailValidator } from '@/components/contacts/ContactEmailValidator';
 import { EmailComposer } from '@/components/email/EmailComposer';
 import { ContactsHeader } from './contacts/ContactsHeader';
 import { supabase } from '@/integrations/supabase/client';
@@ -230,10 +231,11 @@ export const Contacts: React.FC = () => {
       <ContactsHeader stats={contactStats} onNewContact={() => setDialogOpen(true)} />
 
       <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
-        <TabsList className="grid w-full grid-cols-3">
+        <TabsList className="grid w-full grid-cols-4">
           <TabsTrigger value="contacts" className="flex items-center gap-2"><Users className="h-4 w-4" />Contacts ({contactStats.total})</TabsTrigger>
           <TabsTrigger value="lists" className="flex items-center gap-2"><List className="h-4 w-4" />Listes</TabsTrigger>
           <TabsTrigger value="duplicates" className="flex items-center gap-2"><Merge className="h-4 w-4" />Doublons</TabsTrigger>
+          <TabsTrigger value="emails" className="flex items-center gap-2"><MailWarning className="h-4 w-4" />Vérif. emails</TabsTrigger>
         </TabsList>
 
         <TabsContent value="contacts" className="space-y-6">
@@ -276,6 +278,7 @@ export const Contacts: React.FC = () => {
 
         <TabsContent value="lists" className="space-y-6"><ContactLists /></TabsContent>
         <TabsContent value="duplicates" className="space-y-6"><ContactDuplicateScanner onMergeComplete={() => fetchContacts({ reset: true })} /></TabsContent>
+        <TabsContent value="emails" className="space-y-6"><ContactEmailValidator /></TabsContent>
       </Tabs>
 
       <ContactDialog isOpen={dialogOpen} onClose={() => { setDialogOpen(false); setEditingContact(null); }} contact={editingContact} onSave={() => fetchContacts({ reset: true })} />
