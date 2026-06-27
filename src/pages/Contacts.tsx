@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { Plus, Upload, Download, Mail, List, Grid, LayoutList, Loader2, Merge, Users } from 'lucide-react';
+import { Plus, Upload, Download, Mail, List, Grid, LayoutList, Loader2, Merge, Users, MailWarning } from 'lucide-react';
 import { useConfirm } from '@/components/ui/confirm-dialog';
 import { ContactCard } from '@/components/contacts/ContactCard';
 import { ContactDialog } from '@/components/contacts/ContactDialog';
