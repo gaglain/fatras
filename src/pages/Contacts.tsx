@@ -12,6 +12,7 @@ import { ContactFilters } from '@/components/contacts/ContactFilters';
 import { BulkContactActions } from '@/components/contacts/BulkContactActions';
 import { BulkContactListAssignment } from '@/components/contacts/BulkContactListAssignment';
 import { ContactDuplicateScanner } from '@/components/contacts/ContactDuplicateScanner';
+import { ContactEmailValidator } from '@/components/contacts/ContactEmailValidator';
 import { EmailComposer } from '@/components/email/EmailComposer';
 import { ContactsHeader } from './contacts/ContactsHeader';
 import { supabase } from '@/integrations/supabase/client';
