@@ -84,10 +84,14 @@ export const EmailCampaignManager: React.FC<EmailCampaignManagerProps> = ({ camp
   const handleSave = async () => {
     if (!campaignData.name || !campaignData.subject) { toast.error('Nom et sujet requis'); return; }
     try {
-      const payload: any = { name: campaignData.name, subject: campaignData.subject, content: JSON.stringify(campaignData.content), status: 'draft' as const, artist_id: campaignData.artistId || null, event_id: campaignData.eventId || null, include_signature: !!campaignData.includeSignature };
+      const basePayload: any = { name: campaignData.name, subject: campaignData.subject, content: JSON.stringify(campaignData.content), artist_id: campaignData.artistId || null, event_id: campaignData.eventId || null, include_signature: !!campaignData.includeSignature };
       let finalId = campaignId;
-      if (campaignId) { await updateCampaign(campaignId, payload); await supabase.from('campaign_contact_lists').delete().eq('campaign_id', campaignId); }
-      else { const campaign = await createCampaign(payload); finalId = (campaign as any).id; }
+      if (campaignId) {
+        // Ne PAS écraser le status d'une campagne déjà envoyée/en cours/programmée
+        await updateCampaign(campaignId, basePayload);
+        await supabase.from('campaign_contact_lists').delete().eq('campaign_id', campaignId);
+      }
+      else { const campaign = await createCampaign({ ...basePayload, status: 'draft' as const }); finalId = (campaign as any).id; }
       if (finalId) await insertCampaignLists(finalId);
       toast.success(campaignId ? 'Campagne mise à jour' : 'Campagne créée');
       if (!campaignId) onBack?.();
