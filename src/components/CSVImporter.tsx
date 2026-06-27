@@ -130,12 +130,34 @@ export const CSVImporter: React.FC<CSVImporterProps> = ({ isOpen, onClose, onImp
     setMapping(autoMapping);
   };
 
+  // Validation stricte de l'email : format user@domain.tld, ASCII, pas d'espace
+  const isValidEmail = (e: string) => {
+    if (!e) return false;
+    if (!/^[\x00-\x7F]+$/.test(e)) return false;
+    return /^[A-Za-z0-9._%+\-]+@[A-Za-z0-9.\-]+\.[A-Za-z]{2,}$/.test(e);
+  };
+
+  // Nettoyage d'une adresse : trim, retire les chevrons, le préfixe mailto:
+  const cleanEmail = (raw: string): string => {
+    if (!raw) return '';
+    let v = raw.trim().toLowerCase();
+    v = v.replace(/^mailto:/i, '');
+    const m = v.match(/<([^>]+)>/);
+    if (m) v = m[1].trim();
+    v = v.replace(/\s+/g, '');
+    return v;
+  };
+
   const handleImport = async () => {
     if (importing) return;
     setImporting(true);
     try {
       const { data: { user } } = await supabase.auth.getUser();
       if (!user) { toast.error('Vous devez être connecté pour importer des contacts'); return; }
+
+      let invalidEmailCount = 0;
+      let duplicateInFileCount = 0;
+      const seenEmails = new Set<string>();
 
       const mappedData = csvData.map(row => {
         const mappedRow: any = { user_id: user.id, created_at: new Date().toISOString(), updated_at: new Date().toISOString() };
@@ -149,6 +171,20 @@ export const CSVImporter: React.FC<CSVImporterProps> = ({ isOpen, onClose, onImp
               mappedRow[fieldKey] = value.split(',').map((tag: string) => tag.trim()).filter(Boolean);
             } else if (fieldKey === 'accepts_marketing_emails') {
               mappedRow[fieldKey] = value?.toLowerCase() === 'true' || value === '1';
+            } else if (fieldKey === 'email') {
+              const cleaned = cleanEmail(value || '');
+              if (!cleaned) {
+                mappedRow.email = '';
+              } else if (!isValidEmail(cleaned)) {
+                invalidEmailCount++;
+                mappedRow.email = '';
+              } else if (seenEmails.has(cleaned)) {
+                duplicateInFileCount++;
+                mappedRow.email = '';
+              } else {
+                seenEmails.add(cleaned);
+                mappedRow.email = cleaned;
+              }
             } else {
               mappedRow[fieldKey] = value || '';
             }
@@ -179,6 +215,12 @@ export const CSVImporter: React.FC<CSVImporterProps> = ({ isOpen, onClose, onImp
 
       if (insertedAll.length > 0) {
         if (!hadError) toast.success(`${insertedAll.length} contacts importés avec succès !`);
+        if (invalidEmailCount > 0) {
+          toast.warning(`${invalidEmailCount} email(s) invalide(s) ignoré(s) (format incorrect, espace, caractères spéciaux)`);
+        }
+        if (duplicateInFileCount > 0) {
+          toast.warning(`${duplicateInFileCount} email(s) en doublon dans le fichier ignoré(s)`);
+        }
         onImport(mappedData);
         setImportedContacts(insertedAll);
         setStep('assign-list');
