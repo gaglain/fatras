@@ -231,10 +231,11 @@ export const Contacts: React.FC = () => {
       <ContactsHeader stats={contactStats} onNewContact={() => setDialogOpen(true)} />
 
       <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
-        <TabsList className="grid w-full grid-cols-3">
+        <TabsList className="grid w-full grid-cols-4">
           <TabsTrigger value="contacts" className="flex items-center gap-2"><Users className="h-4 w-4" />Contacts ({contactStats.total})</TabsTrigger>
           <TabsTrigger value="lists" className="flex items-center gap-2"><List className="h-4 w-4" />Listes</TabsTrigger>
           <TabsTrigger value="duplicates" className="flex items-center gap-2"><Merge className="h-4 w-4" />Doublons</TabsTrigger>
+          <TabsTrigger value="emails" className="flex items-center gap-2"><MailWarning className="h-4 w-4" />Vérif. emails</TabsTrigger>
         </TabsList>
 
         <TabsContent value="contacts" className="space-y-6">
