@@ -186,6 +186,30 @@ export const ContactEmailValidator: React.FC = () => {
     link.click();
   };
 
+  const startEdit = (id: string, current: string) => {
+    setEditing((p) => ({ ...p, [id]: current }));
+  };
+  const cancelEdit = (id: string) => {
+    setEditing((p) => { const n = { ...p }; delete n[id]; return n; });
+  };
+  const saveEdit = async (id: string) => {
+    const raw = (editing[id] ?? '').trim();
+    const newVal = raw === '' ? null : raw;
+    setSavingId(id);
+    const { error } = await supabase.from('contacts').update({ email: newVal }).eq('id', id);
+    setSavingId(null);
+    if (error) { toast.error(error.message); return; }
+    toast.success('Email mis à jour');
+    cancelEdit(id);
+    // Re-analyse local sans rescan complet
+    setInvalid((prev) => {
+      if (!newVal) return prev.filter((p) => p.id !== id);
+      const res = analyse(newVal);
+      if (res.ok) return prev.filter((p) => p.id !== id);
+      return prev.map((p) => p.id === id ? { ...p, email: newVal, reason: res.reason, suggestion: res.suggestion } : p);
+    });
+  };
+
   const selectedAuto = invalid.filter((i) => selected.has(i.id) && i.suggestion).length;
 
   return (
