@@ -282,10 +282,13 @@ export const ContactEmailValidator: React.FC = () => {
                     <th className="p-2 text-left">Email</th>
                     <th className="p-2 text-left">Problème</th>
                     <th className="p-2 text-left">Correction proposée</th>
+                    <th className="p-2 text-left w-32">Actions</th>
                   </tr>
                 </thead>
                 <tbody>
-                  {invalid.map((i) => (
+                  {invalid.map((i) => {
+                    const isEditing = editing[i.id] !== undefined;
+                    return (
                     <tr key={i.id} className="border-t">
                       <td className="p-2">
                         <Checkbox
@@ -294,11 +297,49 @@ export const ContactEmailValidator: React.FC = () => {
                         />
                       </td>
                       <td className="p-2">{[i.first_name, i.last_name].filter(Boolean).join(' ') || '—'}</td>
-                      <td className="p-2 font-mono text-xs break-all">{i.email}</td>
+                      <td className="p-2 font-mono text-xs break-all">
+                        {isEditing ? (
+                          <Input
+                            value={editing[i.id]}
+                            onChange={(e) => setEditing((p) => ({ ...p, [i.id]: e.target.value }))}
+                            onKeyDown={(e) => {
+                              if (e.key === 'Enter') saveEdit(i.id);
+                              if (e.key === 'Escape') cancelEdit(i.id);
+                            }}
+                            className="h-8 text-xs font-mono"
+                            autoFocus
+                          />
+                        ) : i.email}
+                      </td>
                       <td className="p-2"><Badge variant="outline">{i.reason}</Badge></td>
-                      <td className="p-2 font-mono text-xs text-green-700">{i.suggestion || '—'}</td>
+                      <td className="p-2 font-mono text-xs text-green-700">
+                        {i.suggestion ? (
+                          <button
+                            className="underline hover:text-green-900"
+                            onClick={() => startEdit(i.id, i.suggestion!)}
+                            title="Utiliser cette correction"
+                          >{i.suggestion}</button>
+                        ) : '—'}
+                      </td>
+                      <td className="p-2">
+                        {isEditing ? (
+                          <div className="flex gap-1">
+                            <Button size="sm" variant="default" className="h-7 px-2" onClick={() => saveEdit(i.id)} disabled={savingId === i.id}>
+                              {savingId === i.id ? <Loader2 className="h-3 w-3 animate-spin" /> : <Check className="h-3 w-3" />}
+                            </Button>
+                            <Button size="sm" variant="outline" className="h-7 px-2" onClick={() => cancelEdit(i.id)}>
+                              <X className="h-3 w-3" />
+                            </Button>
+                          </div>
+                        ) : (
+                          <Button size="sm" variant="ghost" className="h-7 px-2" onClick={() => startEdit(i.id, i.email)}>
+                            <Pencil className="h-3 w-3 mr-1" /> Modifier
+                          </Button>
+                        )}
+                      </td>
                     </tr>
-                  ))}
+                    );
+                  })}
                 </tbody>
               </table>
             </div>
