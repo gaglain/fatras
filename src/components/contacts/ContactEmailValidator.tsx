@@ -52,7 +52,7 @@ export const ContactEmailValidator: React.FC = () => {
   const [invalid, setInvalid] = useState<InvalidContact[]>([]);
   const [selected, setSelected] = useState<Set<string>>(new Set());
   const [working, setWorking] = useState(false);
-  const { confirm } = useConfirm();
+  const confirm = useConfirm();
 
   const scan = async () => {
     setScanning(true);
