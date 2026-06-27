@@ -278,6 +278,7 @@ export const Contacts: React.FC = () => {
 
         <TabsContent value="lists" className="space-y-6"><ContactLists /></TabsContent>
         <TabsContent value="duplicates" className="space-y-6"><ContactDuplicateScanner onMergeComplete={() => fetchContacts({ reset: true })} /></TabsContent>
+        <TabsContent value="emails" className="space-y-6"><ContactEmailValidator /></TabsContent>
       </Tabs>
 
       <ContactDialog isOpen={dialogOpen} onClose={() => { setDialogOpen(false); setEditingContact(null); }} contact={editingContact} onSave={() => fetchContacts({ reset: true })} />
