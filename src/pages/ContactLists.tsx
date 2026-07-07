@@ -41,7 +41,7 @@ const exportContactList = async (list: any) => {
     const { data, error } = await (supabase
       .from('contact_list_members') as any)
       .select('contacts(*)')
-      .eq('list_id', list.id);
+      .eq('contact_list_id', list.id);
     if (error) throw error;
     const contacts = ((data as any[]) || []).map((m: any) => m.contacts).filter(Boolean);
     if (contacts.length === 0) {
