@@ -38,12 +38,12 @@ const escapeCSV = (val: any): string => {
 
 const exportContactList = async (list: any) => {
   try {
-    const { data, error } = await supabase
-      .from('contact_list_members')
+    const { data, error } = await (supabase
+      .from('contact_list_members') as any)
       .select('contacts(*)')
       .eq('list_id', list.id);
     if (error) throw error;
-    const contacts = (data || []).map((m: any) => m.contacts).filter(Boolean);
+    const contacts = ((data as any[]) || []).map((m: any) => m.contacts).filter(Boolean);
     if (contacts.length === 0) {
       toast.error('Cette liste ne contient aucun contact');
       return;
