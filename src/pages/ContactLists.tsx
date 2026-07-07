@@ -145,6 +145,7 @@ export const ContactLists: React.FC = () => {
                   <div className="flex gap-1 md:gap-2 flex-shrink-0">
                     <Button variant="outline" size="icon" className="h-8 w-8" onClick={() => { setSelectedList(list); setShowMemberManager(true); }}><UserPlus className="h-4 w-4" /></Button>
                     <Button variant="outline" size="icon" className="h-8 w-8" onClick={() => handleEditList(list)}><Edit className="h-4 w-4" /></Button>
+                    <Button variant="outline" size="icon" className="h-8 w-8" title="Exporter en CSV" onClick={() => exportContactList(list)}><Download className="h-4 w-4" /></Button>
                     <Button variant="outline" size="icon" className="h-8 w-8 text-destructive hover:text-destructive" onClick={() => handleDeleteList(list.id)}><Trash2 className="h-4 w-4" /></Button>
                   </div>
                 </div>
