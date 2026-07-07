@@ -5,12 +5,67 @@ import { Card, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Checkbox } from '@/components/ui/checkbox';
-import { Plus, Users, Edit, Trash2, Search, Loader2, UserPlus, X } from 'lucide-react';
+import { Plus, Users, Edit, Trash2, Search, Loader2, UserPlus, X, Download } from 'lucide-react';
 import { useContactLists } from '@/hooks/useContactLists';
 import { ContactListMemberManager } from '@/components/contacts/ContactListMemberManager';
 import { useConfirm } from '@/components/ui/confirm-dialog';
 import { SearchItem } from '@/components/UniversalSearch';
 import { ContactListFormDialog } from './ContactListFormDialog';
+import { supabase } from '@/integrations/supabase/client';
+import { toast } from 'sonner';
+
+const EXPORT_FIELDS: { key: string; label: string }[] = [
+  { key: 'first_name', label: 'Prénom' },
+  { key: 'last_name', label: 'Nom' },
+  { key: 'email', label: 'Email' },
+  { key: 'phone', label: 'Téléphone' },
+  { key: 'position', label: 'Poste/Titre' },
+  { key: 'address', label: 'Adresse' },
+  { key: 'city', label: 'Ville' },
+  { key: 'postal_code', label: 'Code postal' },
+  { key: 'country', label: 'Pays' },
+  { key: 'status', label: 'Statut (prospect/client/inactive)' },
+  { key: 'source', label: 'Source' },
+  { key: 'notes', label: 'Notes' },
+  { key: 'company', label: 'Entreprise' },
+];
+
+const escapeCSV = (val: any): string => {
+  if (val === null || val === undefined) return '';
+  const s = String(val);
+  return /[",\n]/.test(s) ? `"${s.replace(/"/g, '""')}"` : s;
+};
+
+const exportContactList = async (list: any) => {
+  try {
+    const { data, error } = await (supabase
+      .from('contact_list_members') as any)
+      .select('contacts(*)')
+      .eq('list_id', list.id);
+    if (error) throw error;
+    const contacts = ((data as any[]) || []).map((m: any) => m.contacts).filter(Boolean);
+    if (contacts.length === 0) {
+      toast.error('Cette liste ne contient aucun contact');
+      return;
+    }
+    const headers = EXPORT_FIELDS.map(f => f.label).join(',');
+    const rows = contacts.map((c: any) =>
+      EXPORT_FIELDS.map(f => escapeCSV(c[f.key])).join(',')
+    );
+    const csv = [headers, ...rows].join('\n');
+    const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
+    const link = document.createElement('a');
+    const slug = (list.name || 'liste').replace(/[^a-z0-9]+/gi, '_').toLowerCase();
+    link.setAttribute('href', URL.createObjectURL(blob));
+    link.setAttribute('download', `liste_${slug}_${new Date().toISOString().slice(0, 10)}.csv`);
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+    toast.success(`${contacts.length} contacts exportés`);
+  } catch (e: any) {
+    toast.error('Erreur lors de l\'export : ' + (e?.message || 'inconnu'));
+  }
+};
 
 export const ContactLists: React.FC = () => {
   const { contactLists, contacts, loading, createContactList, updateContactList, deleteContactList } = useContactLists();
@@ -90,6 +145,7 @@ export const ContactLists: React.FC = () => {
                   <div className="flex gap-1 md:gap-2 flex-shrink-0">
                     <Button variant="outline" size="icon" className="h-8 w-8" onClick={() => { setSelectedList(list); setShowMemberManager(true); }}><UserPlus className="h-4 w-4" /></Button>
                     <Button variant="outline" size="icon" className="h-8 w-8" onClick={() => handleEditList(list)}><Edit className="h-4 w-4" /></Button>
+                    <Button variant="outline" size="icon" className="h-8 w-8" title="Exporter en CSV" onClick={() => exportContactList(list)}><Download className="h-4 w-4" /></Button>
                     <Button variant="outline" size="icon" className="h-8 w-8 text-destructive hover:text-destructive" onClick={() => handleDeleteList(list.id)}><Trash2 className="h-4 w-4" /></Button>
                   </div>
                 </div>
