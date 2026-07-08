@@ -125,6 +125,34 @@ const handler = async (req: Request): Promise<Response> => {
       console.log(`Exclusion: ${excludedIds.size} contact(s) ignoré(s) via ${excludeListIds.length} liste(s) d'exclusion.`);
     }
 
+    // Exclusion : contacts déjà destinataires de campagnes précédentes sélectionnées
+    const excludedCampaignIds: string[] = Array.isArray((campaign as any).excluded_campaign_ids)
+      ? (campaign as any).excluded_campaign_ids
+      : [];
+    if (excludedCampaignIds.length > 0) {
+      let addedFromCampaigns = 0;
+      let from = 0;
+      while (true) {
+        const { data, error } = await supabase
+          .from('email_analytics')
+          .select('contact_id')
+          .in('campaign_id', excludedCampaignIds)
+          .eq('event_type', 'sent')
+          .range(from, from + PAGE_SIZE - 1);
+        if (error) { console.error('excluded campaigns fetch error:', error); break; }
+        const rows = data || [];
+        for (const r of rows as any[]) {
+          if (r.contact_id && !excludedIds.has(r.contact_id)) {
+            excludedIds.add(r.contact_id);
+            addedFromCampaigns++;
+          }
+        }
+        if (rows.length < PAGE_SIZE) break;
+        from += PAGE_SIZE;
+      }
+      console.log(`Exclusion campagnes précédentes: ${addedFromCampaigns} contact(s) supplémentaire(s) ignoré(s) via ${excludedCampaignIds.length} campagne(s).`);
+    }
+
     // Resend rejette TOUT le batch si UN seul email est invalide.
     // On filtre donc en amont les adresses non-ASCII ET mal formées.
     // eslint-disable-next-line no-control-regex
