@@ -174,6 +174,7 @@ export const ContactDetail: React.FC = () => {
         </TabsList>
 
         <TabsContent value="overview" className="space-y-4">
+          <ContactQuickActions contactId={id!} contactName={`${contact.first_name} ${contact.last_name}`} onCreated={loadConnections} />
           <ContactOverviewTab connections={connections} connectionsLoading={connectionsLoading} />
           <ContactLinkedEntities connections={connections} />
         </TabsContent>
