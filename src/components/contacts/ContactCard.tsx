@@ -158,37 +158,46 @@ export const ContactCard: React.FC<ContactCardProps> = ({
   return (
     <Card className={`hover:shadow-md transition-shadow cursor-pointer ${isSelected ? 'ring-2 ring-blue-500' : ''}`} onClick={() => navigate(`/contacts/${contact.id}`)}>
       <CardHeader className="pb-3">
-        <div className="flex items-start justify-between">
-          <div className="flex items-center space-x-3">
+        <div className="flex items-start justify-between gap-2">
+          <div className="flex items-center space-x-3 min-w-0 flex-1">
              {onSelect && (
                <input
                  type="checkbox"
                  checked={isSelected}
                  onChange={(e) => onSelect(e.target.checked)}
                  onClick={(e) => e.stopPropagation()}
-                 className="w-4 h-4 text-blue-600 rounded border-gray-300 focus:ring-blue-500"
+                 className="w-4 h-4 text-blue-600 rounded border-gray-300 focus:ring-blue-500 flex-shrink-0"
                />
              )}
-            <div className="w-10 h-10 bg-primary/10 rounded-full flex items-center justify-center">
+            <div className="w-10 h-10 bg-primary/10 rounded-full flex items-center justify-center flex-shrink-0">
               <span className="text-lg">{getRoleIcon(contact.role)}</span>
             </div>
-            <div>
-              <h3 className="font-semibold text-lg">
+            <div className="min-w-0 flex-1">
+              <h3 className="font-semibold text-base sm:text-lg truncate">
                 {contact.first_name} {contact.last_name}
               </h3>
               {contact.position && (
-                <p className="text-sm text-muted-foreground">{contact.position}</p>
+                <p className="text-sm text-muted-foreground truncate">{contact.position}</p>
               )}
+              <Badge className={`${getStatusColor(contact.status)} mt-1 sm:hidden`}>
+                {contact.status}
+              </Badge>
             </div>
           </div>
-          <div className="flex items-center space-x-2">
-            <Badge className={getStatusColor(contact.status)}>
+          <div className="flex items-center gap-1 flex-shrink-0">
+            <Badge className={`${getStatusColor(contact.status)} hidden sm:inline-flex`}>
               {contact.status}
             </Badge>
              <DropdownMenu>
                <DropdownMenuTrigger asChild>
-                 <Button variant="ghost" size="sm" onClick={(e) => e.stopPropagation()}>
-                   <MoreVertical className="h-4 w-4" />
+                 <Button
+                   variant="outline"
+                   size="icon"
+                   className="h-8 w-8 border-border bg-background hover:bg-muted"
+                   onClick={(e) => e.stopPropagation()}
+                   aria-label="Actions du contact"
+                 >
+                   <MoreVertical className="h-4 w-4 text-foreground" />
                  </Button>
                </DropdownMenuTrigger>
               <DropdownMenuContent align="end">
