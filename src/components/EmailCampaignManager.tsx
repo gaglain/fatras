@@ -188,7 +188,7 @@ export const EmailCampaignManager: React.FC<EmailCampaignManagerProps> = ({ camp
         </TabsList>
 
         <TabsContent value="settings">
-          <CampaignManagerSettings campaignData={campaignData} setCampaignData={setCampaignData} templates={templates} contactLists={contactLists} onTemplateSelect={handleTemplateSelect} />
+          <CampaignManagerSettings campaignData={campaignData} setCampaignData={setCampaignData} templates={templates} contactLists={contactLists} campaigns={campaigns} currentCampaignId={campaignId} onTemplateSelect={handleTemplateSelect} />
         </TabsContent>
 
         <TabsContent value="design" className="h-[calc(100vh-16rem)]">
