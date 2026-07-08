@@ -1144,6 +1144,7 @@ export type Database = {
           created_at: string
           delivered_count: number | null
           event_id: string | null
+          excluded_campaign_ids: string[]
           id: string
           include_signature: boolean
           name: string
@@ -1172,6 +1173,7 @@ export type Database = {
           created_at?: string
           delivered_count?: number | null
           event_id?: string | null
+          excluded_campaign_ids?: string[]
           id?: string
           include_signature?: boolean
           name: string
@@ -1200,6 +1202,7 @@ export type Database = {
           created_at?: string
           delivered_count?: number | null
           event_id?: string | null
+          excluded_campaign_ids?: string[]
           id?: string
           include_signature?: boolean
           name?: string

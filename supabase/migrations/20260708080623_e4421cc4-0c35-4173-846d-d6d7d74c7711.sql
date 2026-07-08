@@ -1,0 +1,1 @@
+ALTER TABLE public.email_campaigns ADD COLUMN IF NOT EXISTS excluded_campaign_ids uuid[] NOT NULL DEFAULT '{}';

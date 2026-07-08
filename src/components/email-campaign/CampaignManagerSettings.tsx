@@ -28,10 +28,19 @@ interface CampaignData {
   content: any[];
   selectedLists: string[];
   excludedLists?: string[];
+  excludedCampaignIds?: string[];
   templateId: string;
   artistId: string | null;
   eventId: string | null;
   includeSignature?: boolean;
+}
+
+interface PastCampaign {
+  id: string;
+  name: string;
+  status: string;
+  sent_count?: number;
+  sent_at?: string;
 }
 
 interface CampaignManagerSettingsProps {
@@ -39,12 +48,16 @@ interface CampaignManagerSettingsProps {
   setCampaignData: React.Dispatch<React.SetStateAction<CampaignData>>;
   templates: Template[];
   contactLists: ContactList[];
+  campaigns?: PastCampaign[];
+  currentCampaignId?: string;
   onTemplateSelect: (templateId: string) => void;
 }
 
 export const CampaignManagerSettings: React.FC<CampaignManagerSettingsProps> = ({
-  campaignData, setCampaignData, templates, contactLists, onTemplateSelect
+  campaignData, setCampaignData, templates, contactLists, campaigns = [], currentCampaignId, onTemplateSelect
 }) => {
+  const eligibleCampaigns = campaigns.filter(c => c.id !== currentCampaignId && (c.status === 'sent' || c.status === 'sending' || (c.sent_count ?? 0) > 0));
+
   return (
     <div className="space-y-6">
       <Card>
@@ -160,6 +173,46 @@ export const CampaignManagerSettings: React.FC<CampaignManagerSettingsProps> = (
           ))}
         </CardContent>
       </Card>
+
+      <Card>
+        <CardHeader>
+          <CardTitle>Exclure les destinataires de campagnes précédentes</CardTitle>
+          <p className="text-sm text-muted-foreground mt-1">
+            Les contacts ayant déjà reçu un email dans les campagnes cochées ici ne recevront pas celle-ci (évite les doublons entre séquences).
+          </p>
+        </CardHeader>
+        <CardContent className="space-y-3">
+          {eligibleCampaigns.length === 0 && (
+            <p className="text-sm text-muted-foreground">Aucune campagne envoyée disponible.</p>
+          )}
+          {eligibleCampaigns.map(c => {
+            const checked = (campaignData.excludedCampaignIds || []).includes(c.id);
+            return (
+              <div key={`exc-camp-${c.id}`} className="flex items-center space-x-2">
+                <Checkbox
+                  id={`exc-camp-${c.id}`}
+                  checked={checked}
+                  onCheckedChange={(v) => {
+                    setCampaignData(prev => ({
+                      ...prev,
+                      excludedCampaignIds: v
+                        ? [...(prev.excludedCampaignIds || []), c.id]
+                        : (prev.excludedCampaignIds || []).filter(id => id !== c.id)
+                    }));
+                  }}
+                />
+                <div className="flex-1">
+                  <Label htmlFor={`exc-camp-${c.id}`} className="font-medium cursor-pointer">{c.name}</Label>
+                  <p className="text-sm text-muted-foreground">
+                    {c.sent_count ?? 0} envois{c.sent_at ? ` · ${new Date(c.sent_at).toLocaleDateString('fr-FR')}` : ''}
+                  </p>
+                </div>
+              </div>
+            );
+          })}
+        </CardContent>
+      </Card>
+
 
       <Card>
         <CardHeader><CardTitle>Signature email</CardTitle></CardHeader>
