@@ -19,6 +19,7 @@ import { toast } from 'sonner';
 import { ContactDetailHeader } from './contacts/ContactDetailHeader';
 import { ContactOverviewTab, getAllConnections } from './contacts/ContactOverviewTab';
 import { ContactLinkedEntities } from './contacts/ContactLinkedEntities';
+import { ContactQuickActions } from './contacts/ContactQuickActions';
 
 export const ContactDetail: React.FC = () => {
   const { id } = useParams<{ id: string }>();
@@ -173,6 +174,7 @@ export const ContactDetail: React.FC = () => {
         </TabsList>
 
         <TabsContent value="overview" className="space-y-4">
+          <ContactQuickActions contactId={id!} contactName={`${contact.first_name} ${contact.last_name}`} onCreated={loadConnections} />
           <ContactOverviewTab connections={connections} connectionsLoading={connectionsLoading} />
           <ContactLinkedEntities connections={connections} />
         </TabsContent>
