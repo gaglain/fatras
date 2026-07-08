@@ -19,6 +19,7 @@ import { toast } from 'sonner';
 import { ContactDetailHeader } from './contacts/ContactDetailHeader';
 import { ContactOverviewTab, getAllConnections } from './contacts/ContactOverviewTab';
 import { ContactLinkedEntities } from './contacts/ContactLinkedEntities';
+import { ContactQuickActions } from './contacts/ContactQuickActions';
 
 export const ContactDetail: React.FC = () => {
   const { id } = useParams<{ id: string }>();
