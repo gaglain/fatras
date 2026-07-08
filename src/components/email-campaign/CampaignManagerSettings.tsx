@@ -28,10 +28,19 @@ interface CampaignData {
   content: any[];
   selectedLists: string[];
   excludedLists?: string[];
+  excludedCampaignIds?: string[];
   templateId: string;
   artistId: string | null;
   eventId: string | null;
   includeSignature?: boolean;
+}
+
+interface PastCampaign {
+  id: string;
+  name: string;
+  status: string;
+  sent_count?: number;
+  sent_at?: string;
 }
 
 interface CampaignManagerSettingsProps {
@@ -39,12 +48,16 @@ interface CampaignManagerSettingsProps {
   setCampaignData: React.Dispatch<React.SetStateAction<CampaignData>>;
   templates: Template[];
   contactLists: ContactList[];
+  campaigns?: PastCampaign[];
+  currentCampaignId?: string;
   onTemplateSelect: (templateId: string) => void;
 }
 
 export const CampaignManagerSettings: React.FC<CampaignManagerSettingsProps> = ({
-  campaignData, setCampaignData, templates, contactLists, onTemplateSelect
+  campaignData, setCampaignData, templates, contactLists, campaigns = [], currentCampaignId, onTemplateSelect
 }) => {
+  const eligibleCampaigns = campaigns.filter(c => c.id !== currentCampaignId && (c.status === 'sent' || c.status === 'sending' || (c.sent_count ?? 0) > 0));
+
   return (
     <div className="space-y-6">
       <Card>
