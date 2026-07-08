@@ -123,7 +123,7 @@ export const EmailCampaignManager: React.FC<EmailCampaignManagerProps> = ({ camp
     try {
       let finalId = campaignId;
       if (!finalId) { const campaign = await createCampaign({ name: campaignData.name, subject: campaignData.subject, content: JSON.stringify(campaignData.content), status: 'draft', include_signature: !!campaignData.includeSignature } as any); finalId = campaign.id; }
-      else { await supabase.from('email_campaigns').update({ name: campaignData.name, subject: campaignData.subject, content: JSON.stringify(campaignData.content), status: 'draft', include_signature: !!campaignData.includeSignature }).eq('id', finalId); await supabase.from('campaign_contact_lists').delete().eq('campaign_id', finalId); }
+      else { await supabase.from('email_campaigns').update({ name: campaignData.name, subject: campaignData.subject, content: JSON.stringify(campaignData.content), status: 'draft', include_signature: !!campaignData.includeSignature, excluded_campaign_ids: campaignData.excludedCampaignIds || [] }).eq('id', finalId); await supabase.from('campaign_contact_lists').delete().eq('campaign_id', finalId); }
       if (finalId) await insertCampaignLists(finalId);
       const { invokeEdgeFunction } = await import('@/lib/edgeFunctionClient');
       const result = await invokeEdgeFunction({ functionName: 'send-campaign-emails', body: { campaignId: finalId } });
