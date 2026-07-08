@@ -84,7 +84,7 @@ export const EmailCampaignManager: React.FC<EmailCampaignManagerProps> = ({ camp
   const handleSave = async () => {
     if (!campaignData.name || !campaignData.subject) { toast.error('Nom et sujet requis'); return; }
     try {
-      const basePayload: any = { name: campaignData.name, subject: campaignData.subject, content: JSON.stringify(campaignData.content), artist_id: campaignData.artistId || null, event_id: campaignData.eventId || null, include_signature: !!campaignData.includeSignature };
+      const basePayload: any = { name: campaignData.name, subject: campaignData.subject, content: JSON.stringify(campaignData.content), artist_id: campaignData.artistId || null, event_id: campaignData.eventId || null, include_signature: !!campaignData.includeSignature, excluded_campaign_ids: campaignData.excludedCampaignIds || [] };
       let finalId = campaignId;
       if (campaignId) {
         // Ne PAS écraser le status d'une campagne déjà envoyée/en cours/programmée
