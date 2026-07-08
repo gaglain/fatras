@@ -41,8 +41,8 @@ export const EmailCampaignManager: React.FC<EmailCampaignManagerProps> = ({ camp
   useEffect(() => {
     const loadLinks = async () => {
       if (!campaignId) return;
-      const { data } = await supabase.from('email_campaigns').select('artist_id,event_id,include_signature').eq('id', campaignId).single();
-      if (data) setCampaignData(prev => ({ ...prev, artistId: data.artist_id || null, eventId: data.event_id || null, includeSignature: !!(data as any).include_signature }));
+      const { data } = await supabase.from('email_campaigns').select('artist_id,event_id,include_signature,excluded_campaign_ids').eq('id', campaignId).single();
+      if (data) setCampaignData(prev => ({ ...prev, artistId: data.artist_id || null, eventId: data.event_id || null, includeSignature: !!(data as any).include_signature, excludedCampaignIds: (data as any).excluded_campaign_ids || [] }));
     };
     loadLinks();
   }, [campaignId]);
