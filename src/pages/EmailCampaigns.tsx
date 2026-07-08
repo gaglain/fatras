@@ -128,11 +128,17 @@ export const EmailCampaigns: React.FC = () => {
       if (!user) throw new Error('User not authenticated');
       const { data: fullCampaign, error: fetchError } = await supabase.from('email_campaigns').select('*').eq('id', campaign.id).single();
       if (fetchError || !fullCampaign) throw fetchError;
-      const { data: newCampaign, error: insertError } = await supabase.from('email_campaigns').insert({ user_id: user.id, name: `${fullCampaign.name} (copie)`, subject: fullCampaign.subject, content: fullCampaign.content, status: 'draft', artist_id: fullCampaign.artist_id, event_id: fullCampaign.event_id, template_id: fullCampaign.template_id, include_signature: !!fullCampaign.include_signature }).select('id').single();
+      // Nouvelle campagne : on exclut automatiquement les contacts déjà touchés par
+      // la campagne source ET par celles qu'elle excluait déjà (chaîne de séquences).
+      const previousExcluded: string[] = Array.isArray((fullCampaign as any).excluded_campaign_ids)
+        ? (fullCampaign as any).excluded_campaign_ids
+        : [];
+      const excludedCampaignIds = Array.from(new Set([...previousExcluded, fullCampaign.id]));
+      const { data: newCampaign, error: insertError } = await supabase.from('email_campaigns').insert({ user_id: user.id, name: `${fullCampaign.name} (copie)`, subject: fullCampaign.subject, content: fullCampaign.content, status: 'draft', artist_id: fullCampaign.artist_id, event_id: fullCampaign.event_id, template_id: fullCampaign.template_id, include_signature: !!fullCampaign.include_signature, excluded_campaign_ids: excludedCampaignIds }).select('id').single();
       if (insertError) throw insertError;
       if (newCampaign) {
-        const { data: lists } = await supabase.from('campaign_contact_lists').select('contact_list_id').eq('campaign_id', campaign.id);
-        if (lists?.length) await supabase.from('campaign_contact_lists').insert(lists.map(l => ({ campaign_id: newCampaign.id, contact_list_id: l.contact_list_id })));
+        const { data: lists } = await supabase.from('campaign_contact_lists').select('contact_list_id, kind').eq('campaign_id', campaign.id);
+        if (lists?.length) await supabase.from('campaign_contact_lists').insert(lists.map((l: any) => ({ campaign_id: newCampaign.id, contact_list_id: l.contact_list_id, kind: l.kind || 'include' })));
       }
       toast({ title: "Succès", description: "Campagne dupliquée avec succès" });
       await fetchCampaigns();
