@@ -113,7 +113,7 @@ export const EmailCampaignManager: React.FC<EmailCampaignManagerProps> = ({ camp
       if (!finalId) { const campaign = await createCampaign({ name: campaignData.name, subject: campaignData.subject, content: JSON.stringify(campaignData.content), status: 'scheduled', artist_id: campaignData.artistId || null, event_id: campaignData.eventId || null, include_signature: !!campaignData.includeSignature } as any); finalId = (campaign as any).id; }
       else { await supabase.from('campaign_contact_lists').delete().eq('campaign_id', finalId); }
       if (finalId) await insertCampaignLists(finalId);
-      await supabase.from('email_campaigns').update({ status: 'scheduled', scheduled_for: scheduledFor.toISOString(), auto_send: autoSend }).eq('id', finalId);
+      await supabase.from('email_campaigns').update({ status: 'scheduled', scheduled_for: scheduledFor.toISOString(), auto_send: autoSend, excluded_campaign_ids: campaignData.excludedCampaignIds || [] }).eq('id', finalId);
     } catch (error: any) { throw new Error('Erreur lors de la programmation: ' + error.message); }
   };
 
