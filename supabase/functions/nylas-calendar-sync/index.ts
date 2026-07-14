@@ -83,10 +83,6 @@ Deno.serve(async (req) => {
           location: event.location || '',
           participants: event.participants || [],
           busy: true,
-          conferencing: {
-            provider: 'Google Meet',
-            autocreate: {},
-          },
         }),
       })
 
