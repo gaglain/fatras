@@ -218,14 +218,20 @@ export const TourStopRoadmapTab: React.FC<TourStopRoadmapTabProps> = ({
       {stop.invitations && (
         <div>
           <h3 className="font-semibold text-gray-900 mb-1 text-sm sm:text-base">🎟️ Invitations</h3>
-          <p className="text-xs sm:text-sm text-gray-700 bg-purple-50 p-2 sm:p-3 rounded whitespace-pre-wrap">{stop.invitations}</p>
+          <div
+            className="prose prose-sm max-w-none text-xs sm:text-sm text-gray-700 bg-purple-50 p-2 sm:p-3 rounded [&_ul]:list-disc [&_ul]:pl-5 [&_ol]:list-decimal [&_ol]:pl-5"
+            dangerouslySetInnerHTML={{ __html: sanitizeHtml(stop.invitations) }}
+          />
         </div>
       )}
 
       {stop.notes && (
         <div>
           <h3 className="font-semibold text-gray-900 mb-1 text-sm sm:text-base">📝 Notes</h3>
-          <p className="text-xs sm:text-sm text-gray-700 bg-yellow-50 p-2 sm:p-3 rounded whitespace-pre-wrap">{stop.notes}</p>
+          <div
+            className="prose prose-sm max-w-none text-xs sm:text-sm text-gray-700 bg-yellow-50 p-2 sm:p-3 rounded [&_ul]:list-disc [&_ul]:pl-5 [&_ol]:list-decimal [&_ol]:pl-5"
+            dangerouslySetInnerHTML={{ __html: sanitizeHtml(stop.notes) }}
+          />
         </div>
       )}
 
@@ -241,12 +247,13 @@ export const TourStopRoadmapTab: React.FC<TourStopRoadmapTabProps> = ({
         </div>
       )}
 
-      {stop.equipment && stop.equipment.length > 0 && (
+      {stop.equipment && stop.equipment.length > 0 && stop.equipment.some(e => e && e.trim()) && (
         <div>
           <h3 className="font-semibold text-gray-900 mb-2 text-sm sm:text-base">🔧 Équipement</h3>
-          <div className="flex flex-wrap gap-2">
-            {stop.equipment.map((eq, idx) => <span key={idx} className="px-2 py-1 bg-blue-50 text-blue-700 rounded-full text-xs sm:text-sm">{eq}</span>)}
-          </div>
+          <div
+            className="prose prose-sm max-w-none text-xs sm:text-sm text-gray-700 bg-blue-50 p-2 sm:p-3 rounded [&_ul]:list-disc [&_ul]:pl-5 [&_ol]:list-decimal [&_ol]:pl-5"
+            dangerouslySetInnerHTML={{ __html: sanitizeHtml(stop.equipment.join('')) }}
+          />
         </div>
       )}
 
