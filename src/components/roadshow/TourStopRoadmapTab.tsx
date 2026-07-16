@@ -13,6 +13,7 @@ import { useAuth } from '@/hooks/useAuth';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
 import { ExpenseFileLink, ExpenseImage } from './ExpenseFileLink';
+import { sanitizeHtml } from '@/lib/sanitize';
 
 interface TourStopRoadmapTabProps {
   stop: TourStop;
