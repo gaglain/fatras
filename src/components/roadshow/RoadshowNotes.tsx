@@ -1,6 +1,5 @@
 import React, { useState } from 'react';
 import { Button } from '@/components/ui/button';
-import { Textarea } from '@/components/ui/textarea';
 import { Badge } from '@/components/ui/badge';
 import { Plus, Trash2, Edit, Check, X } from 'lucide-react';
 import { useRoadshowNotes } from '@/hooks/useRoadshowNotes';
@@ -9,6 +8,8 @@ import { Alert, AlertDescription } from '@/components/ui/alert';
 import { Info } from 'lucide-react';
 import { useAuth } from '@/hooks/useAuth';
 import { useConfirm } from '@/components/ui/confirm-dialog';
+import { SongRichTextEditor } from '@/components/setlist/SongRichTextEditor';
+import { sanitizeHtml } from '@/lib/sanitize';
 
 interface RoadshowNotesProps {
   roadshowStopId?: string;
