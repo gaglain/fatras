@@ -56,19 +56,23 @@ export const RoadshowNotes: React.FC<RoadshowNotesProps> = ({ roadshowStopId }) 
     );
   }
 
+  const stripHtml = (html: string) => html.replace(/<[^>]*>/g, '').replace(/&nbsp;/g, ' ').trim();
+
   return (
     <div className="space-y-4">
       {/* Add note */}
-      <div className="flex gap-2">
-        <Textarea
-          placeholder="Ajouter une note..."
+      <div className="space-y-2">
+        <SongRichTextEditor
           value={newNote}
-          onChange={(e) => setNewNote(e.target.value)}
-          className="min-h-[60px]"
+          onChange={setNewNote}
+          placeholder="Ajouter une note..."
+          minHeight={100}
         />
-        <Button onClick={handleAdd} size="sm" disabled={!newNote.trim()}>
-          <Plus className="h-4 w-4" />
-        </Button>
+        <div className="flex justify-end">
+          <Button onClick={handleAdd} size="sm" disabled={!stripHtml(newNote)}>
+            <Plus className="h-4 w-4 mr-1" /> Ajouter
+          </Button>
+        </div>
       </div>
 
       {/* Notes list */}
@@ -108,19 +112,22 @@ export const RoadshowNotes: React.FC<RoadshowNotesProps> = ({ roadshowStopId }) 
                   )}
                 </div>
                 {isEditing ? (
-                  <div className="flex gap-2 mt-2">
-                    <Textarea value={editContent} onChange={(e) => setEditContent(e.target.value)} className="min-h-[40px]" />
-                    <div className="flex flex-col gap-1">
-                      <Button variant="ghost" size="sm" className="h-6 w-6 p-0" onClick={handleSaveEdit}>
-                        <Check className="h-3 w-3" />
+                  <div className="space-y-2 mt-2">
+                    <SongRichTextEditor value={editContent} onChange={setEditContent} minHeight={80} />
+                    <div className="flex justify-end gap-1">
+                      <Button variant="ghost" size="sm" className="h-7 px-2" onClick={handleSaveEdit}>
+                        <Check className="h-3 w-3 mr-1" /> Enregistrer
                       </Button>
-                      <Button variant="ghost" size="sm" className="h-6 w-6 p-0" onClick={() => setEditingId(null)}>
-                        <X className="h-3 w-3" />
+                      <Button variant="ghost" size="sm" className="h-7 px-2" onClick={() => setEditingId(null)}>
+                        <X className="h-3 w-3 mr-1" /> Annuler
                       </Button>
                     </div>
                   </div>
                 ) : (
-                  <p className="text-sm whitespace-pre-wrap">{note.content}</p>
+                  <div
+                    className="prose prose-sm max-w-none text-sm [&_ul]:list-disc [&_ul]:pl-5 [&_ol]:list-decimal [&_ol]:pl-5"
+                    dangerouslySetInnerHTML={{ __html: sanitizeHtml(note.content) }}
+                  />
                 )}
               </div>
             );
