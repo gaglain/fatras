@@ -267,30 +267,26 @@ export const TourStopCard: React.FC<TourStopCardProps> = ({
           )}
 
           {/* Invitations */}
-          {stop.invitations && (
+          {stop.invitations && stripHtml(stop.invitations) && (
             <div className="mb-3 sm:mb-4">
               <p className="text-xs sm:text-sm text-muted-foreground mb-1">🎟️ Invitations:</p>
-              <p className="text-xs sm:text-sm line-clamp-2 break-words">{stop.invitations}</p>
+              <p className="text-xs sm:text-sm line-clamp-2 break-words">{stripHtml(stop.invitations)}</p>
             </div>
           )}
 
           {/* Notes */}
-          {stop.notes && (
+          {stop.notes && stripHtml(stop.notes) && (
             <div className="mb-3 sm:mb-4">
               <p className="text-xs sm:text-sm text-muted-foreground mb-1">📝 Notes:</p>
-              <p className="text-xs sm:text-sm line-clamp-2 break-words">{stop.notes}</p>
+              <p className="text-xs sm:text-sm line-clamp-2 break-words">{stripHtml(stop.notes)}</p>
             </div>
           )}
 
           {/* Équipement */}
-          {stop.equipment && stop.equipment.length > 0 && (
+          {stop.equipment && stop.equipment.length > 0 && stripHtml(stop.equipment.join('')) && (
             <div className="mb-3 sm:mb-4">
               <p className="text-xs sm:text-sm text-muted-foreground mb-1">🔧 Équipement:</p>
-              <div className="flex flex-wrap gap-1">
-                {stop.equipment.map((eq, idx) => (
-                  <Badge key={idx} variant="outline" className="text-xs">{eq}</Badge>
-                ))}
-              </div>
+              <p className="text-xs sm:text-sm line-clamp-2 break-words">{stripHtml(stop.equipment.join(' '))}</p>
             </div>
           )}
 
