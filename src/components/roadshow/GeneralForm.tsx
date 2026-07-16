@@ -98,21 +98,21 @@ export const GeneralForm: React.FC<GeneralFormProps> = ({ formData, setFormData 
 
       <div>
         <label className="block text-sm font-medium text-gray-700 mb-2">Notes</label>
-        <Textarea
+        <SongRichTextEditor
           value={formData.notes}
-          onChange={(e) => setFormData({ ...formData, notes: e.target.value })}
+          onChange={(html) => setFormData({ ...formData, notes: html })}
           placeholder="Notes spéciales..."
-          className="min-h-[100px]"
+          minHeight={140}
         />
       </div>
 
       <div>
         <label className="block text-sm font-medium text-gray-700 mb-2">Invitations</label>
-        <Textarea
+        <SongRichTextEditor
           value={formData.invitations || ''}
-          onChange={(e) => setFormData({ ...formData, invitations: e.target.value })}
+          onChange={(html) => setFormData({ ...formData, invitations: html })}
           placeholder="Liste des invités, contacts VIP, entrées gratuites..."
-          className="min-h-[120px]"
+          minHeight={160}
         />
         <p className="text-xs text-muted-foreground mt-1">
           Notez ici les invités, contacts ou listes d'entrées pour cette date
