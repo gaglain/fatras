@@ -11,6 +11,11 @@ import { generateTourStopPDF } from '@/utils/pdfGenerator';
 import { toast } from 'sonner';
 import { openChatWithRoadshowStop } from '@/lib/chatWidgetEvents';
 
+const stripHtml = (html: string) => {
+  if (!html) return '';
+  return html.replace(/<[^>]*>/g, ' ').replace(/&nbsp;/g, ' ').replace(/\s+/g, ' ').trim();
+};
+
 interface TourStopWithCosts extends TourStop {
   vehicleType?: string;
   distanceKm?: number;
