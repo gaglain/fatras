@@ -1,9 +1,9 @@
 
 import React from 'react';
 import { Input } from '@/components/ui/input';
-import { Textarea } from '@/components/ui/textarea';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Switch } from '@/components/ui/switch';
+import { SongRichTextEditor } from '@/components/setlist/SongRichTextEditor';
 import { FormData } from '@/types/roadshow.types';
 
 interface LogisticsFormProps {
@@ -182,11 +182,11 @@ export const LogisticsForm: React.FC<LogisticsFormProps> = ({ formData, setFormD
 
       <div>
         <label className="block text-xs font-medium text-muted-foreground mb-1">Équipement</label>
-        <Textarea
-          value={formData.equipment.join(', ')}
-          onChange={(e) => setFormData({ ...formData, equipment: e.target.value.split(',').map(item => item.trim()) })}
+        <SongRichTextEditor
+          value={formData.equipment?.[0] || ''}
+          onChange={(html) => setFormData({ ...formData, equipment: [html] })}
           placeholder="Équipement nécessaire..."
-          className="min-h-[100px]"
+          minHeight={140}
         />
       </div>
 

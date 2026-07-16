@@ -2,6 +2,23 @@
 import jsPDF from 'jspdf';
 import { TourStop } from '@/types/roadshow.types';
 
+const stripHtmlToText = (html: string): string => {
+  if (!html) return '';
+  return html
+    .replace(/<\s*br\s*\/?\s*>/gi, '\n')
+    .replace(/<\/\s*(p|div|li|h[1-6]|blockquote)\s*>/gi, '\n')
+    .replace(/<li[^>]*>/gi, '• ')
+    .replace(/<[^>]+>/g, '')
+    .replace(/&nbsp;/g, ' ')
+    .replace(/&amp;/g, '&')
+    .replace(/&lt;/g, '<')
+    .replace(/&gt;/g, '>')
+    .replace(/&quot;/g, '"')
+    .replace(/&#39;/g, "'")
+    .replace(/\n{3,}/g, '\n\n')
+    .trim();
+};
+
 interface TourStopWithCosts extends TourStop {
   vehicleType?: string;
   distanceKm?: number;
@@ -281,23 +298,16 @@ export const generateTourStopPDF = (
   // ==========================================
   // EQUIPEMENT
   // ==========================================
-  if (tourStop.equipment && tourStop.equipment.length > 0 && tourStop.equipment.some(e => e.trim())) {
+  if (tourStop.equipment && tourStop.equipment.length > 0 && tourStop.equipment.some(e => stripHtmlToText(e).trim())) {
     drawSectionHeader('EQUIPEMENT');
-
-    let badgeX = m + 4;
-    tourStop.equipment.forEach((item) => {
-      if (!item.trim()) return;
-      doc.setFontSize(8);
-      const bw = doc.getTextWidth(item.trim()) + 10;
-      if (badgeX + bw > pw - m) {
-        badgeX = m + 4;
-        y += 9;
-        checkPage(10);
-      }
-      drawBadgeOutline(item.trim(), badgeX, y);
-      badgeX += bw + 3;
-    });
-    y += 10;
+    checkPage(10);
+    doc.setFontSize(9);
+    doc.setFont('helvetica', 'normal');
+    setColor(COLORS.text);
+    const eqText = stripHtmlToText(tourStop.equipment.join('\n')).trim();
+    const eqLines = doc.splitTextToSize(eqText, contentW - 8);
+    doc.text(eqLines, m + 4, y);
+    y += eqLines.length * 4.5 + 6;
   }
 
   // ==========================================
@@ -322,13 +332,13 @@ export const generateTourStopPDF = (
   // ==========================================
   // INVITATIONS
   // ==========================================
-  if (tourStop.invitations && tourStop.invitations.trim()) {
+  if (tourStop.invitations && stripHtmlToText(tourStop.invitations).trim()) {
     drawSectionHeader('INVITATIONS');
     checkPage(10);
     doc.setFontSize(9);
     doc.setFont('helvetica', 'normal');
     setColor(COLORS.text);
-    const lines = doc.splitTextToSize(tourStop.invitations, contentW - 8);
+    const lines = doc.splitTextToSize(stripHtmlToText(tourStop.invitations), contentW - 8);
     doc.text(lines, m + 4, y);
     y += lines.length * 4.5 + 6;
   }
@@ -336,11 +346,11 @@ export const generateTourStopPDF = (
   // ==========================================
   // NOTES
   // ==========================================
-  if (tourStop.notes && tourStop.notes.trim()) {
+  if (tourStop.notes && stripHtmlToText(tourStop.notes).trim()) {
     drawSectionHeader('NOTES');
     checkPage(10);
     setFill(COLORS.sectionBg);
-    const noteLines = doc.splitTextToSize(tourStop.notes, contentW - 12);
+    const noteLines = doc.splitTextToSize(stripHtmlToText(tourStop.notes), contentW - 12);
     const noteH = noteLines.length * 4.5 + 6;
     doc.roundedRect(m, y - 2, contentW, noteH, 3, 3, 'F');
     doc.setFontSize(9);
