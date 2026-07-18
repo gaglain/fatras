@@ -289,6 +289,14 @@ function buildEmailHtml(p: EmailParams): string {
       </div>
       ` : ""}
 
+      ${p.documents && p.documents.length > 0 ? `
+      <h3 style="margin:20px 0 8px;font-size:16px;color:#1e293b;">📎 Documents</h3>
+      <div style="background:#eff6ff;border-radius:8px;padding:12px 16px;">
+        ${p.documents.map(d => `<p style="margin:4px 0;font-size:14px;">📄 <a href="${d.url}" style="color:#2563eb;text-decoration:underline;" target="_blank" rel="noopener noreferrer">${d.name}</a></p>`).join('')}
+      </div>
+      ` : ""}
+
+
       <div style="text-align:center;margin:28px 0 16px;">
         <a href="${p.shareUrl}" style="display:inline-block;background:#3b82f6;color:#fff;text-decoration:none;padding:12px 28px;border-radius:8px;font-size:15px;font-weight:600;">
           📋 Voir la feuille de route complète
