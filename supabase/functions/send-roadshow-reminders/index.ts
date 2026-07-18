@@ -148,6 +148,7 @@ Deno.serve(async (req) => {
             shareUrl,
             daysLabel,
             introLine,
+            documents,
           });
 
           // Send via Resend
