@@ -43,7 +43,7 @@ interface RouteSheet {
   invitations?: string
 }
 
-function buildRouteSheetDescription(event: any, routeSheet: RouteSheet, quoteAmount?: number | null, crewNames?: string[]): string {
+function buildRouteSheetDescription(event: any, routeSheet: RouteSheet, quoteAmount?: number | null, crewNames?: string[], documents?: Array<{ name: string; url: string }>): string {
   const lines: string[] = []
 
   lines.push(`🎤 ${event.title}`)
