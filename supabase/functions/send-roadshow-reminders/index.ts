@@ -91,6 +91,20 @@ Deno.serve(async (req) => {
 
         if (!profiles || profiles.length === 0) continue;
 
+        // Fetch attached documents for this stop
+        const { data: docsRows } = await supabase
+          .from('roadshow_documents')
+          .select('file_name, file_path, category')
+          .eq('roadshow_stop_id', stop.id)
+          .order('created_at', { ascending: false });
+
+        const documents = (docsRows || []).map((d: any) => {
+          const { data: pub } = supabase.storage
+            .from('roadshow-documents')
+            .getPublicUrl(d.file_path);
+          return { name: d.file_name, url: pub.publicUrl, category: d.category };
+        });
+
         let emailsSent = 0;
 
         for (const profile of profiles) {
@@ -134,6 +148,7 @@ Deno.serve(async (req) => {
             shareUrl,
             daysLabel,
             introLine,
+            documents,
           });
 
           // Send via Resend
@@ -216,6 +231,7 @@ interface EmailParams {
   shareUrl: string;
   daysLabel: string;
   introLine: string;
+  documents: Array<{ name: string; url: string; category: string }>;
 }
 
 function buildEmailHtml(p: EmailParams): string {
@@ -272,6 +288,14 @@ function buildEmailHtml(p: EmailParams): string {
         ${p.meetingPointLocation ? infoBlock("Lieu de RDV", p.meetingPointLocation) : ""}
       </div>
       ` : ""}
+
+      ${p.documents && p.documents.length > 0 ? `
+      <h3 style="margin:20px 0 8px;font-size:16px;color:#1e293b;">📎 Documents</h3>
+      <div style="background:#eff6ff;border-radius:8px;padding:12px 16px;">
+        ${p.documents.map(d => `<p style="margin:4px 0;font-size:14px;">📄 <a href="${d.url}" style="color:#2563eb;text-decoration:underline;" target="_blank" rel="noopener noreferrer">${d.name}</a></p>`).join('')}
+      </div>
+      ` : ""}
+
 
       <div style="text-align:center;margin:28px 0 16px;">
         <a href="${p.shareUrl}" style="display:inline-block;background:#3b82f6;color:#fff;text-decoration:none;padding:12px 28px;border-radius:8px;font-size:15px;font-weight:600;">

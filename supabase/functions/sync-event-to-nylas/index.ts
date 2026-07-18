@@ -43,7 +43,7 @@ interface RouteSheet {
   invitations?: string
 }
 
-function buildRouteSheetDescription(event: any, routeSheet: RouteSheet, quoteAmount?: number | null, crewNames?: string[]): string {
+function buildRouteSheetDescription(event: any, routeSheet: RouteSheet, quoteAmount?: number | null, crewNames?: string[], documents?: Array<{ name: string; url: string }>): string {
   const lines: string[] = []
 
   lines.push(`🎤 ${event.title}`)
@@ -150,6 +150,13 @@ function buildRouteSheetDescription(event: any, routeSheet: RouteSheet, quoteAmo
   if (routeSheet.notes) {
     lines.push('📝 NOTES')
     lines.push(`  ${routeSheet.notes}`)
+    lines.push('')
+  }
+
+  // 📎 Documents
+  if (documents && documents.length > 0) {
+    lines.push('📎 DOCUMENTS')
+    documents.forEach(d => lines.push(`  • ${d.name} : ${d.url}`))
     lines.push('')
   }
 
@@ -441,7 +448,21 @@ Deno.serve(async (req) => {
         }
       }
 
-      description = buildRouteSheetDescription(event, routeSheet as RouteSheet, quoteAmount, crewNames)
+      // Fetch attached documents for this route sheet
+      const { data: docsRows } = await supabase
+        .from('roadshow_documents')
+        .select('file_name, file_path')
+        .eq('roadshow_stop_id', routeSheet.id)
+        .order('created_at', { ascending: false })
+
+      const documents = (docsRows || []).map((d: any) => {
+        const { data: pub } = supabase.storage
+          .from('roadshow-documents')
+          .getPublicUrl(d.file_path)
+        return { name: d.file_name, url: pub.publicUrl }
+      })
+
+      description = buildRouteSheetDescription(event, routeSheet as RouteSheet, quoteAmount, crewNames, documents)
     } else {
       console.log(`📋 No route sheet found for event ${event_id}`)
       description = buildGenericDescription(event)
