@@ -122,7 +122,7 @@ export const RoadshowDocumentsPreview: React.FC<Props> = ({ roadshowStopId }) =>
             </div>
           </div>
         </div>
-      )}
+      ), document.body)}
     </div>
   );
 };
