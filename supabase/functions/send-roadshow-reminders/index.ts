@@ -231,6 +231,7 @@ interface EmailParams {
   shareUrl: string;
   daysLabel: string;
   introLine: string;
+  documents: Array<{ name: string; url: string; category: string }>;
 }
 
 function buildEmailHtml(p: EmailParams): string {
