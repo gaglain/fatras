@@ -1,4 +1,5 @@
 import React, { useEffect, useState } from 'react';
+import { createPortal } from 'react-dom';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { FileText, Download, Eye, File as FileIcon } from 'lucide-react';
@@ -82,9 +83,9 @@ export const RoadshowDocumentsPreview: React.FC<Props> = ({ roadshowStopId }) =>
         })}
       </div>
 
-      {preview && (
+      {preview && createPortal((
         <div
-          className="fixed inset-0 bg-black/70 z-50 flex items-center justify-center p-4"
+          className="fixed inset-0 bg-black/70 z-[200] flex items-center justify-center p-2 sm:p-4"
           onClick={() => setPreview(null)}
         >
           <div
@@ -121,7 +122,7 @@ export const RoadshowDocumentsPreview: React.FC<Props> = ({ roadshowStopId }) =>
             </div>
           </div>
         </div>
-      )}
+      ), document.body)}
     </div>
   );
 };
