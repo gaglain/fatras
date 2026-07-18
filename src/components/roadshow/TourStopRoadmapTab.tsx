@@ -14,6 +14,7 @@ import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
 import { ExpenseFileLink, ExpenseImage } from './ExpenseFileLink';
 import { sanitizeHtml } from '@/lib/sanitize';
+import { RoadshowDocumentsPreview } from './RoadshowDocumentsPreview';
 
 interface TourStopRoadmapTabProps {
   stop: TourStop;
