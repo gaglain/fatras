@@ -91,6 +91,20 @@ Deno.serve(async (req) => {
 
         if (!profiles || profiles.length === 0) continue;
 
+        // Fetch attached documents for this stop
+        const { data: docsRows } = await supabase
+          .from('roadshow_documents')
+          .select('file_name, file_path, category')
+          .eq('roadshow_stop_id', stop.id)
+          .order('created_at', { ascending: false });
+
+        const documents = (docsRows || []).map((d: any) => {
+          const { data: pub } = supabase.storage
+            .from('roadshow-documents')
+            .getPublicUrl(d.file_path);
+          return { name: d.file_name, url: pub.publicUrl, category: d.category };
+        });
+
         let emailsSent = 0;
 
         for (const profile of profiles) {
