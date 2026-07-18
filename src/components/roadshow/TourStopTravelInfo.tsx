@@ -168,7 +168,7 @@ export const TourStopTravelInfo: React.FC<TourStopTravelInfoProps> = ({
   }
 
   return (
-    <div className="bg-blue-50 dark:bg-blue-950/20 p-3 sm:p-4 rounded-lg space-y-3">
+    <div className="bg-blue-50 dark:bg-blue-950/20 p-3 sm:p-4 rounded-lg space-y-3 min-w-0 overflow-hidden">
       <div className="flex items-center justify-between">
         <h3 className="font-semibold text-foreground flex items-center text-sm sm:text-base">
           <Car className="h-3 w-3 sm:h-4 sm:w-4 mr-2 text-blue-600 dark:text-blue-400 flex-shrink-0" />
