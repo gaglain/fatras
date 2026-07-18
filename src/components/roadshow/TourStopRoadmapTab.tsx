@@ -259,8 +259,11 @@ export const TourStopRoadmapTab: React.FC<TourStopRoadmapTabProps> = ({
         </div>
       )}
 
+      <RoadshowDocumentsPreview roadshowStopId={stop.id} />
+
       {/* Notes de frais */}
       <div className="border-t pt-3 sm:pt-4">
+
         <div className="flex items-center justify-between mb-2 sm:mb-3">
           <h3 className="font-semibold text-gray-900 flex items-center text-sm sm:text-base">
             <FileText className="h-3 w-3 sm:h-4 sm:w-4 mr-1 sm:mr-2 text-purple-600" />Frais ({expenses.length})
