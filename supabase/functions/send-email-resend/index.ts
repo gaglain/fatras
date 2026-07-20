@@ -71,7 +71,29 @@ const handler = async (req: Request): Promise<Response> => {
       );
     }
 
-    const { to, subject, html, fromName = 'Application', from, userId, attachments }: EmailRequest = await req.json();
+    let { to, subject, html, fromName = 'Application', from, userId, attachments }: EmailRequest = await req.json();
+
+    // Normaliser les destinataires : accepter string ou array, séparateurs , ; espace
+    const normalizeRecipients = (input: unknown): string[] => {
+      const raw = Array.isArray(input) ? input : [input];
+      const out: string[] = [];
+      for (const item of raw) {
+        if (typeof item !== 'string') continue;
+        const parts = item.split(/[,;\s]+/);
+        for (const p of parts) {
+          const cleaned = p.trim().replace(/^mailto:/i, '').replace(/^<|>$/g, '').trim();
+          if (cleaned && /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(cleaned)) out.push(cleaned);
+        }
+      }
+      return Array.from(new Set(out));
+    };
+    to = normalizeRecipients(to);
+    if (to.length === 0) {
+      return new Response(
+        JSON.stringify({ success: false, error: 'Aucune adresse destinataire valide' }),
+        { status: 400, headers: { 'Content-Type': 'application/json', ...corsHeaders } }
+      );
+    }
 
     // Validate that userId matches authenticated user (if provided)
     if (userId && userId !== user.id) {
