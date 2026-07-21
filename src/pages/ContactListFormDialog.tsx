@@ -31,8 +31,8 @@ export const ContactListFormDialog: React.FC<ContactListFormDialogProps> = ({
 }) => {
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="!flex !flex-col !overflow-hidden !p-0 !gap-0 !w-[100vw] !h-[100dvh] sm:!w-[95vw] sm:!max-w-2xl sm:!h-[90dvh] sm:!max-h-[90dvh]">
-        <DialogHeader className="px-4 sm:px-6 pt-[calc(1rem+env(safe-area-inset-top))] sm:pt-6 pb-3 pr-16 border-b shrink-0">
+      <DialogContent className="!flex !flex-col !overflow-hidden !p-0 !gap-0 !w-[100vw] !h-[100dvh] !max-w-none lg:!w-[min(95vw,42rem)] lg:!h-[90dvh] lg:!max-h-[90dvh]">
+        <DialogHeader className="px-4 sm:px-6 pt-[calc(1rem+env(safe-area-inset-top))] lg:pt-6 pb-3 pr-16 border-b shrink-0">
           <DialogTitle>{title}</DialogTitle>
         </DialogHeader>
         <div className="space-y-5 overflow-y-auto overflow-x-hidden px-4 sm:px-6 py-4 flex-1 min-h-0 overscroll-contain">
@@ -96,9 +96,9 @@ export const ContactListFormDialog: React.FC<ContactListFormDialogProps> = ({
           )}
 
         </div>
-        <div className="flex flex-col-reverse sm:flex-row sm:justify-end gap-2 px-4 sm:px-6 py-3 pb-[calc(0.75rem+env(safe-area-inset-bottom))] sm:pb-6 border-t shrink-0 bg-background shadow-[0_-8px_20px_hsl(var(--background)/0.92)]">
-          <Button variant="outline" onClick={() => onOpenChange(false)} className="w-full sm:w-auto">Annuler</Button>
-          <Button onClick={onSave} disabled={saving || !formData.name.trim()} className="w-full sm:w-auto">
+        <div className="flex flex-col-reverse lg:flex-row lg:justify-end gap-2 px-4 sm:px-6 py-3 pb-[calc(0.75rem+env(safe-area-inset-bottom))] lg:pb-6 border-t shrink-0 bg-background shadow-[0_-8px_20px_hsl(var(--background)/0.92)]">
+          <Button variant="outline" onClick={() => onOpenChange(false)} className="w-full lg:w-auto">Annuler</Button>
+          <Button onClick={onSave} disabled={saving || !formData.name.trim()} className="w-full lg:w-auto">
             {saving && <Loader2 className="h-4 w-4 mr-2 animate-spin" />}{saveLabel}
           </Button>
         </div>
@@ -144,12 +144,12 @@ const ContactPickerSection: React.FC<ContactPickerSectionProps> = ({ contacts, s
 
   return (
     <>
-      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between mb-3 gap-2 min-w-0">
+      <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between mb-3 gap-2 min-w-0">
         <h3 className="text-base sm:text-lg font-semibold leading-snug min-w-0">
           Contacts ({filtered.length}/{contacts.length}) — {selectedIds.length} sélectionné(s)
         </h3>
         {filtered.length > 0 && (
-          <Button type="button" variant="outline" size="sm" onClick={toggleAllFiltered} className="w-full sm:w-auto shrink-0">
+          <Button type="button" variant="outline" size="sm" onClick={toggleAllFiltered} className="w-full lg:w-auto shrink-0">
             {allFilteredSelected ? 'Tout désélectionner' : 'Tout sélectionner'}
           </Button>
         )}
