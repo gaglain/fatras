@@ -31,9 +31,11 @@ export const ContactListFormDialog: React.FC<ContactListFormDialogProps> = ({
 }) => {
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-2xl w-[95vw] max-h-[90vh] p-0 flex flex-col gap-0">
-        <DialogHeader className="p-4 sm:p-6 pb-2 border-b shrink-0"><DialogTitle>{title}</DialogTitle></DialogHeader>
-        <div className="space-y-6 overflow-y-auto p-4 sm:p-6 flex-1">
+      <DialogContent className="!inset-0 !left-0 !top-0 !translate-x-0 !translate-y-0 !flex !flex-col !overflow-hidden !p-0 !gap-0 !w-[100vw] sm:!w-[100vw] !h-[100dvh] sm:!h-[100dvh] !max-w-none !max-h-[100dvh] !rounded-none lg:!inset-auto lg:!left-[50%] lg:!top-[50%] lg:!translate-x-[-50%] lg:!translate-y-[-50%] lg:!w-[min(95vw,42rem)] lg:!h-[90dvh] lg:!max-h-[90dvh] lg:!rounded-lg">
+        <DialogHeader className="px-4 sm:px-6 pt-[calc(1rem+env(safe-area-inset-top))] lg:pt-6 pb-3 pr-16 border-b shrink-0">
+          <DialogTitle>{title}</DialogTitle>
+        </DialogHeader>
+        <div className="space-y-5 overflow-y-auto overflow-x-hidden px-4 sm:px-6 py-4 flex-1 min-h-0 overscroll-contain">
           <div className="space-y-4">
             <div>
               <label className="block text-sm font-medium mb-2">Nom de la liste</label>
@@ -94,9 +96,9 @@ export const ContactListFormDialog: React.FC<ContactListFormDialogProps> = ({
           )}
 
         </div>
-        <div className="flex flex-col-reverse sm:flex-row sm:justify-end gap-2 p-4 sm:p-6 border-t shrink-0 bg-background">
-          <Button variant="outline" onClick={() => onOpenChange(false)} className="w-full sm:w-auto">Annuler</Button>
-          <Button onClick={onSave} disabled={saving || !formData.name.trim()} className="w-full sm:w-auto">
+        <div className="flex flex-col-reverse lg:flex-row lg:justify-end gap-2 px-4 sm:px-6 py-3 pb-[calc(0.75rem+env(safe-area-inset-bottom))] lg:pb-6 border-t shrink-0 bg-background shadow-[0_-8px_20px_hsl(var(--background)/0.92)]">
+          <Button variant="outline" onClick={() => onOpenChange(false)} className="w-full lg:w-auto">Annuler</Button>
+          <Button onClick={onSave} disabled={saving || !formData.name.trim()} className="w-full lg:w-auto">
             {saving && <Loader2 className="h-4 w-4 mr-2 animate-spin" />}{saveLabel}
           </Button>
         </div>
@@ -142,12 +144,12 @@ const ContactPickerSection: React.FC<ContactPickerSectionProps> = ({ contacts, s
 
   return (
     <>
-      <div className="flex items-center justify-between mb-3 gap-2">
-        <h3 className="text-lg font-semibold">
+      <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between mb-3 gap-2 min-w-0">
+        <h3 className="text-base sm:text-lg font-semibold leading-snug min-w-0">
           Contacts ({filtered.length}/{contacts.length}) — {selectedIds.length} sélectionné(s)
         </h3>
         {filtered.length > 0 && (
-          <Button type="button" variant="outline" size="sm" onClick={toggleAllFiltered}>
+          <Button type="button" variant="outline" size="sm" onClick={toggleAllFiltered} className="w-full lg:w-auto shrink-0">
             {allFilteredSelected ? 'Tout désélectionner' : 'Tout sélectionner'}
           </Button>
         )}
@@ -161,10 +163,10 @@ const ContactPickerSection: React.FC<ContactPickerSectionProps> = ({ contacts, s
           className="pl-9"
         />
       </div>
-      <div className="space-y-2 max-h-72 overflow-y-auto border rounded-lg p-4">
+      <div className="space-y-2 max-h-[38dvh] sm:max-h-72 overflow-y-auto overflow-x-hidden border rounded-lg p-2 sm:p-4 overscroll-contain">
         {filtered.map((contact) => (
-          <div key={contact.id} className="flex items-center justify-between p-2 border rounded">
-            <div className="flex items-center space-x-3 flex-1 min-w-0">
+          <div key={contact.id} className="flex items-center justify-between gap-2 p-2 border rounded min-w-0">
+            <div className="flex items-center gap-3 flex-1 min-w-0">
               <Checkbox
                 checked={selectedIds.includes(contact.id)}
                 onCheckedChange={(checked) => {
