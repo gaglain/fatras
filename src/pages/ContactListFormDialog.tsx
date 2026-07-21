@@ -31,9 +31,9 @@ export const ContactListFormDialog: React.FC<ContactListFormDialogProps> = ({
 }) => {
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-2xl">
-        <DialogHeader><DialogTitle>{title}</DialogTitle></DialogHeader>
-        <div className="space-y-6">
+      <DialogContent className="max-w-2xl w-[95vw] max-h-[90vh] p-0 flex flex-col gap-0">
+        <DialogHeader className="p-4 sm:p-6 pb-2 border-b shrink-0"><DialogTitle>{title}</DialogTitle></DialogHeader>
+        <div className="space-y-6 overflow-y-auto p-4 sm:p-6 flex-1">
           <div className="space-y-4">
             <div>
               <label className="block text-sm font-medium mb-2">Nom de la liste</label>
@@ -93,12 +93,12 @@ export const ContactListFormDialog: React.FC<ContactListFormDialogProps> = ({
             </div>
           )}
 
-          <div className="flex justify-end space-x-2">
-            <Button variant="outline" onClick={() => onOpenChange(false)}>Annuler</Button>
-            <Button onClick={onSave} disabled={saving || !formData.name.trim()}>
-              {saving && <Loader2 className="h-4 w-4 mr-2 animate-spin" />}{saveLabel}
-            </Button>
-          </div>
+        </div>
+        <div className="flex flex-col-reverse sm:flex-row sm:justify-end gap-2 p-4 sm:p-6 border-t shrink-0 bg-background">
+          <Button variant="outline" onClick={() => onOpenChange(false)} className="w-full sm:w-auto">Annuler</Button>
+          <Button onClick={onSave} disabled={saving || !formData.name.trim()} className="w-full sm:w-auto">
+            {saving && <Loader2 className="h-4 w-4 mr-2 animate-spin" />}{saveLabel}
+          </Button>
         </div>
       </DialogContent>
     </Dialog>
