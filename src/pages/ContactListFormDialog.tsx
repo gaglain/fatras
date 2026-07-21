@@ -31,7 +31,7 @@ export const ContactListFormDialog: React.FC<ContactListFormDialogProps> = ({
 }) => {
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="!flex !flex-col !overflow-hidden !p-0 !gap-0 !w-[100vw] !h-[100dvh] !max-w-none lg:!w-[min(95vw,42rem)] lg:!h-[90dvh] lg:!max-h-[90dvh]">
+      <DialogContent className="!inset-0 !left-0 !top-0 !translate-x-0 !translate-y-0 !flex !flex-col !overflow-hidden !p-0 !gap-0 !w-[100vw] sm:!w-[100vw] !h-[100dvh] sm:!h-[100dvh] !max-w-none !max-h-[100dvh] !rounded-none lg:!inset-auto lg:!left-[50%] lg:!top-[50%] lg:!translate-x-[-50%] lg:!translate-y-[-50%] lg:!w-[min(95vw,42rem)] lg:!h-[90dvh] lg:!max-h-[90dvh] lg:!rounded-lg">
         <DialogHeader className="px-4 sm:px-6 pt-[calc(1rem+env(safe-area-inset-top))] lg:pt-6 pb-3 pr-16 border-b shrink-0">
           <DialogTitle>{title}</DialogTitle>
         </DialogHeader>
