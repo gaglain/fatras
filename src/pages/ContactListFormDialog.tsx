@@ -93,12 +93,12 @@ export const ContactListFormDialog: React.FC<ContactListFormDialogProps> = ({
             </div>
           )}
 
-          <div className="flex justify-end space-x-2">
-            <Button variant="outline" onClick={() => onOpenChange(false)}>Annuler</Button>
-            <Button onClick={onSave} disabled={saving || !formData.name.trim()}>
-              {saving && <Loader2 className="h-4 w-4 mr-2 animate-spin" />}{saveLabel}
-            </Button>
-          </div>
+        </div>
+        <div className="flex flex-col-reverse sm:flex-row sm:justify-end gap-2 p-4 sm:p-6 border-t shrink-0 bg-background">
+          <Button variant="outline" onClick={() => onOpenChange(false)} className="w-full sm:w-auto">Annuler</Button>
+          <Button onClick={onSave} disabled={saving || !formData.name.trim()} className="w-full sm:w-auto">
+            {saving && <Loader2 className="h-4 w-4 mr-2 animate-spin" />}{saveLabel}
+          </Button>
         </div>
       </DialogContent>
     </Dialog>
