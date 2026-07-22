@@ -30,15 +30,25 @@ export const ContactDuplicateScanner: React.FC<{ onMergeComplete: () => void }> 
   const scanForDuplicates = async () => {
     setScanning(true);
     try {
-      // Fetch all contacts with non-empty email
-      const { data, error } = await supabase
-        .from('contacts')
-        .select('*')
-        .not('email', 'is', null)
-        .neq('email', '')
-        .order('created_at', { ascending: true });
-
-      if (error) throw error;
+      // Fetch all contacts with non-empty email — paginated to bypass 1000-row cap
+      const PAGE = 1000;
+      let from = 0;
+      let all: Contact[] = [];
+      while (true) {
+        const { data, error } = await supabase
+          .from('contacts')
+          .select('*')
+          .not('email', 'is', null)
+          .neq('email', '')
+          .order('created_at', { ascending: true })
+          .range(from, from + PAGE - 1);
+        if (error) throw error;
+        const rows = (data || []) as Contact[];
+        all = all.concat(rows);
+        if (rows.length < PAGE) break;
+        from += PAGE;
+      }
+      const data = all;
 
       // Group by normalized email
       const emailMap = new Map<string, Contact[]>();
