@@ -22,7 +22,7 @@ import { toast } from 'sonner';
 import { Contact } from '@/types/contact.types';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 
-const PAGE_SIZE = 200;
+const PAGE_SIZE = 500;
 
 export const Contacts: React.FC = () => {
   const { user } = useAuth();
