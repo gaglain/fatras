@@ -288,14 +288,23 @@ export const Contacts: React.FC = () => {
                       variant="secondary"
                       disabled={isLoadingMore}
                       onClick={async () => {
-                        // Load all remaining pages sequentially
-                        while (true) {
-                          const before = contacts.length;
-                          await fetchContacts({ reset: false });
-                          // break when nothing more to fetch — hasMore state may be stale, use ref-like check via count
-                          const totalRes = await supabase.from('contacts').select('*', { count: 'exact', head: true });
-                          const total = totalRes.count || 0;
-                          if (before + PAGE_SIZE >= total) break;
+                        setIsLoadingMore(true);
+                        try {
+                          const { data, error } = await supabase
+                            .from('contacts')
+                            .select('*')
+                            .order('created_at', { ascending: false })
+                            .range(contacts.length, totalContactsCount - 1);
+                          if (error) throw error;
+                          const rest = (data || []) as Contact[];
+                          setContacts(prev => [...prev, ...rest]);
+                          await fetchRelationsForContacts(rest.map(c => c.id!).filter(Boolean));
+                          setHasMore(false);
+                          toast.success(`${rest.length} contacts supplémentaires chargés`);
+                        } catch {
+                          toast.error('Erreur lors du chargement complet');
+                        } finally {
+                          setIsLoadingMore(false);
                         }
                       }}
                     >
