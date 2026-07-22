@@ -80,18 +80,83 @@ export const ContactDuplicateScanner: React.FC<{ onMergeComplete: () => void }> 
     onMergeComplete();
   };
 
+  const bulkMergeAll = async () => {
+    if (duplicateGroups.length === 0) return;
+    setBulkMerging(true);
+    setBulkProgress({ done: 0, total: duplicateGroups.length, errors: 0 });
+    let done = 0;
+    let errors = 0;
+    const remaining: DuplicateGroup[] = [];
+    for (const group of duplicateGroups) {
+      try {
+        await smartMergeContacts(group.contacts);
+      } catch (e: any) {
+        console.error('[BulkMerge] error on', group.email, e);
+        errors++;
+        remaining.push(group);
+      }
+      done++;
+      setBulkProgress({ done, total: duplicateGroups.length, errors });
+    }
+    setDuplicateGroups(remaining);
+    setBulkMerging(false);
+    setBulkProgress(null);
+    if (errors === 0) {
+      toast.success(`${done} groupe(s) de doublons fusionné(s)`);
+    } else {
+      toast.warning(`${done - errors} fusionné(s), ${errors} en erreur`);
+    }
+    onMergeComplete();
+  };
+
   return (
     <div className="space-y-4">
-      <div className="flex items-center justify-between">
+      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
         <div>
           <h3 className="text-lg font-semibold text-foreground">Détection des doublons</h3>
           <p className="text-sm text-muted-foreground">Scannez vos contacts pour trouver les doublons par email</p>
         </div>
-        <Button onClick={scanForDuplicates} disabled={scanning} variant="outline">
-          {scanning ? <Loader2 className="h-4 w-4 mr-2 animate-spin" /> : <Search className="h-4 w-4 mr-2" />}
-          {scanning ? 'Scan en cours...' : 'Scanner les doublons'}
-        </Button>
+        <div className="flex flex-wrap gap-2">
+          <Button onClick={scanForDuplicates} disabled={scanning || bulkMerging} variant="outline">
+            {scanning ? <Loader2 className="h-4 w-4 mr-2 animate-spin" /> : <Search className="h-4 w-4 mr-2" />}
+            {scanning ? 'Scan en cours...' : 'Scanner les doublons'}
+          </Button>
+          {duplicateGroups.length > 0 && (
+            <AlertDialog>
+              <AlertDialogTrigger asChild>
+                <Button disabled={bulkMerging}>
+                  {bulkMerging ? <Loader2 className="h-4 w-4 mr-2 animate-spin" /> : <Wand2 className="h-4 w-4 mr-2" />}
+                  {bulkMerging && bulkProgress
+                    ? `Fusion ${bulkProgress.done}/${bulkProgress.total}...`
+                    : `Tout fusionner (${duplicateGroups.length})`}
+                </Button>
+              </AlertDialogTrigger>
+              <AlertDialogContent>
+                <AlertDialogHeader>
+                  <AlertDialogTitle>Fusionner tous les doublons ?</AlertDialogTitle>
+                  <AlertDialogDescription>
+                    {duplicateGroups.length} groupe(s) seront fusionnés automatiquement. Pour chaque groupe,
+                    le contact le plus récent est conservé, les valeurs non-vides des autres sont récupérées,
+                    les tags sont combinés, et les relations (événements, devis, tâches, listes…) sont réassignées.
+                    Cette action est irréversible.
+                  </AlertDialogDescription>
+                </AlertDialogHeader>
+                <AlertDialogFooter>
+                  <AlertDialogCancel>Annuler</AlertDialogCancel>
+                  <AlertDialogAction onClick={bulkMergeAll}>Tout fusionner</AlertDialogAction>
+                </AlertDialogFooter>
+              </AlertDialogContent>
+            </AlertDialog>
+          )}
+        </div>
       </div>
+
+      {bulkMerging && bulkProgress && (
+        <div className="text-sm text-muted-foreground">
+          Fusion en cours : {bulkProgress.done}/{bulkProgress.total}
+          {bulkProgress.errors > 0 && ` — ${bulkProgress.errors} erreur(s)`}
+        </div>
+      )}
 
       {scanned && duplicateGroups.length === 0 && (
         <Card>
