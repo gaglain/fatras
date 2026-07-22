@@ -3,11 +3,16 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { ScrollArea } from '@/components/ui/scroll-area';
-import { Search, Merge, Loader2, CheckCircle, AlertTriangle } from 'lucide-react';
+import { Search, Merge, Loader2, CheckCircle, AlertTriangle, Wand2 } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
 import { Contact } from '@/types/contact.types';
 import { ContactMergeDialog } from './ContactMergeDialog';
+import { smartMergeContacts } from './contactMergeUtils';
+import {
+  AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent,
+  AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger,
+} from '@/components/ui/alert-dialog';
 
 interface DuplicateGroup {
   email: string;
