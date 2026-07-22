@@ -268,11 +268,43 @@ export const Contacts: React.FC = () => {
               {contacts.length === 0 && <Button onClick={() => setDialogOpen(true)}><Plus className="h-4 w-4 mr-2" />Ajouter un contact</Button>}
             </div>
           ) : (
-            <div className={viewMode === 'grid' ? "grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4 md:gap-6" : "space-y-2"}>
-              {filteredContacts.map((contact) => (
-                <ContactCard key={contact.id} contact={contact} onEdit={(c) => { setEditingContact(c); setDialogOpen(true); }} onDelete={handleDelete} onContact={handleContact} isSelected={selectedContactIds.includes(contact.id!)} onSelect={(s) => s ? setSelectedContactIds(prev => [...prev, contact.id!]) : setSelectedContactIds(prev => prev.filter(id => id !== contact.id!))} viewMode={viewMode} />
-              ))}
-            </div>
+            <>
+              <div className={viewMode === 'grid' ? "grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4 md:gap-6" : "space-y-2"}>
+                {filteredContacts.map((contact) => (
+                  <ContactCard key={contact.id} contact={contact} onEdit={(c) => { setEditingContact(c); setDialogOpen(true); }} onDelete={handleDelete} onContact={handleContact} isSelected={selectedContactIds.includes(contact.id!)} onSelect={(s) => s ? setSelectedContactIds(prev => [...prev, contact.id!]) : setSelectedContactIds(prev => prev.filter(id => id !== contact.id!))} viewMode={viewMode} />
+                ))}
+              </div>
+              {hasMore && (
+                <div className="flex flex-col items-center gap-2 py-6">
+                  <p className="text-sm text-muted-foreground">
+                    {contacts.length} sur {totalContactsCount} contacts chargés
+                  </p>
+                  <div className="flex gap-2">
+                    <Button variant="outline" onClick={() => fetchContacts({ reset: false })} disabled={isLoadingMore}>
+                      {isLoadingMore ? <Loader2 className="h-4 w-4 mr-2 animate-spin" /> : null}
+                      Charger {Math.min(PAGE_SIZE, totalContactsCount - contacts.length)} de plus
+                    </Button>
+                    <Button
+                      variant="secondary"
+                      disabled={isLoadingMore}
+                      onClick={async () => {
+                        // Load all remaining pages sequentially
+                        while (true) {
+                          const before = contacts.length;
+                          await fetchContacts({ reset: false });
+                          // break when nothing more to fetch — hasMore state may be stale, use ref-like check via count
+                          const totalRes = await supabase.from('contacts').select('*', { count: 'exact', head: true });
+                          const total = totalRes.count || 0;
+                          if (before + PAGE_SIZE >= total) break;
+                        }
+                      }}
+                    >
+                      Tout charger ({totalContactsCount})
+                    </Button>
+                  </div>
+                </div>
+              )}
+            </>
           )}
         </TabsContent>
 
