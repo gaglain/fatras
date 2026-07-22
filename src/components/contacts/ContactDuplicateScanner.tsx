@@ -24,6 +24,8 @@ export const ContactDuplicateScanner: React.FC<{ onMergeComplete: () => void }> 
   const [duplicateGroups, setDuplicateGroups] = useState<DuplicateGroup[]>([]);
   const [scanned, setScanned] = useState(false);
   const [mergeTarget, setMergeTarget] = useState<DuplicateGroup | null>(null);
+  const [bulkMerging, setBulkMerging] = useState(false);
+  const [bulkProgress, setBulkProgress] = useState<{ done: number; total: number; errors: number } | null>(null);
 
   const scanForDuplicates = async () => {
     setScanning(true);
