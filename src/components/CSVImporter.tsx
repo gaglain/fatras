@@ -248,9 +248,19 @@ export const CSVImporter: React.FC<CSVImporterProps> = ({ isOpen, onClose, onImp
         if (duplicateInFileCount > 0) {
           toast.warning(`${duplicateInFileCount} email(s) en doublon dans le fichier ignoré(s)`);
         }
+        if (duplicateInDbCount > 0) {
+          toast.warning(`${duplicateInDbCount} contact(s) déjà présent(s) en base ignoré(s)`);
+        }
         onImport(mappedData);
         setImportedContacts(insertedAll);
         setStep('assign-list');
+      } else if (mappedData.length === 0) {
+        toast.info(
+          `Aucun nouveau contact à importer` +
+          (duplicateInDbCount ? ` — ${duplicateInDbCount} déjà en base` : '') +
+          (duplicateInFileCount ? `, ${duplicateInFileCount} doublons dans le fichier` : '') +
+          (invalidEmailCount ? `, ${invalidEmailCount} emails invalides` : '')
+        );
       }
     } catch (error) {
       logger.error('Import error:', error);
