@@ -155,8 +155,30 @@ export const CSVImporter: React.FC<CSVImporterProps> = ({ isOpen, onClose, onImp
       const { data: { user } } = await supabase.auth.getUser();
       if (!user) { toast.error('Vous devez être connecté pour importer des contacts'); return; }
 
+      // Pre-fetch all existing emails from DB to dedupe against
+      const existingEmails = new Set<string>();
+      const PAGE = 1000;
+      let from = 0;
+      while (true) {
+        const { data: batch, error: fetchErr } = await supabase
+          .from('contacts')
+          .select('email')
+          .not('email', 'is', null)
+          .neq('email', '')
+          .range(from, from + PAGE - 1);
+        if (fetchErr) break;
+        const rows = batch || [];
+        for (const r of rows) {
+          const e = (r.email || '').trim().toLowerCase();
+          if (e) existingEmails.add(e);
+        }
+        if (rows.length < PAGE) break;
+        from += PAGE;
+      }
+
       let invalidEmailCount = 0;
       let duplicateInFileCount = 0;
+      let duplicateInDbCount = 0;
       const seenEmails = new Set<string>();
 
       const mappedData = csvData.map(row => {
@@ -178,9 +200,13 @@ export const CSVImporter: React.FC<CSVImporterProps> = ({ isOpen, onClose, onImp
               } else if (!isValidEmail(cleaned)) {
                 invalidEmailCount++;
                 mappedRow.email = '';
+                mappedRow.__skip = true;
               } else if (seenEmails.has(cleaned)) {
                 duplicateInFileCount++;
-                mappedRow.email = '';
+                mappedRow.__skip = true;
+              } else if (existingEmails.has(cleaned)) {
+                duplicateInDbCount++;
+                mappedRow.__skip = true;
               } else {
                 seenEmails.add(cleaned);
                 mappedRow.email = cleaned;
@@ -196,7 +222,8 @@ export const CSVImporter: React.FC<CSVImporterProps> = ({ isOpen, onClose, onImp
         if (!mappedRow.role) mappedRow.role = 'contact';
         if (mappedRow.accepts_marketing_emails === undefined) mappedRow.accepts_marketing_emails = true;
         return mappedRow;
-      });
+      }).filter(r => !r.__skip)
+        .map(r => { delete r.__skip; return r; });
 
       const batchSize = 50;
       const insertedAll: any[] = [];
