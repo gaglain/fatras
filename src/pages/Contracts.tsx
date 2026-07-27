@@ -230,7 +230,11 @@ export const Contracts: React.FC = () => {
 
   if (loading) return <div>Chargement...</div>;
 
-  const filteredQuotes = quotes.filter(q => q.title.toLowerCase().includes(searchTerm.toLowerCase()) || q.quote_number.toLowerCase().includes(searchTerm.toLowerCase()));
+  const filteredQuotes = quotes.filter(q => {
+    const matchesSearch = q.title.toLowerCase().includes(searchTerm.toLowerCase()) || q.quote_number.toLowerCase().includes(searchTerm.toLowerCase());
+    const matchesStatus = selectedStatus === 'all' || q.status === selectedStatus;
+    return matchesSearch && matchesStatus;
+  });
 
   return (
     <div className="space-y-6 p-4 lg:p-0">
