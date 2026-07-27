@@ -33,6 +33,7 @@ export const Contracts: React.FC = () => {
   const [showTemplates, setShowTemplates] = useState(false);
   const [editingQuote, setEditingQuote] = useState<any>(null);
   const [searchTerm, setSearchTerm] = useState('');
+  const [selectedStatus, setSelectedStatus] = useState<string>('all');
   const [viewMode, setViewMode] = useState<'grid' | 'list'>('grid');
   const [viewingQuote, setViewingQuote] = useState<any>(null);
   const [viewingQuoteItems, setViewingQuoteItems] = useState<any[]>([]);
