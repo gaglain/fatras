@@ -255,6 +255,20 @@ export const Contracts: React.FC = () => {
           <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 h-4 w-4" />
           <Input placeholder="Rechercher des devis..." value={searchTerm} onChange={(e) => setSearchTerm(e.target.value)} className="pl-10" />
         </div>
+        <Select value={selectedStatus} onValueChange={setSelectedStatus}>
+          <SelectTrigger className="w-full sm:w-48">
+            <Filter className="h-4 w-4 mr-2 text-muted-foreground" />
+            <SelectValue placeholder="Filtrer par état" />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value="all">Tous les états</SelectItem>
+            <SelectItem value="draft">Brouillon</SelectItem>
+            <SelectItem value="sent">Envoyé</SelectItem>
+            <SelectItem value="accepted">Accepté</SelectItem>
+            <SelectItem value="rejected">Refusé</SelectItem>
+            <SelectItem value="expired">Expiré</SelectItem>
+          </SelectContent>
+        </Select>
         <ViewToggle viewMode={viewMode} onViewModeChange={setViewMode} />
       </div>
 
