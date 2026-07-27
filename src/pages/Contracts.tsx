@@ -2,8 +2,9 @@ import React, { useState, useEffect } from 'react';
 import { useConfirm } from '@/components/ui/confirm-dialog';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { ViewToggle } from '@/components/ui/view-toggle';
-import { Plus, FileText, Calculator, Search, File } from 'lucide-react';
+import { Plus, FileText, Calculator, Search, File, Filter } from 'lucide-react';
 import { toast } from 'sonner';
 import { useQuotes } from '@/hooks/useQuotes';
 import { useContacts } from '@/hooks/useContacts';
@@ -32,6 +33,7 @@ export const Contracts: React.FC = () => {
   const [showTemplates, setShowTemplates] = useState(false);
   const [editingQuote, setEditingQuote] = useState<any>(null);
   const [searchTerm, setSearchTerm] = useState('');
+  const [selectedStatus, setSelectedStatus] = useState<string>('all');
   const [viewMode, setViewMode] = useState<'grid' | 'list'>('grid');
   const [viewingQuote, setViewingQuote] = useState<any>(null);
   const [viewingQuoteItems, setViewingQuoteItems] = useState<any[]>([]);
@@ -228,7 +230,11 @@ export const Contracts: React.FC = () => {
 
   if (loading) return <div>Chargement...</div>;
 
-  const filteredQuotes = quotes.filter(q => q.title.toLowerCase().includes(searchTerm.toLowerCase()) || q.quote_number.toLowerCase().includes(searchTerm.toLowerCase()));
+  const filteredQuotes = quotes.filter(q => {
+    const matchesSearch = q.title.toLowerCase().includes(searchTerm.toLowerCase()) || q.quote_number.toLowerCase().includes(searchTerm.toLowerCase());
+    const matchesStatus = selectedStatus === 'all' || q.status === selectedStatus;
+    return matchesSearch && matchesStatus;
+  });
 
   return (
     <div className="space-y-6 p-4 lg:p-0">
@@ -249,6 +255,20 @@ export const Contracts: React.FC = () => {
           <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 h-4 w-4" />
           <Input placeholder="Rechercher des devis..." value={searchTerm} onChange={(e) => setSearchTerm(e.target.value)} className="pl-10" />
         </div>
+        <Select value={selectedStatus} onValueChange={setSelectedStatus}>
+          <SelectTrigger className="w-full sm:w-48">
+            <Filter className="h-4 w-4 mr-2 text-muted-foreground" />
+            <SelectValue placeholder="Filtrer par état" />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value="all">Tous les états</SelectItem>
+            <SelectItem value="draft">Brouillon</SelectItem>
+            <SelectItem value="sent">Envoyé</SelectItem>
+            <SelectItem value="accepted">Accepté</SelectItem>
+            <SelectItem value="rejected">Refusé</SelectItem>
+            <SelectItem value="expired">Expiré</SelectItem>
+          </SelectContent>
+        </Select>
         <ViewToggle viewMode={viewMode} onViewModeChange={setViewMode} />
       </div>
 
