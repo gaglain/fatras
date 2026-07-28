@@ -86,6 +86,16 @@ export const useWebPushNotifications = () => {
 
       if (!existingSubscription) {
         setSubscription(null);
+        // Auto-resubscribe silently when the permission is already granted:
+        // the device must stay registered to receive pushes without opening the app.
+        if (Notification.permission === 'granted') {
+          try {
+            await subscribeToPush();
+            logger.debug('Push subscription auto-restored');
+          } catch (autoError) {
+            logger.error('Auto-resubscribe failed:', autoError);
+          }
+        }
         return;
       }
 
@@ -96,6 +106,7 @@ export const useWebPushNotifications = () => {
       logger.error('Error loading existing subscription:', error);
     }
   };
+
 
   const requestPermission = useCallback(async () => {
     if (!isSupported) {
