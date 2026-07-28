@@ -23,6 +23,7 @@ interface QuoteFormDialogProps {
   contacts: any[];
   events: any[];
   artists: any[];
+  users?: any[];
   calculation: any;
   setCalculation: (calc: any) => void;
   currentItems: any[];
@@ -35,7 +36,7 @@ interface QuoteFormDialogProps {
 
 export const QuoteFormDialog: React.FC<QuoteFormDialogProps> = ({
   dialogOpen, onDialogOpenChange, selectedQuote, formData, setFormData, onSubmit,
-  contacts, events, artists, calculation, setCalculation, currentItems, setCurrentItems,
+  contacts, events, artists, users = [], calculation, setCalculation, currentItems, setCurrentItems,
   updateQuote, setSelectedQuote, QuoteCalculator, QuoteItemManager,
 }) => {
   return (
@@ -108,6 +109,20 @@ export const QuoteFormDialog: React.FC<QuoteFormDialogProps> = ({
                     onSelect={(item: any) => setFormData({ ...formData, artist_id: item.id })}
                     placeholder="Rechercher un spectacle..."
                   />
+                </div>
+                <div className="space-y-2">
+                  <Label>Propriétaire</Label>
+                  <Select value={formData.owner_id || 'none'} onValueChange={(value) => setFormData({ ...formData, owner_id: value === 'none' ? '' : value })}>
+                    <SelectTrigger><SelectValue placeholder="Sélectionner un propriétaire" /></SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="none">Aucun propriétaire</SelectItem>
+                      {users.map((u: any) => (
+                        <SelectItem key={u.user_id} value={u.user_id}>
+                          {u.first_name || u.last_name ? `${u.first_name || ''} ${u.last_name || ''}`.trim() : (u.username || u.email)}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
                 </div>
                 <div className="space-y-2">
                   <Label>Valide jusqu'au</Label>
