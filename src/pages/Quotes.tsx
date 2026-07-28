@@ -10,6 +10,7 @@ import { useQuotes, Quote, QuoteItem } from '@/hooks/useQuotes';
 import { useContacts } from '@/hooks/useContacts';
 import { useEvents } from '@/hooks/useEvents';
 import { useAuth } from '@/hooks/useAuth';
+import { useActiveUsers } from '@/hooks/useActiveUsers';
 import { useCentralizedData } from '@/hooks/useCentralizedData';
 import { QuoteCalculator, QuoteCalculation } from '@/components/quotes/QuoteCalculator';
 import { QuoteItemManager } from '@/components/quotes/QuoteItemManager';
@@ -33,6 +34,7 @@ export const Quotes: React.FC = () => {
   const { events } = useEvents();
   const { artists } = useCentralizedData();
   const { user } = useAuth();
+  const { users: activeUsers } = useActiveUsers();
 
   const loadDraft = () => {
     try { const saved = localStorage.getItem('quoteDraft'); return saved ? JSON.parse(saved) : null; } catch { return null; }
@@ -40,7 +42,7 @@ export const Quotes: React.FC = () => {
 
   const [formData, setFormData] = useState(loadDraft() || {
     title: '', description: '', contact_id: 'none', event_id: 'none', artist_id: 'none',
-    status: 'draft' as Quote['status'], valid_until: '', terms: '', notes: '', vat_rate: 20
+    status: 'draft' as Quote['status'], valid_until: '', terms: '', notes: '', vat_rate: 20, owner_id: ''
   });
 
   useEffect(() => {
@@ -58,12 +60,12 @@ export const Quotes: React.FC = () => {
   }, []);
 
   const resetForm = () => {
-    setFormData({ title: '', description: '', contact_id: 'none', event_id: 'none', artist_id: 'none', status: 'draft', valid_until: '', terms: '', notes: '', vat_rate: 20 });
+    setFormData({ title: '', description: '', contact_id: 'none', event_id: 'none', artist_id: 'none', status: 'draft', valid_until: '', terms: '', notes: '', vat_rate: 20, owner_id: user?.id || '' });
     localStorage.removeItem('quoteDraft');
   };
 
   const fillFormFromQuote = (q: Quote) => {
-    setFormData({ title: q.title, description: q.description || '', contact_id: q.contact_id ?? 'none', event_id: q.event_id ?? 'none', artist_id: q.artist_id ?? 'none', status: q.status, valid_until: q.valid_until || '', terms: q.terms || '', notes: q.notes || '', vat_rate: (q as any).vat_rate ?? 0 });
+    setFormData({ title: q.title, description: q.description || '', contact_id: q.contact_id ?? 'none', event_id: q.event_id ?? 'none', artist_id: q.artist_id ?? 'none', status: q.status, valid_until: q.valid_until || '', terms: q.terms || '', notes: q.notes || '', vat_rate: (q as any).vat_rate ?? 0, owner_id: (q as any).owner_id || '' });
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -72,7 +74,7 @@ export const Quotes: React.FC = () => {
     if (!user) { toast.error('Utilisateur non connecté'); return; }
     try {
       if (selectedQuote) {
-        const updated = await updateQuote(selectedQuote.id, { title: formData.title, description: formData.description, contact_id: formData.contact_id !== 'none' ? formData.contact_id : null, event_id: formData.event_id !== 'none' ? formData.event_id : null, artist_id: formData.artist_id !== 'none' ? formData.artist_id : null, status: formData.status, valid_until: formData.valid_until || null, terms: formData.terms, notes: formData.notes, vat_rate: formData.vat_rate ?? 0 });
+        const updated = await updateQuote(selectedQuote.id, { title: formData.title, description: formData.description, contact_id: formData.contact_id !== 'none' ? formData.contact_id : null, event_id: formData.event_id !== 'none' ? formData.event_id : null, artist_id: formData.artist_id !== 'none' ? formData.artist_id : null, status: formData.status, valid_until: formData.valid_until || null, terms: formData.terms, notes: formData.notes, vat_rate: formData.vat_rate ?? 0, owner_id: formData.owner_id || undefined });
         // Feuille de route + canal créés automatiquement par trigger DB (anti-doublon centralisé)
         if (formData.status === 'accepted' && selectedQuote.status !== 'accepted') toast.success('Feuille de route et canal générés automatiquement');
         toast.success('Devis mis à jour');
@@ -80,7 +82,7 @@ export const Quotes: React.FC = () => {
         setDialogOpen(false);
         return;
       }
-      const newQuote = await addQuote({ user_id: user.id, quote_number: generateQuoteNumber(), title: formData.title, description: formData.description, contact_id: formData.contact_id !== 'none' ? formData.contact_id : undefined, event_id: formData.event_id !== 'none' ? formData.event_id : undefined, artist_id: formData.artist_id !== 'none' ? formData.artist_id : undefined, status: formData.status, total_amount: calculation?.finalPrice || 0, tax_amount: calculation?.vatAmount || 0, vat_rate: formData.vat_rate ?? 0, valid_until: formData.valid_until || undefined, terms: formData.terms, notes: formData.notes });
+      const newQuote = await addQuote({ user_id: user.id, quote_number: generateQuoteNumber(), title: formData.title, description: formData.description, contact_id: formData.contact_id !== 'none' ? formData.contact_id : undefined, event_id: formData.event_id !== 'none' ? formData.event_id : undefined, artist_id: formData.artist_id !== 'none' ? formData.artist_id : undefined, status: formData.status, total_amount: calculation?.finalPrice || 0, tax_amount: calculation?.vatAmount || 0, vat_rate: formData.vat_rate ?? 0, valid_until: formData.valid_until || undefined, terms: formData.terms, notes: formData.notes, owner_id: formData.owner_id || user.id });
       toast.success('Devis créé');
       resetForm();
       setCalculation(null);
@@ -129,6 +131,7 @@ export const Quotes: React.FC = () => {
         contacts={contacts}
         events={events}
         artists={artists}
+        users={activeUsers}
         calculation={calculation}
         setCalculation={setCalculation}
         currentItems={currentItems}

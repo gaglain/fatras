@@ -76,7 +76,7 @@ export const Opportunities: React.FC = () => {
     fetchOpportunities();
   }, [user]);
 
-  const resetForm = () => { setNewOpportunity({ ...defaultOpportunityForm }); setShowAddForm(false); setEditingOpportunity(null); };
+  const resetForm = () => { setNewOpportunity({ ...defaultOpportunityForm, owner_id: user?.id || '' }); setShowAddForm(false); setEditingOpportunity(null); };
 
   const handleAddOpportunity = async () => {
     if (!newOpportunity.title || !newOpportunity.venue || !user) { toast.error('Veuillez remplir tous les champs obligatoires'); return; }
@@ -149,7 +149,7 @@ export const Opportunities: React.FC = () => {
           <h1 className="text-3xl font-bold text-foreground">Opportunités</h1>
           <p className="text-muted-foreground mt-2">Gérez vos opportunités de concerts et événements</p>
         </div>
-        <Button onClick={() => setShowAddForm(true)} className="w-full lg:w-auto"><Plus className="h-4 w-4 mr-2" /><span className="hidden sm:inline">Nouvelle Opportunité</span><span className="sm:hidden">Nouvelle</span></Button>
+        <Button onClick={() => { setNewOpportunity({ ...defaultOpportunityForm, owner_id: user?.id || '' }); setShowAddForm(true); }} className="w-full lg:w-auto"><Plus className="h-4 w-4 mr-2" /><span className="hidden sm:inline">Nouvelle Opportunité</span><span className="sm:hidden">Nouvelle</span></Button>
       </div>
 
       <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-4">

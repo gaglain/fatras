@@ -2930,6 +2930,7 @@ export type Database = {
           event_id: string | null
           id: string
           notes: string | null
+          owner_id: string | null
           quote_number: string
           status: string | null
           tax_amount: number | null
@@ -2950,6 +2951,7 @@ export type Database = {
           event_id?: string | null
           id?: string
           notes?: string | null
+          owner_id?: string | null
           quote_number: string
           status?: string | null
           tax_amount?: number | null
@@ -2970,6 +2972,7 @@ export type Database = {
           event_id?: string | null
           id?: string
           notes?: string | null
+          owner_id?: string | null
           quote_number?: string
           status?: string | null
           tax_amount?: number | null

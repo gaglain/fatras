@@ -66,7 +66,7 @@ export const EventDialog: React.FC<EventDialogProps> = ({ open, onOpenChange, ev
           booking_url: (event as any).booking_url || '', owner_id: (event as any).owner_id || ''
         });
       } else {
-        setFormData({ ...defaultFormData });
+        setFormData({ ...defaultFormData, owner_id: user?.id || '' });
       }
     }
   }, [event, open]);
