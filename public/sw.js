@@ -205,7 +205,25 @@ self.addEventListener('push', (event) => {
         }
       }
 
-      // On iOS, silent pushes are not supported — always show notification
+      // Silent badge sync: the Push API requires a visible notification,
+      // so we show one with a dedicated tag and close it immediately.
+      if (isSilentBadgeSync) {
+        try {
+          await self.registration.showNotification('​', {
+            body: '​',
+            icon: notificationData.icon,
+            badge: notificationData.badge,
+            tag: 'badge-sync',
+            silent: true,
+            data: { silentBadgeSync: true },
+          });
+          const shown = await self.registration.getNotifications({ tag: 'badge-sync' });
+          shown.forEach((n) => n.close());
+        } catch (err) {
+          console.error('📛 Silent badge sync failed:', err);
+        }
+        return;
+      }
 
       await self.registration.showNotification(notificationData.title, {
         body: notificationData.body,
@@ -220,6 +238,7 @@ self.addEventListener('push', (event) => {
     })()
   );
 });
+
 
 // Handle notification clicks
 self.addEventListener('notificationclick', (event) => {
