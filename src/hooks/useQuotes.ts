@@ -8,6 +8,7 @@ export interface Quote {
   contact_id?: string;
   event_id?: string;
   artist_id?: string;
+  owner_id?: string;
   quote_number: string;
   title: string;
   description?: string;
@@ -56,6 +57,7 @@ export const useQuotes = () => {
           contact_id: quote.contact_id || undefined,
           event_id: quote.event_id || undefined,
           artist_id: quote.artist_id || undefined,
+          owner_id: (quote as Record<string, unknown>).owner_id as string || undefined,
           quote_number: quote.quote_number,
           title: quote.title,
           description: quote.description || '',
@@ -87,6 +89,7 @@ export const useQuotes = () => {
           contact_id: quoteData.contact_id,
           event_id: quoteData.event_id,
           artist_id: quoteData.artist_id,
+          owner_id: quoteData.owner_id || null,
           quote_number: quoteData.quote_number,
           title: quoteData.title,
           description: quoteData.description,
@@ -110,6 +113,7 @@ export const useQuotes = () => {
         contact_id: data.contact_id || undefined,
         event_id: data.event_id || undefined,
         artist_id: data.artist_id || undefined,
+        owner_id: (data as Record<string, unknown>).owner_id as string || undefined,
         quote_number: data.quote_number,
         title: data.title,
         description: data.description || '',
@@ -140,6 +144,7 @@ export const useQuotes = () => {
           contact_id: updates.contact_id,
           event_id: updates.event_id,
           artist_id: updates.artist_id,
+          owner_id: updates.owner_id ?? null,
           title: updates.title,
           description: updates.description,
           status: updates.status,
@@ -164,6 +169,7 @@ export const useQuotes = () => {
           contact_id: data.contact_id || undefined,
           event_id: data.event_id || undefined,
           artist_id: data.artist_id || undefined,
+          owner_id: (data as Record<string, unknown>).owner_id as string || undefined,
           quote_number: data.quote_number,
           title: data.title,
           description: data.description || '',

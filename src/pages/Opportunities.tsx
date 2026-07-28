@@ -76,7 +76,7 @@ export const Opportunities: React.FC = () => {
     fetchOpportunities();
   }, [user]);
 
-  const resetForm = () => { setNewOpportunity({ ...defaultOpportunityForm }); setShowAddForm(false); setEditingOpportunity(null); };
+  const resetForm = () => { setNewOpportunity({ ...defaultOpportunityForm, owner_id: user?.id || '' }); setShowAddForm(false); setEditingOpportunity(null); };
 
   const handleAddOpportunity = async () => {
     if (!newOpportunity.title || !newOpportunity.venue || !user) { toast.error('Veuillez remplir tous les champs obligatoires'); return; }

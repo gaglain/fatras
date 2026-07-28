@@ -95,7 +95,7 @@ export const ContactDialog: React.FC<ContactDialogProps> = ({
           source: '', notes: '', tags: [], role: 'contact'
         });
         setSelectedArtistId('');
-        setSelectedOwnerId('');
+        setSelectedOwnerId(user?.id || '');
         setNewTag('');
       }
     }
