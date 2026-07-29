@@ -61,19 +61,9 @@ const handler = async (req: Request): Promise<Response> => {
           event_data: { user_agent: req.headers.get('user-agent') }
         });
 
-      // Update campaign stats
-      const newOpenedCount = (campaign.opened_count || 0) + 1;
-      const openRate = campaign.sent_count > 0 ? (newOpenedCount / campaign.sent_count) * 100 : 0;
-
-      await supabase
-        .from('email_campaigns')
-        .update({
-          opened_count: newOpenedCount,
-          open_rate: openRate
-        })
-        .eq('id', campaignId);
-
-      console.log(`Updated campaign stats - Opens: ${newOpenedCount}, Rate: ${openRate.toFixed(2)}%`);
+      // Recalcul centralisé des stats (contacts uniques, clic = ouverture)
+      await supabase.rpc('recompute_campaign_stats', { p_campaign_id: campaignId });
+      console.log('Campaign stats recomputed after open');
     } else {
       console.log('Open already tracked, skipping duplicate');
     }
