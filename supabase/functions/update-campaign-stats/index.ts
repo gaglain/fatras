@@ -28,50 +28,14 @@ const handler = async (req: Request): Promise<Response> => {
 
     console.log(`Updating campaign stats - Campaign: ${campaignId}, Event: ${eventType}`);
 
-    // Get current campaign stats
-    const { data: campaign, error: campaignError } = await supabase
-      .from('email_campaigns')
-      .select('*')
-      .eq('id', campaignId)
-      .single();
-
-    if (campaignError || !campaign) {
-      return new Response('Campaign not found', { status: 404, headers: corsHeaders });
+    // Recalcul centralisé (contacts uniques, un clic vaut une ouverture, taux sur les livrés)
+    const { error: rpcError } = await supabase.rpc('recompute_campaign_stats', { p_campaign_id: campaignId });
+    if (rpcError) {
+      console.error('Erreur recompute_campaign_stats:', rpcError);
+      return new Response('Error', { status: 500, headers: corsHeaders });
     }
 
-    // Calculate new stats based on event type
-    let updateData: any = {};
-
-    switch (eventType) {
-      case 'opened':
-        updateData.opened_count = (campaign.opened_count || 0) + 1;
-        if (campaign.sent_count > 0) {
-          updateData.open_rate = (updateData.opened_count / campaign.sent_count) * 100;
-        }
-        break;
-      case 'clicked':
-        updateData.clicked_count = (campaign.clicked_count || 0) + 1;
-        if (campaign.sent_count > 0) {
-          updateData.click_rate = (updateData.clicked_count / campaign.sent_count) * 100;
-        }
-        break;
-      case 'bounced':
-        updateData.bounced_count = (campaign.bounced_count || 0) + 1;
-        break;
-      case 'unsubscribed':
-        updateData.unsubscribed_count = (campaign.unsubscribed_count || 0) + 1;
-        break;
-    }
-
-    // Update campaign stats
-    await supabase
-      .from('email_campaigns')
-      .update(updateData)
-      .eq('id', campaignId);
-
-    console.log(`Campaign stats updated:`, updateData);
-
-    return new Response(JSON.stringify({ success: true, updated: updateData }), {
+    return new Response(JSON.stringify({ success: true }), {
       headers: {
         'Content-Type': 'application/json',
         ...corsHeaders,
