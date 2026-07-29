@@ -255,48 +255,15 @@ async function processWebhookEvent(supabase: any, body: any) {
   console.log('Successfully processed webhook event');
 }
 
-async function updateCampaignStats(supabase: any, campaignId: string, eventType: string) {
-  const { data: campaign, error: campaignError } = await supabase
-    .from('email_campaigns')
-    .select('*')
-    .eq('id', campaignId)
-    .single();
-
-  if (campaignError || !campaign) {
-    console.log('Campaign not found:', campaignId);
-    return;
+async function updateCampaignStats(supabase: any, campaignId: string, _eventType: string) {
+  // Les compteurs sont recalculés côté base à partir de email_analytics
+  // (contacts uniques, un clic vaut une ouverture, taux basés sur les emails livrés).
+  const { error } = await supabase.rpc('recompute_campaign_stats', { p_campaign_id: campaignId });
+  if (error) {
+    console.error('Erreur recompute_campaign_stats:', error);
+  } else {
+    console.log('Campaign stats recomputed for', campaignId);
   }
-
-  let updateData: any = {};
-
-  switch (eventType) {
-    case 'email.delivered':
-      updateData.delivered_count = (campaign.delivered_count || 0) + 1;
-      break;
-    case 'email.opened':
-      updateData.opened_count = (campaign.opened_count || 0) + 1;
-      if (campaign.sent_count > 0) {
-        updateData.open_rate = ((updateData.opened_count || campaign.opened_count) / campaign.sent_count) * 100;
-      }
-      break;
-    case 'email.clicked':
-      updateData.clicked_count = (campaign.clicked_count || 0) + 1;
-      if (campaign.sent_count > 0) {
-        updateData.click_rate = ((updateData.clicked_count || campaign.clicked_count) / campaign.sent_count) * 100;
-      }
-      break;
-    case 'email.bounced':
-    case 'email.complained':
-      updateData.bounced_count = (campaign.bounced_count || 0) + 1;
-      break;
-  }
-
-  await supabase
-    .from('email_campaigns')
-    .update(updateData)
-    .eq('id', campaignId);
-
-  console.log('Campaign stats updated:', updateData);
 }
 
 serve(handler);

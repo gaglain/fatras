@@ -57,31 +57,9 @@ const handler = async (req: Request): Promise<Response> => {
         }
       });
 
-    // Check if this is the first click from this contact
-    const { data: previousClicks } = await supabase
-      .from('email_analytics')
-      .select('id')
-      .eq('campaign_id', campaignId)
-      .eq('contact_id', contactId)
-      .eq('event_type', 'clicked');
-
-    // Only increment the unique click count if this is the first click from this contact
-    if (previousClicks && previousClicks.length === 1) {
-      const newClickedCount = (campaign.clicked_count || 0) + 1;
-      const clickRate = campaign.opened_count > 0 ? (newClickedCount / campaign.opened_count) * 100 : 0;
-
-      await supabase
-        .from('email_campaigns')
-        .update({
-          clicked_count: newClickedCount,
-          click_rate: clickRate
-        })
-        .eq('id', campaignId);
-
-      console.log(`Updated campaign stats - Clicks: ${newClickedCount}, Rate: ${clickRate.toFixed(2)}%`);
-    } else {
-      console.log('Additional click tracked (not counted in unique clicks)');
-    }
+    // Recalcul centralisé des stats (contacts uniques, clic = ouverture implicite)
+    await supabase.rpc('recompute_campaign_stats', { p_campaign_id: campaignId });
+    console.log('Campaign stats recomputed after click');
 
     // Redirect to original URL
     return Response.redirect(decodeURIComponent(originalUrl), 302);
