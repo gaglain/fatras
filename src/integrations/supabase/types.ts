@@ -4802,6 +4802,10 @@ export type Database = {
         Args: { _channel_id: string }
         Returns: boolean
       }
+      recompute_campaign_stats: {
+        Args: { p_campaign_id: string }
+        Returns: undefined
+      }
       refresh_shop_stats: { Args: never; Returns: undefined }
       update_campaign_stats: {
         Args: { campaign_id: string; event_type: string }
