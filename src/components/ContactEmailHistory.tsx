@@ -28,6 +28,9 @@ export const ContactEmailHistory: React.FC<ContactEmailHistoryProps> = ({
   const { emails, isLoading, loadEmails, markAsRead, syncNow } = useUnifiedEmails({ autoLoad: false });
   const { syncEmails } = useEmailSync();
   const [selectedEmail, setSelectedEmail] = React.useState<any | null>(null);
+  const [expandedSourceId, setExpandedSourceId] = React.useState<string | null>(null);
+  const [fetchedSources, setFetchedSources] = React.useState<Record<string, any>>({});
+
   const [composeEmail, setComposeEmail] = React.useState<any | null>(null);
   const [composeMode, setComposeMode] = React.useState<'reply' | 'forward' | null>(null);
   const [isSyncing, setIsSyncing] = React.useState(false);
