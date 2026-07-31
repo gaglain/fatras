@@ -579,18 +579,68 @@ export const ContactEmailHistory: React.FC<ContactEmailHistoryProps> = ({
               </p>
             )}
 
-            {getSourceEmailId(email) && (
-              <button
-                type="button"
-                className="text-xs text-primary underline mt-1"
-                onClick={(e) => { e.stopPropagation(); openSourceEmail(email); }}
-              >
-                Voir le message d'origine
-                {(email.metadata as any)?.in_reply_to_subject
-                  ? ` : ${decodeMimeHeader((email.metadata as any).in_reply_to_subject)}`
-                  : ''}
-              </button>
-            )}
+            {getSourceEmailId(email) && (() => {
+              const srcId = getSourceEmailId(email)!;
+              const expanded = expandedSourceId === srcId;
+              const src = findSourceEmail(email);
+              const meta = (email.metadata as any) || {};
+              return (
+                <div className="mt-1">
+                  <button
+                    type="button"
+                    className="text-xs text-primary underline"
+                    onClick={(e) => { e.stopPropagation(); void toggleSourcePreview(email); }}
+                  >
+                    {expanded ? 'Masquer le message d\'origine' : 'Voir le message d\'origine'}
+                    {meta.in_reply_to_subject
+                      ? ` : ${decodeMimeHeader(meta.in_reply_to_subject)}`
+                      : ''}
+                  </button>
+
+                  {expanded && (
+                    <div
+                      className="mt-2 rounded-md border bg-muted/40 p-2 space-y-1 text-xs"
+                      onClick={(e) => e.stopPropagation()}
+                    >
+                      {src ? (
+                        <>
+                          <div><strong>Objet:</strong> {decodeMimeHeader(src.subject) || '(Aucun sujet)'}</div>
+                          <div><strong>De:</strong> {src.from_name || src.from_email || '—'}</div>
+                          <div><strong>À:</strong> {src.to_name || src.to_email || '—'}</div>
+                          <div>
+                            <strong>Date:</strong>{' '}
+                            {formatDate(src.received_at || src.sent_at || src.created_at)}
+                          </div>
+                          <div className="break-all">
+                            <strong>ID message:</strong> {src.message_id || meta.in_reply_to_message_id || src.id}
+                          </div>
+                          {sourceExcerpt(src) && (
+                            <p className="pt-1 border-t whitespace-pre-wrap text-muted-foreground">
+                              {sourceExcerpt(src)}
+                            </p>
+                          )}
+                          <Button
+                            variant="outline"
+                            size="sm"
+                            className="mt-1 h-7 text-xs"
+                            onClick={(e) => { e.stopPropagation(); openSourceEmail(email); }}
+                          >
+                            Ouvrir en entier
+                          </Button>
+                        </>
+                      ) : (
+                        <>
+                          <div><strong>Objet:</strong> {decodeMimeHeader(meta.in_reply_to_subject) || '(Aucun sujet)'}</div>
+                          <div className="break-all"><strong>ID message:</strong> {meta.in_reply_to_message_id || srcId}</div>
+                          <p className="text-muted-foreground">Chargement du contenu d'origine…</p>
+                        </>
+                      )}
+                    </div>
+                  )}
+                </div>
+              );
+            })()}
+
           </div>
           </div>
         </div>
