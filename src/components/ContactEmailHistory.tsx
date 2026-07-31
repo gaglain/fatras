@@ -766,6 +766,66 @@ export const ContactEmailHistory: React.FC<ContactEmailHistoryProps> = ({
                           </Button>
 
                           <div className="pt-2 mt-1 border-t space-y-2">
+                            {contactNotes.length > 0 && (
+                              <div className="space-y-1">
+                                <p className="font-medium">Notes du contact</p>
+                                {contactNotes.map((note, index) => (
+                                  <div key={index} className="flex items-start gap-2">
+                                    {editingNoteIndex === index ? (
+                                      <>
+                                        <Input
+                                          value={editingNoteText}
+                                          onChange={(e) => setEditingNoteText(e.target.value)}
+                                          className="h-7 text-xs"
+                                          onKeyDown={(e) => {
+                                            if (e.key === 'Enter') { e.preventDefault(); void saveEditedNote(); }
+                                            if (e.key === 'Escape') { setEditingNoteIndex(null); setEditingNoteText(''); }
+                                          }}
+                                        />
+                                        <Button
+                                          size="sm"
+                                          variant="outline"
+                                          className="h-7 text-xs shrink-0"
+                                          disabled={!editingNoteText.trim() || savingAnnotation === 'note'}
+                                          onClick={(e) => { e.stopPropagation(); void saveEditedNote(); }}
+                                        >
+                                          Enregistrer
+                                        </Button>
+                                        <Button
+                                          size="sm"
+                                          variant="ghost"
+                                          className="h-7 text-xs shrink-0"
+                                          onClick={(e) => { e.stopPropagation(); setEditingNoteIndex(null); setEditingNoteText(''); }}
+                                        >
+                                          Annuler
+                                        </Button>
+                                      </>
+                                    ) : (
+                                      <>
+                                        <span className="flex-1 whitespace-pre-wrap text-muted-foreground">{note}</span>
+                                        <Button
+                                          size="sm"
+                                          variant="ghost"
+                                          className="h-7 text-xs shrink-0"
+                                          onClick={(e) => { e.stopPropagation(); startEditNote(index); }}
+                                        >
+                                          Modifier
+                                        </Button>
+                                        <Button
+                                          size="sm"
+                                          variant="ghost"
+                                          className="h-7 text-xs shrink-0 text-destructive"
+                                          disabled={savingAnnotation === 'note'}
+                                          onClick={(e) => { e.stopPropagation(); void deleteNote(index); }}
+                                        >
+                                          Supprimer
+                                        </Button>
+                                      </>
+                                    )}
+                                  </div>
+                                ))}
+                              </div>
+                            )}
                             <div className="flex gap-2">
                               <Input
                                 value={noteDraft}
