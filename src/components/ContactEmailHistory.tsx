@@ -929,6 +929,18 @@ export const ContactEmailHistory: React.FC<ContactEmailHistoryProps> = ({
         toEmail={composeTo}
         subject={composeSubject}
         preText={quotedBody(composeEmail)}
+        contactId={contactId}
+        kind={composeMode ?? 'new'}
+        sourceEmail={composeEmail ? {
+          id: typeof composeEmail.id === 'string' && !composeEmail.id.startsWith('analytics-') ? composeEmail.id : undefined,
+          message_id: composeEmail.message_id,
+          subject: decodeMimeHeader(composeEmail.subject) || undefined,
+          thread_id: composeEmail.thread_id,
+        } : null}
+        onSent={() => {
+          void loadEmails({ contactId, contactEmail: normalizedContactEmail, limit: 500 });
+          void loadCampaignEmails();
+        }}
       />
     </>
   );
