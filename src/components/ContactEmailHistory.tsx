@@ -30,6 +30,10 @@ export const ContactEmailHistory: React.FC<ContactEmailHistoryProps> = ({
   const [selectedEmail, setSelectedEmail] = React.useState<any | null>(null);
   const [expandedSourceId, setExpandedSourceId] = React.useState<string | null>(null);
   const [fetchedSources, setFetchedSources] = React.useState<Record<string, any>>({});
+  const [noteDraft, setNoteDraft] = React.useState('');
+  const [tagDraft, setTagDraft] = React.useState('');
+  const [savingAnnotation, setSavingAnnotation] = React.useState<'note' | 'tag' | null>(null);
+
 
   const [composeEmail, setComposeEmail] = React.useState<any | null>(null);
   const [composeMode, setComposeMode] = React.useState<'reply' | 'forward' | null>(null);
