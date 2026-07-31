@@ -388,6 +388,27 @@ export const ContactEmailHistory: React.FC<ContactEmailHistoryProps> = ({
     setSelectedEmail(email);
   };
 
+  const openCompose = (email: any, mode: 'reply' | 'forward') => {
+    setComposeEmail(email);
+    setComposeMode(mode);
+  };
+
+  const quotedBody = (email: any) =>
+    email
+      ? `\n\n---\nDe: ${email.from_name || email.from_email}\nÀ: ${email.to_name || email.to_email}\nDate: ${formatDate(email.received_at || email.sent_at || email.created_at)}\nObjet: ${decodeMimeHeader(email.subject) || '(Aucun sujet)'}\n\n${stripTags(email.html_content || email.content || '')}`
+      : '';
+
+  const composeTo =
+    composeMode === 'forward'
+      ? ''
+      : composeEmail?.direction === 'received'
+        ? composeEmail?.from_email || ''
+        : composeEmail?.to_email || contactEmail || '';
+
+  const composeSubject = composeEmail
+    ? `${composeMode === 'forward' ? 'Tr' : 'Re'}: ${decodeMimeHeader(composeEmail.subject) || ''}`
+    : '';
+
   if (isLoading) {
     return (
       <Card>
