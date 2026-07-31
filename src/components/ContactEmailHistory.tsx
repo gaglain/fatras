@@ -588,6 +588,57 @@ export const ContactEmailHistory: React.FC<ContactEmailHistoryProps> = ({
     setComposeMode(mode);
   };
 
+  const openTaskDialog = (email: any) => {
+    setTaskEmail(email);
+    const subj = decodeMimeHeader(email?.subject) || '(Aucun sujet)';
+    setTaskTitle(`Suivi email : ${subj}`);
+    const d = new Date();
+    d.setDate(d.getDate() + 1);
+    setTaskDueDate(d.toISOString().slice(0, 10));
+    setTaskPriority('medium');
+  };
+
+  const createTaskFromEmail = async () => {
+    if (!taskEmail || !taskTitle.trim()) return;
+    setCreatingTask(true);
+    try {
+      const { data: userData } = await supabase.auth.getUser();
+      const uid = userData?.user?.id;
+      if (!uid) throw new Error('Utilisateur non authentifié');
+
+      const subj = decodeMimeHeader(taskEmail.subject) || '(Aucun sujet)';
+      const description = [
+        `Tâche créée depuis un email.`,
+        `Objet: ${subj}`,
+        `De: ${taskEmail.from_name || taskEmail.from_email || '—'}`,
+        `À: ${taskEmail.to_name || taskEmail.to_email || '—'}`,
+        `Date: ${formatDate(taskEmail.received_at || taskEmail.sent_at || taskEmail.created_at)}`,
+        taskEmail.message_id ? `ID message: ${taskEmail.message_id}` : '',
+      ].filter(Boolean).join('\n');
+
+      const { error } = await supabase.from('tasks').insert({
+        user_id: uid,
+        assigned_to: uid,
+        contact_id: contactId,
+        title: taskTitle.trim(),
+        description,
+        priority: taskPriority,
+        status: 'todo',
+        task_type: 'Email',
+        due_date: taskDueDate ? new Date(`${taskDueDate}T09:00:00`).toISOString() : null,
+      });
+      if (error) throw error;
+
+      toast.success('Tâche créée et liée au contact');
+      setTaskEmail(null);
+    } catch (err: any) {
+      toast.error(`Erreur: ${err?.message || 'création de la tâche impossible'}`);
+    } finally {
+      setCreatingTask(false);
+    }
+  };
+
+
   const quotedBody = (email: any) =>
     email
       ? `\n\n---\nDe: ${email.from_name || email.from_email}\nÀ: ${email.to_name || email.to_email}\nDate: ${formatDate(email.received_at || email.sent_at || email.created_at)}\nObjet: ${decodeMimeHeader(email.subject) || '(Aucun sujet)'}\n\n${stripTags(email.html_content || email.content || '')}`
