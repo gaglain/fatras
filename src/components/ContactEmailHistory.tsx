@@ -400,7 +400,10 @@ export const ContactEmailHistory: React.FC<ContactEmailHistoryProps> = ({
     const srcId = getSourceEmailId(email);
     if (!srcId) return;
     setExpandedSourceId((prev) => (prev === srcId ? null : srcId));
+    setNoteDraft('');
+    setTagDraft('');
     if (findSourceEmail(email)) return;
+
     const { data } = await supabase
       .from('emails')
       .select('*')
