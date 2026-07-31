@@ -383,13 +383,44 @@ export const ContactEmailHistory: React.FC<ContactEmailHistoryProps> = ({
   const getSourceEmailId = (email: any): string | null =>
     (email?.metadata as any)?.in_reply_to_email_id || null;
 
-  const openSourceEmail = (email: any) => {
+  const findSourceEmail = (email: any): any | null => {
+    const srcId = getSourceEmailId(email);
+    if (!srcId) return null;
+    return contactEmails.find((e: any) => e.id === srcId) || fetchedSources[srcId] || null;
+  };
+
+  const toggleSourcePreview = async (email: any) => {
     const srcId = getSourceEmailId(email);
     if (!srcId) return;
-    const found = contactEmails.find((e: any) => e.id === srcId);
+    setExpandedSourceId((prev) => (prev === srcId ? null : srcId));
+    if (findSourceEmail(email)) return;
+    const { data } = await supabase
+      .from('emails')
+      .select('*')
+      .eq('id', srcId)
+      .maybeSingle();
+    if (data) setFetchedSources((prev) => ({ ...prev, [srcId]: data }));
+  };
+
+  const openSourceEmail = (email: any) => {
+    const found = findSourceEmail(email);
     if (found) setSelectedEmail(found);
     else toast.info('Message d\'origine introuvable dans l\'historique');
   };
+
+  const stripHtml = (html: string) =>
+    html.replace(/<style[\s\S]*?<\/style>/gi, '')
+      .replace(/<[^>]+>/g, ' ')
+      .replace(/&nbsp;/g, ' ')
+      .replace(/\s+/g, ' ')
+      .trim();
+
+  const sourceExcerpt = (src: any): string => {
+    const raw = src?.content || (src?.html_content ? stripHtml(src.html_content) : '');
+    if (!raw) return '';
+    return raw.length > 400 ? `${raw.slice(0, 400)}…` : raw;
+  };
+
 
 
   const formatDate = (dateString: string) => {
