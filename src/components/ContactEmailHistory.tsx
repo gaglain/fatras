@@ -43,6 +43,11 @@ export const ContactEmailHistory: React.FC<ContactEmailHistoryProps> = ({
   const [isSyncing, setIsSyncing] = React.useState(false);
   const [isBackfilling, setIsBackfilling] = React.useState(false);
   const [campaignEmails, setCampaignEmails] = React.useState<any[]>([]);
+  const [taskEmail, setTaskEmail] = React.useState<any | null>(null);
+  const [taskTitle, setTaskTitle] = React.useState('');
+  const [taskDueDate, setTaskDueDate] = React.useState('');
+  const [taskPriority, setTaskPriority] = React.useState<'low' | 'medium' | 'high' | 'urgent'>('medium');
+  const [creatingTask, setCreatingTask] = React.useState(false);
 
   const normalizeAddress = React.useCallback((value?: string) => {
     if (!value) return '';
