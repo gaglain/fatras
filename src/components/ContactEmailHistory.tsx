@@ -3,7 +3,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { Mail, Send, Inbox, Clock, User, RefreshCw, Reply, Forward, Megaphone, MessagesSquare, ChevronDown, ChevronRight, Search, X } from 'lucide-react';
+import { Mail, Send, Inbox, Clock, User, RefreshCw, Reply, Forward, Megaphone, MessagesSquare, ChevronDown, ChevronRight, Search, X, CheckSquare } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
@@ -43,6 +43,11 @@ export const ContactEmailHistory: React.FC<ContactEmailHistoryProps> = ({
   const [isSyncing, setIsSyncing] = React.useState(false);
   const [isBackfilling, setIsBackfilling] = React.useState(false);
   const [campaignEmails, setCampaignEmails] = React.useState<any[]>([]);
+  const [taskEmail, setTaskEmail] = React.useState<any | null>(null);
+  const [taskTitle, setTaskTitle] = React.useState('');
+  const [taskDueDate, setTaskDueDate] = React.useState('');
+  const [taskPriority, setTaskPriority] = React.useState<'low' | 'medium' | 'high' | 'urgent'>('medium');
+  const [creatingTask, setCreatingTask] = React.useState(false);
 
   const normalizeAddress = React.useCallback((value?: string) => {
     if (!value) return '';
@@ -588,6 +593,57 @@ export const ContactEmailHistory: React.FC<ContactEmailHistoryProps> = ({
     setComposeMode(mode);
   };
 
+  const openTaskDialog = (email: any) => {
+    setTaskEmail(email);
+    const subj = decodeMimeHeader(email?.subject) || '(Aucun sujet)';
+    setTaskTitle(`Suivi email : ${subj}`);
+    const d = new Date();
+    d.setDate(d.getDate() + 1);
+    setTaskDueDate(d.toISOString().slice(0, 10));
+    setTaskPriority('medium');
+  };
+
+  const createTaskFromEmail = async () => {
+    if (!taskEmail || !taskTitle.trim()) return;
+    setCreatingTask(true);
+    try {
+      const { data: userData } = await supabase.auth.getUser();
+      const uid = userData?.user?.id;
+      if (!uid) throw new Error('Utilisateur non authentifié');
+
+      const subj = decodeMimeHeader(taskEmail.subject) || '(Aucun sujet)';
+      const description = [
+        `Tâche créée depuis un email.`,
+        `Objet: ${subj}`,
+        `De: ${taskEmail.from_name || taskEmail.from_email || '—'}`,
+        `À: ${taskEmail.to_name || taskEmail.to_email || '—'}`,
+        `Date: ${formatDate(taskEmail.received_at || taskEmail.sent_at || taskEmail.created_at)}`,
+        taskEmail.message_id ? `ID message: ${taskEmail.message_id}` : '',
+      ].filter(Boolean).join('\n');
+
+      const { error } = await supabase.from('tasks').insert({
+        user_id: uid,
+        assigned_to: uid,
+        contact_id: contactId,
+        title: taskTitle.trim(),
+        description,
+        priority: taskPriority,
+        status: 'todo',
+        task_type: 'Email',
+        due_date: taskDueDate ? new Date(`${taskDueDate}T09:00:00`).toISOString() : null,
+      });
+      if (error) throw error;
+
+      toast.success('Tâche créée et liée au contact');
+      setTaskEmail(null);
+    } catch (err: any) {
+      toast.error(`Erreur: ${err?.message || 'création de la tâche impossible'}`);
+    } finally {
+      setCreatingTask(false);
+    }
+  };
+
+
   const quotedBody = (email: any) =>
     email
       ? `\n\n---\nDe: ${email.from_name || email.from_email}\nÀ: ${email.to_name || email.to_email}\nDate: ${formatDate(email.received_at || email.sent_at || email.created_at)}\nObjet: ${decodeMimeHeader(email.subject) || '(Aucun sujet)'}\n\n${stripTags(email.html_content || email.content || '')}`
@@ -907,6 +963,17 @@ export const ContactEmailHistory: React.FC<ContactEmailHistoryProps> = ({
         >
           <Forward className="h-3 w-3 mr-2" />
           Transférer
+        </Button>
+        <Button
+          variant="outline"
+          size="sm"
+          onClick={(e) => {
+            e.stopPropagation();
+            openTaskDialog(email);
+          }}
+        >
+          <CheckSquare className="h-3 w-3 mr-2" />
+          Créer une tâche
         </Button>
       </div>
     </div>
@@ -1238,9 +1305,55 @@ export const ContactEmailHistory: React.FC<ContactEmailHistoryProps> = ({
             <Button variant="outline" size="sm" onClick={() => openCompose(selectedEmail, 'forward')}>
               <Forward className="h-4 w-4 mr-2" /> Transférer
             </Button>
+            <Button variant="outline" size="sm" onClick={() => openTaskDialog(selectedEmail)}>
+              <CheckSquare className="h-4 w-4 mr-2" /> Créer une tâche
+            </Button>
           </div>
         </DialogContent>
       </Dialog>
+
+      {/* Dialog création de tâche depuis un email */}
+      <Dialog open={!!taskEmail} onOpenChange={(open) => { if (!open) setTaskEmail(null); }}>
+        <DialogContent className="max-w-md">
+          <DialogHeader>
+            <DialogTitle>Créer une tâche</DialogTitle>
+            <DialogDescription>
+              La tâche sera liée à ce contact et à l'email sélectionné.
+            </DialogDescription>
+          </DialogHeader>
+          <div className="space-y-3">
+            <div className="space-y-1">
+              <label className="text-xs font-medium">Titre</label>
+              <Input value={taskTitle} onChange={(e) => setTaskTitle(e.target.value)} placeholder="Titre de la tâche" />
+            </div>
+            <div className="grid grid-cols-2 gap-3">
+              <div className="space-y-1">
+                <label className="text-xs font-medium">Échéance</label>
+                <Input type="date" value={taskDueDate} onChange={(e) => setTaskDueDate(e.target.value)} />
+              </div>
+              <div className="space-y-1">
+                <label className="text-xs font-medium">Priorité</label>
+                <Select value={taskPriority} onValueChange={(v) => setTaskPriority(v as any)}>
+                  <SelectTrigger><SelectValue /></SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="low">Basse</SelectItem>
+                    <SelectItem value="medium">Moyenne</SelectItem>
+                    <SelectItem value="high">Haute</SelectItem>
+                    <SelectItem value="urgent">Urgente</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+            </div>
+            <div className="flex justify-end gap-2 pt-2">
+              <Button variant="outline" size="sm" onClick={() => setTaskEmail(null)}>Annuler</Button>
+              <Button size="sm" disabled={!taskTitle.trim() || creatingTask} onClick={() => void createTaskFromEmail()}>
+                {creatingTask ? 'Création…' : 'Créer la tâche'}
+              </Button>
+            </div>
+          </div>
+        </DialogContent>
+      </Dialog>
+
 
       {/* Dialog de réponse / transfert */}
       <EmailComposer 
