@@ -964,6 +964,17 @@ export const ContactEmailHistory: React.FC<ContactEmailHistoryProps> = ({
           <Forward className="h-3 w-3 mr-2" />
           Transférer
         </Button>
+        <Button
+          variant="outline"
+          size="sm"
+          onClick={(e) => {
+            e.stopPropagation();
+            openTaskDialog(email);
+          }}
+        >
+          <CheckSquare className="h-3 w-3 mr-2" />
+          Créer une tâche
+        </Button>
       </div>
     </div>
   );
