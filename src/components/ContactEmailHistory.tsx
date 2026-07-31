@@ -242,16 +242,18 @@ export const ContactEmailHistory: React.FC<ContactEmailHistoryProps> = ({
     const toTs = dateTo ? new Date(dateTo).getTime() + 24 * 3600 * 1000 - 1 : null;
 
     return contactEmails.filter((e) => {
-      // Texte (sujet + contenu + expéditeur/destinataire)
+      // Texte (ID message, sujet, contenu, expéditeur, destinataire)
       if (q) {
         const subj = decodeMimeHeader(e.subject || '').toLowerCase();
         const body = stripTags(e.html_content || e.content || '').toLowerCase();
         const from = `${e.from_name || ''} ${e.from_email || ''}`.toLowerCase();
         const to = `${e.to_name || ''} ${e.to_email || ''}`.toLowerCase();
-        if (!subj.includes(q) && !body.includes(q) && !from.includes(q) && !to.includes(q)) {
+        const ids = `${e.id || ''} ${e.message_id || ''}`.toLowerCase();
+        if (!subj.includes(q) && !body.includes(q) && !from.includes(q) && !to.includes(q) && !ids.includes(q)) {
           return false;
         }
       }
+
       // Statut
       if (statusFilter !== 'all') {
         if (statusFilter === 'received' && e.direction !== 'received') return false;
