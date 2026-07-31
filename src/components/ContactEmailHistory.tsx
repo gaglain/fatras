@@ -951,7 +951,7 @@ export const ContactEmailHistory: React.FC<ContactEmailHistoryProps> = ({
                   <div className="relative flex-1">
                     <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
                     <Input
-                      placeholder="Rechercher par objet, contenu, expéditeur…"
+                      placeholder="Rechercher par ID, objet, destinataire ou contenu…"
                       value={searchQuery}
                       onChange={(e) => setSearchQuery(e.target.value)}
                       className="pl-10"
@@ -1008,12 +1008,12 @@ export const ContactEmailHistory: React.FC<ContactEmailHistoryProps> = ({
                     />
                   </div>
                 )}
-                {hasActiveFilters && (
-                  <p className="text-xs text-muted-foreground">
-                    {filteredEmails.length} résultat{filteredEmails.length > 1 ? 's' : ''} sur {contactEmails.length}
-                  </p>
-                )}
+                <p className="text-xs text-muted-foreground">
+                  {searchQuery.trim() ? `${filteredEmails.length} résultat${filteredEmails.length > 1 ? 's' : ''} pour « ${searchQuery.trim()} »` : `${filteredEmails.length} email${filteredEmails.length > 1 ? 's' : ''} sur ${contactEmails.length}`}
+                  {searchQuery.trim() ? ' — ID, objet, destinataire et contenu sont recherchés' : ''}
+                </p>
               </div>
+
 
             <Tabs defaultValue="threads" className="w-full">
               <TabsList className="grid w-full grid-cols-4 h-auto">
