@@ -487,12 +487,19 @@ export const ContactEmailHistory: React.FC<ContactEmailHistoryProps> = ({
                   {email.campaign_name || 'Campagne'}
                 </Badge>
               )}
+              {getKind(email) && (
+                <Badge variant="outline" className="text-xs gap-1">
+                  {getKind(email) === 'reply' ? <Reply className="h-3 w-3" /> : <Forward className="h-3 w-3" />}
+                  {getKind(email) === 'reply' ? 'Réponse' : 'Transfert'}
+                </Badge>
+              )}
               {email.direction === 'received' && !email.read_at && (
                 <Badge variant="outline" className="text-xs">
                   Nouveau
                 </Badge>
               )}
             </div>
+
             
             <h4 className={`text-sm font-medium line-clamp-2 mb-1 ${
               email.direction === 'received' && !email.read_at ? 'font-semibold' : ''
