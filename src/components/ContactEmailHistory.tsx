@@ -346,6 +346,10 @@ export const ContactEmailHistory: React.FC<ContactEmailHistoryProps> = ({
         return 'Livré';
       case 'sent':
         return 'Envoyé';
+      case 'sending':
+        return 'Envoi en cours';
+      case 'failed':
+        return 'Échec d\'envoi';
       case 'pending':
         return 'En attente';
       case 'bounced':
@@ -364,11 +368,29 @@ export const ContactEmailHistory: React.FC<ContactEmailHistoryProps> = ({
       case 'sent':
         return 'secondary';
       case 'bounced':
+      case 'failed':
         return 'destructive';
       default:
         return 'outline';
     }
   };
+
+  const getKind = (email: any): 'reply' | 'forward' | null => {
+    const k = (email?.metadata as any)?.kind;
+    return k === 'reply' || k === 'forward' ? k : null;
+  };
+
+  const getSourceEmailId = (email: any): string | null =>
+    (email?.metadata as any)?.in_reply_to_email_id || null;
+
+  const openSourceEmail = (email: any) => {
+    const srcId = getSourceEmailId(email);
+    if (!srcId) return;
+    const found = contactEmails.find((e: any) => e.id === srcId);
+    if (found) setSelectedEmail(found);
+    else toast.info('Message d\'origine introuvable dans l\'historique');
+  };
+
 
   const formatDate = (dateString: string) => {
     const date = new Date(dateString);
