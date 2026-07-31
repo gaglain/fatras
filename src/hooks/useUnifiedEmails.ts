@@ -26,6 +26,7 @@ export interface UnifiedEmail {
   provider: string;
   thread_id?: string;
   labels?: string[];
+  metadata?: any;
   attachments?: unknown;
   contact_id?: string;
   sent_at?: string;
