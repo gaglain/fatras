@@ -505,6 +505,7 @@ export const ContactEmailHistory: React.FC<ContactEmailHistoryProps> = ({
       const { error } = await supabase.from('contacts').update({ notes }).eq('id', contactId);
       if (error) throw error;
       setNoteDraft('');
+      setContactNotes(notes.split('\n').filter((l) => l.trim().length > 0));
       toast.success('Note ajoutée au contact');
     } catch (e: unknown) {
       toast.error(`Impossible d'ajouter la note: ${e instanceof Error ? e.message : 'erreur inconnue'}`);
