@@ -418,6 +418,68 @@ export const ContactEmailHistory: React.FC<ContactEmailHistoryProps> = ({
     else toast.info('Message d\'origine introuvable dans l\'historique');
   };
 
+  const addNoteFromSource = async (src: any) => {
+    const text = noteDraft.trim();
+    if (!text) return;
+    setSavingAnnotation('note');
+    try {
+      const { data: contact, error: readError } = await supabase
+        .from('contacts')
+        .select('notes')
+        .eq('id', contactId)
+        .maybeSingle();
+      if (readError) throw readError;
+
+      const subject = decodeMimeHeader(src?.subject) || '(Aucun sujet)';
+      const stamp = new Date().toLocaleString('fr-FR');
+      const entry = `[${stamp}] (Email: ${subject}) ${text}`;
+      const notes = contact?.notes ? `${contact.notes}\n${entry}` : entry;
+
+      const { error } = await supabase.from('contacts').update({ notes }).eq('id', contactId);
+      if (error) throw error;
+      setNoteDraft('');
+      toast.success('Note ajoutée au contact');
+    } catch (e: unknown) {
+      toast.error(`Impossible d'ajouter la note: ${e instanceof Error ? e.message : 'erreur inconnue'}`);
+    } finally {
+      setSavingAnnotation(null);
+    }
+  };
+
+  const addTagFromSource = async () => {
+    const tag = tagDraft.trim();
+    if (!tag) return;
+    setSavingAnnotation('tag');
+    try {
+      const { data: contact, error: readError } = await supabase
+        .from('contacts')
+        .select('tags')
+        .eq('id', contactId)
+        .maybeSingle();
+      if (readError) throw readError;
+
+      const current: string[] = Array.isArray(contact?.tags) ? contact!.tags as string[] : [];
+      if (current.some((t) => t.toLowerCase() === tag.toLowerCase())) {
+        toast.info('Ce tag existe déjà sur le contact');
+        setTagDraft('');
+        return;
+      }
+      const { error } = await supabase
+        .from('contacts')
+        .update({ tags: [...current, tag] })
+        .eq('id', contactId);
+      if (error) throw error;
+      setTagDraft('');
+      toast.success('Tag ajouté au contact');
+    } catch (e: unknown) {
+      toast.error(`Impossible d'ajouter le tag: ${e instanceof Error ? e.message : 'erreur inconnue'}`);
+    } finally {
+      setSavingAnnotation(null);
+    }
+  };
+
+
+
   const stripHtml = (html: string) =>
     html.replace(/<style[\s\S]*?<\/style>/gi, '')
       .replace(/<[^>]+>/g, ' ')
