@@ -33,6 +33,9 @@ export const ContactEmailHistory: React.FC<ContactEmailHistoryProps> = ({
   const [noteDraft, setNoteDraft] = React.useState('');
   const [tagDraft, setTagDraft] = React.useState('');
   const [savingAnnotation, setSavingAnnotation] = React.useState<'note' | 'tag' | null>(null);
+  const [contactNotes, setContactNotes] = React.useState<string[]>([]);
+  const [editingNoteIndex, setEditingNoteIndex] = React.useState<number | null>(null);
+  const [editingNoteText, setEditingNoteText] = React.useState('');
 
 
   const [composeEmail, setComposeEmail] = React.useState<any | null>(null);
@@ -396,12 +399,75 @@ export const ContactEmailHistory: React.FC<ContactEmailHistoryProps> = ({
     return contactEmails.find((e: any) => e.id === srcId) || fetchedSources[srcId] || null;
   };
 
+  const loadContactNotes = React.useCallback(async () => {
+    const { data } = await supabase
+      .from('contacts')
+      .select('notes')
+      .eq('id', contactId)
+      .maybeSingle();
+    const lines = (data?.notes || '').split('\n').filter((l: string) => l.trim().length > 0);
+    setContactNotes(lines);
+  }, [contactId]);
+
+  const persistNotes = async (lines: string[]) => {
+    const { error } = await supabase
+      .from('contacts')
+      .update({ notes: lines.join('\n') })
+      .eq('id', contactId);
+    if (error) throw error;
+    setContactNotes(lines);
+  };
+
+  const startEditNote = (index: number) => {
+    setEditingNoteIndex(index);
+    setEditingNoteText(contactNotes[index] ?? '');
+  };
+
+  const saveEditedNote = async () => {
+    if (editingNoteIndex === null) return;
+    const text = editingNoteText.trim();
+    if (!text) return;
+    setSavingAnnotation('note');
+    try {
+      const next = [...contactNotes];
+      next[editingNoteIndex] = text;
+      await persistNotes(next);
+      setEditingNoteIndex(null);
+      setEditingNoteText('');
+      toast.success('Note modifiée');
+    } catch (e: unknown) {
+      toast.error(`Impossible de modifier la note: ${e instanceof Error ? e.message : 'erreur inconnue'}`);
+    } finally {
+      setSavingAnnotation(null);
+    }
+  };
+
+  const deleteNote = async (index: number) => {
+    setSavingAnnotation('note');
+    try {
+      await persistNotes(contactNotes.filter((_, i) => i !== index));
+      if (editingNoteIndex === index) {
+        setEditingNoteIndex(null);
+        setEditingNoteText('');
+      }
+      toast.success('Note supprimée');
+    } catch (e: unknown) {
+      toast.error(`Impossible de supprimer la note: ${e instanceof Error ? e.message : 'erreur inconnue'}`);
+    } finally {
+      setSavingAnnotation(null);
+    }
+  };
+
   const toggleSourcePreview = async (email: any) => {
     const srcId = getSourceEmailId(email);
     if (!srcId) return;
+    const willExpand = expandedSourceId !== srcId;
     setExpandedSourceId((prev) => (prev === srcId ? null : srcId));
     setNoteDraft('');
     setTagDraft('');
+    setEditingNoteIndex(null);
+    setEditingNoteText('');
+    if (willExpand) void loadContactNotes();
     if (findSourceEmail(email)) return;
 
     const { data } = await supabase
@@ -411,6 +477,7 @@ export const ContactEmailHistory: React.FC<ContactEmailHistoryProps> = ({
       .maybeSingle();
     if (data) setFetchedSources((prev) => ({ ...prev, [srcId]: data }));
   };
+
 
   const openSourceEmail = (email: any) => {
     const found = findSourceEmail(email);
@@ -438,6 +505,7 @@ export const ContactEmailHistory: React.FC<ContactEmailHistoryProps> = ({
       const { error } = await supabase.from('contacts').update({ notes }).eq('id', contactId);
       if (error) throw error;
       setNoteDraft('');
+      setContactNotes(notes.split('\n').filter((l) => l.trim().length > 0));
       toast.success('Note ajoutée au contact');
     } catch (e: unknown) {
       toast.error(`Impossible d'ajouter la note: ${e instanceof Error ? e.message : 'erreur inconnue'}`);
@@ -698,6 +766,66 @@ export const ContactEmailHistory: React.FC<ContactEmailHistoryProps> = ({
                           </Button>
 
                           <div className="pt-2 mt-1 border-t space-y-2">
+                            {contactNotes.length > 0 && (
+                              <div className="space-y-1">
+                                <p className="font-medium">Notes du contact</p>
+                                {contactNotes.map((note, index) => (
+                                  <div key={index} className="flex items-start gap-2">
+                                    {editingNoteIndex === index ? (
+                                      <>
+                                        <Input
+                                          value={editingNoteText}
+                                          onChange={(e) => setEditingNoteText(e.target.value)}
+                                          className="h-7 text-xs"
+                                          onKeyDown={(e) => {
+                                            if (e.key === 'Enter') { e.preventDefault(); void saveEditedNote(); }
+                                            if (e.key === 'Escape') { setEditingNoteIndex(null); setEditingNoteText(''); }
+                                          }}
+                                        />
+                                        <Button
+                                          size="sm"
+                                          variant="outline"
+                                          className="h-7 text-xs shrink-0"
+                                          disabled={!editingNoteText.trim() || savingAnnotation === 'note'}
+                                          onClick={(e) => { e.stopPropagation(); void saveEditedNote(); }}
+                                        >
+                                          Enregistrer
+                                        </Button>
+                                        <Button
+                                          size="sm"
+                                          variant="ghost"
+                                          className="h-7 text-xs shrink-0"
+                                          onClick={(e) => { e.stopPropagation(); setEditingNoteIndex(null); setEditingNoteText(''); }}
+                                        >
+                                          Annuler
+                                        </Button>
+                                      </>
+                                    ) : (
+                                      <>
+                                        <span className="flex-1 whitespace-pre-wrap text-muted-foreground">{note}</span>
+                                        <Button
+                                          size="sm"
+                                          variant="ghost"
+                                          className="h-7 text-xs shrink-0"
+                                          onClick={(e) => { e.stopPropagation(); startEditNote(index); }}
+                                        >
+                                          Modifier
+                                        </Button>
+                                        <Button
+                                          size="sm"
+                                          variant="ghost"
+                                          className="h-7 text-xs shrink-0 text-destructive"
+                                          disabled={savingAnnotation === 'note'}
+                                          onClick={(e) => { e.stopPropagation(); void deleteNote(index); }}
+                                        >
+                                          Supprimer
+                                        </Button>
+                                      </>
+                                    )}
+                                  </div>
+                                ))}
+                              </div>
+                            )}
                             <div className="flex gap-2">
                               <Input
                                 value={noteDraft}
