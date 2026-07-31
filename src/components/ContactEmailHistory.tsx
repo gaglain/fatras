@@ -346,6 +346,10 @@ export const ContactEmailHistory: React.FC<ContactEmailHistoryProps> = ({
         return 'Livré';
       case 'sent':
         return 'Envoyé';
+      case 'sending':
+        return 'Envoi en cours';
+      case 'failed':
+        return 'Échec d\'envoi';
       case 'pending':
         return 'En attente';
       case 'bounced':
@@ -364,11 +368,29 @@ export const ContactEmailHistory: React.FC<ContactEmailHistoryProps> = ({
       case 'sent':
         return 'secondary';
       case 'bounced':
+      case 'failed':
         return 'destructive';
       default:
         return 'outline';
     }
   };
+
+  const getKind = (email: any): 'reply' | 'forward' | null => {
+    const k = (email?.metadata as any)?.kind;
+    return k === 'reply' || k === 'forward' ? k : null;
+  };
+
+  const getSourceEmailId = (email: any): string | null =>
+    (email?.metadata as any)?.in_reply_to_email_id || null;
+
+  const openSourceEmail = (email: any) => {
+    const srcId = getSourceEmailId(email);
+    if (!srcId) return;
+    const found = contactEmails.find((e: any) => e.id === srcId);
+    if (found) setSelectedEmail(found);
+    else toast.info('Message d\'origine introuvable dans l\'historique');
+  };
+
 
   const formatDate = (dateString: string) => {
     const date = new Date(dateString);
@@ -465,12 +487,19 @@ export const ContactEmailHistory: React.FC<ContactEmailHistoryProps> = ({
                   {email.campaign_name || 'Campagne'}
                 </Badge>
               )}
+              {getKind(email) && (
+                <Badge variant="outline" className="text-xs gap-1">
+                  {getKind(email) === 'reply' ? <Reply className="h-3 w-3" /> : <Forward className="h-3 w-3" />}
+                  {getKind(email) === 'reply' ? 'Réponse' : 'Transfert'}
+                </Badge>
+              )}
               {email.direction === 'received' && !email.read_at && (
                 <Badge variant="outline" className="text-xs">
                   Nouveau
                 </Badge>
               )}
             </div>
+
             
             <h4 className={`text-sm font-medium line-clamp-2 mb-1 ${
               email.direction === 'received' && !email.read_at ? 'font-semibold' : ''
@@ -508,6 +537,25 @@ export const ContactEmailHistory: React.FC<ContactEmailHistoryProps> = ({
                     ? ` • Livré le ${formatDate(email.delivered_at)}`
                     : ''}
               </p>
+            )}
+
+            {email.status === 'failed' && (email.metadata as any)?.error && (
+              <p className="text-xs text-destructive mt-1">
+                Erreur: {(email.metadata as any).error}
+              </p>
+            )}
+
+            {getSourceEmailId(email) && (
+              <button
+                type="button"
+                className="text-xs text-primary underline mt-1"
+                onClick={(e) => { e.stopPropagation(); openSourceEmail(email); }}
+              >
+                Voir le message d'origine
+                {(email.metadata as any)?.in_reply_to_subject
+                  ? ` : ${decodeMimeHeader((email.metadata as any).in_reply_to_subject)}`
+                  : ''}
+              </button>
             )}
           </div>
           </div>
@@ -881,6 +929,18 @@ export const ContactEmailHistory: React.FC<ContactEmailHistoryProps> = ({
         toEmail={composeTo}
         subject={composeSubject}
         preText={quotedBody(composeEmail)}
+        contactId={contactId}
+        kind={composeMode ?? 'new'}
+        sourceEmail={composeEmail ? {
+          id: typeof composeEmail.id === 'string' && !composeEmail.id.startsWith('analytics-') ? composeEmail.id : undefined,
+          message_id: composeEmail.message_id,
+          subject: decodeMimeHeader(composeEmail.subject) || undefined,
+          thread_id: composeEmail.thread_id,
+        } : null}
+        onSent={() => {
+          void loadEmails({ contactId, contactEmail: normalizedContactEmail, limit: 500 });
+          void loadCampaignEmails();
+        }}
       />
     </>
   );

@@ -26,6 +26,7 @@ export interface UnifiedEmail {
   provider: string;
   thread_id?: string;
   labels?: string[];
+  metadata?: any;
   attachments?: unknown;
   contact_id?: string;
   sent_at?: string;
@@ -55,7 +56,7 @@ const mapUnifiedRow = (ue: any, myEmailsSet: Set<string>): UnifiedEmail => {
     id: ue.id, message_id: ue.message_id, direction,
     from_email: ue.from_email, from_name: ue.from_name, to_email: ue.to_email, to_name: ue.to_name,
     subject: ue.subject, content: ue.content, html_content: ue.html_content,
-    status: ue.status, provider: ue.provider, thread_id: ue.thread_id, labels: ue.labels,
+    status: ue.status, provider: ue.provider, thread_id: ue.thread_id, labels: ue.labels, metadata: ue.metadata,
     attachments: ue.attachments, contact_id: ue.contact_id,
     sent_at: ue.sent_at, received_at: ue.received_at, read_at: ue.read_at,
     delivered_at: ue.delivered_at, opened_at: ue.opened_at, is_read: ue.is_read,
