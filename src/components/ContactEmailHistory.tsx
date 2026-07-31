@@ -3,7 +3,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { Mail, Send, Inbox, Clock, User, RefreshCw, Reply, Megaphone, MessagesSquare, ChevronDown, ChevronRight, Search, X } from 'lucide-react';
+import { Mail, Send, Inbox, Clock, User, RefreshCw, Reply, Forward, Megaphone, MessagesSquare, ChevronDown, ChevronRight, Search, X } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
@@ -28,7 +28,8 @@ export const ContactEmailHistory: React.FC<ContactEmailHistoryProps> = ({
   const { emails, isLoading, loadEmails, markAsRead, syncNow } = useUnifiedEmails({ autoLoad: false });
   const { syncEmails } = useEmailSync();
   const [selectedEmail, setSelectedEmail] = React.useState<any | null>(null);
-  const [showReply, setShowReply] = React.useState(false);
+  const [composeEmail, setComposeEmail] = React.useState<any | null>(null);
+  const [composeMode, setComposeMode] = React.useState<'reply' | 'forward' | null>(null);
   const [isSyncing, setIsSyncing] = React.useState(false);
   const [isBackfilling, setIsBackfilling] = React.useState(false);
   const [campaignEmails, setCampaignEmails] = React.useState<any[]>([]);
@@ -387,6 +388,27 @@ export const ContactEmailHistory: React.FC<ContactEmailHistoryProps> = ({
     setSelectedEmail(email);
   };
 
+  const openCompose = (email: any, mode: 'reply' | 'forward') => {
+    setComposeEmail(email);
+    setComposeMode(mode);
+  };
+
+  const quotedBody = (email: any) =>
+    email
+      ? `\n\n---\nDe: ${email.from_name || email.from_email}\nÀ: ${email.to_name || email.to_email}\nDate: ${formatDate(email.received_at || email.sent_at || email.created_at)}\nObjet: ${decodeMimeHeader(email.subject) || '(Aucun sujet)'}\n\n${stripTags(email.html_content || email.content || '')}`
+      : '';
+
+  const composeTo =
+    composeMode === 'forward'
+      ? ''
+      : composeEmail?.direction === 'received'
+        ? composeEmail?.from_email || ''
+        : composeEmail?.to_email || contactEmail || '';
+
+  const composeSubject = composeEmail
+    ? `${composeMode === 'forward' ? 'Tr' : 'Re'}: ${decodeMimeHeader(composeEmail.subject) || ''}`
+    : '';
+
   if (isLoading) {
     return (
       <Card>
@@ -492,22 +514,30 @@ export const ContactEmailHistory: React.FC<ContactEmailHistoryProps> = ({
         </div>
       </div>
       
-      {email.direction === 'received' && (
-        <div className="mt-2 pt-2 border-t">
-          <Button 
-            variant="outline" 
-            size="sm"
-            onClick={(e) => {
-              e.stopPropagation();
-              setSelectedEmail(email);
-              setShowReply(true);
-            }}
-          >
-            <Reply className="h-3 w-3 mr-2" />
-            Répondre
-          </Button>
-        </div>
-      )}
+      <div className="mt-2 pt-2 border-t flex flex-wrap gap-2">
+        <Button
+          variant="outline"
+          size="sm"
+          onClick={(e) => {
+            e.stopPropagation();
+            openCompose(email, 'reply');
+          }}
+        >
+          <Reply className="h-3 w-3 mr-2" />
+          Répondre
+        </Button>
+        <Button
+          variant="outline"
+          size="sm"
+          onClick={(e) => {
+            e.stopPropagation();
+            openCompose(email, 'forward');
+          }}
+        >
+          <Forward className="h-3 w-3 mr-2" />
+          Transférer
+        </Button>
+      </div>
     </div>
   );
 
@@ -830,19 +860,27 @@ export const ContactEmailHistory: React.FC<ContactEmailHistoryProps> = ({
               </div>
             )}
           </ScrollArea>
+          <div className="mt-4 pt-3 border-t flex flex-wrap gap-2">
+            <Button variant="outline" size="sm" onClick={() => openCompose(selectedEmail, 'reply')}>
+              <Reply className="h-4 w-4 mr-2" /> Répondre
+            </Button>
+            <Button variant="outline" size="sm" onClick={() => openCompose(selectedEmail, 'forward')}>
+              <Forward className="h-4 w-4 mr-2" /> Transférer
+            </Button>
+          </div>
         </DialogContent>
       </Dialog>
 
-      {/* Dialog de réponse */}
+      {/* Dialog de réponse / transfert */}
       <EmailComposer 
-        isOpen={showReply}
+        isOpen={!!composeMode && !!composeEmail}
         onClose={() => {
-          setShowReply(false);
-          setSelectedEmail(null);
+          setComposeMode(null);
+          setComposeEmail(null);
         }}
-        toEmail={selectedEmail?.from_email || ''}
-        subject={`Re: ${decodeMimeHeader(selectedEmail?.subject) || ''}`}
-        preText={`\n\n---\nDe: ${selectedEmail?.from_name || selectedEmail?.from_email}\nDate: ${selectedEmail && formatDate(selectedEmail.received_at || selectedEmail.sent_at || selectedEmail.created_at)}\n\n${stripTags(selectedEmail?.html_content || selectedEmail?.content || '')}`}
+        toEmail={composeTo}
+        subject={composeSubject}
+        preText={quotedBody(composeEmail)}
       />
     </>
   );
