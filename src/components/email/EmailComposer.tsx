@@ -20,6 +20,14 @@ interface EmailComposerProps {
   toEmail?: string;
   subject?: string;
   preText?: string;
+  /** Contact auquel rattacher l'email dans l'historique */
+  contactId?: string;
+  /** Type d'envoi: nouveau, réponse ou transfert */
+  kind?: 'new' | 'reply' | 'forward';
+  /** Email d'origine (pour réponse/transfert) */
+  sourceEmail?: { id?: string; message_id?: string; subject?: string; thread_id?: string } | null;
+  /** Callback après tentative d'envoi (succès ou échec) */
+  onSent?: () => void;
 }
 
 export const EmailComposer: React.FC<EmailComposerProps> = ({
@@ -27,7 +35,11 @@ export const EmailComposer: React.FC<EmailComposerProps> = ({
   onClose,
   toEmail = '',
   subject = '',
-  preText = ''
+  preText = '',
+  contactId,
+  kind = 'new',
+  sourceEmail = null,
+  onSent,
 }) => {
   const { currentUser } = useUser();
   const { accounts, loadAccounts, sendEmail: sendViaNylas } = useNylasEmail();
