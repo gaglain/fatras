@@ -696,7 +696,47 @@ export const ContactEmailHistory: React.FC<ContactEmailHistoryProps> = ({
                           >
                             Ouvrir en entier
                           </Button>
+
+                          <div className="pt-2 mt-1 border-t space-y-2">
+                            <div className="flex gap-2">
+                              <Input
+                                value={noteDraft}
+                                onChange={(e) => setNoteDraft(e.target.value)}
+                                placeholder="Ajouter une note à ce contact…"
+                                className="h-7 text-xs"
+                                onKeyDown={(e) => { if (e.key === 'Enter') { e.preventDefault(); void addNoteFromSource(src); } }}
+                              />
+                              <Button
+                                size="sm"
+                                variant="outline"
+                                className="h-7 text-xs shrink-0"
+                                disabled={!noteDraft.trim() || savingAnnotation === 'note'}
+                                onClick={(e) => { e.stopPropagation(); void addNoteFromSource(src); }}
+                              >
+                                Note
+                              </Button>
+                            </div>
+                            <div className="flex gap-2">
+                              <Input
+                                value={tagDraft}
+                                onChange={(e) => setTagDraft(e.target.value)}
+                                placeholder="Ajouter un tag…"
+                                className="h-7 text-xs"
+                                onKeyDown={(e) => { if (e.key === 'Enter') { e.preventDefault(); void addTagFromSource(); } }}
+                              />
+                              <Button
+                                size="sm"
+                                variant="outline"
+                                className="h-7 text-xs shrink-0"
+                                disabled={!tagDraft.trim() || savingAnnotation === 'tag'}
+                                onClick={(e) => { e.stopPropagation(); void addTagFromSource(); }}
+                              >
+                                Tag
+                              </Button>
+                            </div>
+                          </div>
                         </>
+
                       ) : (
                         <>
                           <div><strong>Objet:</strong> {decodeMimeHeader(meta.in_reply_to_subject) || '(Aucun sujet)'}</div>
