@@ -860,19 +860,27 @@ export const ContactEmailHistory: React.FC<ContactEmailHistoryProps> = ({
               </div>
             )}
           </ScrollArea>
+          <div className="mt-4 pt-3 border-t flex flex-wrap gap-2">
+            <Button variant="outline" size="sm" onClick={() => openCompose(selectedEmail, 'reply')}>
+              <Reply className="h-4 w-4 mr-2" /> Répondre
+            </Button>
+            <Button variant="outline" size="sm" onClick={() => openCompose(selectedEmail, 'forward')}>
+              <Forward className="h-4 w-4 mr-2" /> Transférer
+            </Button>
+          </div>
         </DialogContent>
       </Dialog>
 
-      {/* Dialog de réponse */}
+      {/* Dialog de réponse / transfert */}
       <EmailComposer 
-        isOpen={showReply}
+        isOpen={!!composeMode && !!composeEmail}
         onClose={() => {
-          setShowReply(false);
-          setSelectedEmail(null);
+          setComposeMode(null);
+          setComposeEmail(null);
         }}
-        toEmail={selectedEmail?.from_email || ''}
-        subject={`Re: ${decodeMimeHeader(selectedEmail?.subject) || ''}`}
-        preText={`\n\n---\nDe: ${selectedEmail?.from_name || selectedEmail?.from_email}\nDate: ${selectedEmail && formatDate(selectedEmail.received_at || selectedEmail.sent_at || selectedEmail.created_at)}\n\n${stripTags(selectedEmail?.html_content || selectedEmail?.content || '')}`}
+        toEmail={composeTo}
+        subject={composeSubject}
+        preText={quotedBody(composeEmail)}
       />
     </>
   );
