@@ -30,6 +30,10 @@ export const ContactEmailHistory: React.FC<ContactEmailHistoryProps> = ({
   const [selectedEmail, setSelectedEmail] = React.useState<any | null>(null);
   const [expandedSourceId, setExpandedSourceId] = React.useState<string | null>(null);
   const [fetchedSources, setFetchedSources] = React.useState<Record<string, any>>({});
+  const [noteDraft, setNoteDraft] = React.useState('');
+  const [tagDraft, setTagDraft] = React.useState('');
+  const [savingAnnotation, setSavingAnnotation] = React.useState<'note' | 'tag' | null>(null);
+
 
   const [composeEmail, setComposeEmail] = React.useState<any | null>(null);
   const [composeMode, setComposeMode] = React.useState<'reply' | 'forward' | null>(null);
@@ -396,7 +400,10 @@ export const ContactEmailHistory: React.FC<ContactEmailHistoryProps> = ({
     const srcId = getSourceEmailId(email);
     if (!srcId) return;
     setExpandedSourceId((prev) => (prev === srcId ? null : srcId));
+    setNoteDraft('');
+    setTagDraft('');
     if (findSourceEmail(email)) return;
+
     const { data } = await supabase
       .from('emails')
       .select('*')
@@ -410,6 +417,68 @@ export const ContactEmailHistory: React.FC<ContactEmailHistoryProps> = ({
     if (found) setSelectedEmail(found);
     else toast.info('Message d\'origine introuvable dans l\'historique');
   };
+
+  const addNoteFromSource = async (src: any) => {
+    const text = noteDraft.trim();
+    if (!text) return;
+    setSavingAnnotation('note');
+    try {
+      const { data: contact, error: readError } = await supabase
+        .from('contacts')
+        .select('notes')
+        .eq('id', contactId)
+        .maybeSingle();
+      if (readError) throw readError;
+
+      const subject = decodeMimeHeader(src?.subject) || '(Aucun sujet)';
+      const stamp = new Date().toLocaleString('fr-FR');
+      const entry = `[${stamp}] (Email: ${subject}) ${text}`;
+      const notes = contact?.notes ? `${contact.notes}\n${entry}` : entry;
+
+      const { error } = await supabase.from('contacts').update({ notes }).eq('id', contactId);
+      if (error) throw error;
+      setNoteDraft('');
+      toast.success('Note ajoutée au contact');
+    } catch (e: unknown) {
+      toast.error(`Impossible d'ajouter la note: ${e instanceof Error ? e.message : 'erreur inconnue'}`);
+    } finally {
+      setSavingAnnotation(null);
+    }
+  };
+
+  const addTagFromSource = async () => {
+    const tag = tagDraft.trim();
+    if (!tag) return;
+    setSavingAnnotation('tag');
+    try {
+      const { data: contact, error: readError } = await supabase
+        .from('contacts')
+        .select('tags')
+        .eq('id', contactId)
+        .maybeSingle();
+      if (readError) throw readError;
+
+      const current: string[] = Array.isArray(contact?.tags) ? contact!.tags as string[] : [];
+      if (current.some((t) => t.toLowerCase() === tag.toLowerCase())) {
+        toast.info('Ce tag existe déjà sur le contact');
+        setTagDraft('');
+        return;
+      }
+      const { error } = await supabase
+        .from('contacts')
+        .update({ tags: [...current, tag] })
+        .eq('id', contactId);
+      if (error) throw error;
+      setTagDraft('');
+      toast.success('Tag ajouté au contact');
+    } catch (e: unknown) {
+      toast.error(`Impossible d'ajouter le tag: ${e instanceof Error ? e.message : 'erreur inconnue'}`);
+    } finally {
+      setSavingAnnotation(null);
+    }
+  };
+
+
 
   const stripHtml = (html: string) =>
     html.replace(/<style[\s\S]*?<\/style>/gi, '')
@@ -627,7 +696,47 @@ export const ContactEmailHistory: React.FC<ContactEmailHistoryProps> = ({
                           >
                             Ouvrir en entier
                           </Button>
+
+                          <div className="pt-2 mt-1 border-t space-y-2">
+                            <div className="flex gap-2">
+                              <Input
+                                value={noteDraft}
+                                onChange={(e) => setNoteDraft(e.target.value)}
+                                placeholder="Ajouter une note à ce contact…"
+                                className="h-7 text-xs"
+                                onKeyDown={(e) => { if (e.key === 'Enter') { e.preventDefault(); void addNoteFromSource(src); } }}
+                              />
+                              <Button
+                                size="sm"
+                                variant="outline"
+                                className="h-7 text-xs shrink-0"
+                                disabled={!noteDraft.trim() || savingAnnotation === 'note'}
+                                onClick={(e) => { e.stopPropagation(); void addNoteFromSource(src); }}
+                              >
+                                Note
+                              </Button>
+                            </div>
+                            <div className="flex gap-2">
+                              <Input
+                                value={tagDraft}
+                                onChange={(e) => setTagDraft(e.target.value)}
+                                placeholder="Ajouter un tag…"
+                                className="h-7 text-xs"
+                                onKeyDown={(e) => { if (e.key === 'Enter') { e.preventDefault(); void addTagFromSource(); } }}
+                              />
+                              <Button
+                                size="sm"
+                                variant="outline"
+                                className="h-7 text-xs shrink-0"
+                                disabled={!tagDraft.trim() || savingAnnotation === 'tag'}
+                                onClick={(e) => { e.stopPropagation(); void addTagFromSource(); }}
+                              >
+                                Tag
+                              </Button>
+                            </div>
+                          </div>
                         </>
+
                       ) : (
                         <>
                           <div><strong>Objet:</strong> {decodeMimeHeader(meta.in_reply_to_subject) || '(Aucun sujet)'}</div>
