@@ -94,9 +94,11 @@ export const EmailComposer: React.FC<EmailComposerProps> = ({
       return;
     }
 
+    let createdEmailId: string | null = null;
+
     try {
       setSending(true);
-      
+
       // Créer d'abord l'enregistrement email pour obtenir l'ID
       const { data: emailRecord, error: emailError } = await supabase
         .from('emails')
@@ -106,7 +108,15 @@ export const EmailComposer: React.FC<EmailComposerProps> = ({
           subject: emailSubject,
           content,
           direction: 'sent',
-          status: 'sending'
+          status: 'sending',
+          contact_id: contactId || null,
+          thread_id: sourceEmail?.thread_id || null,
+          metadata: {
+            kind,
+            in_reply_to_email_id: sourceEmail?.id || null,
+            in_reply_to_message_id: sourceEmail?.message_id || null,
+            in_reply_to_subject: sourceEmail?.subject || null,
+          },
         })
         .select()
         .single();
@@ -114,6 +124,7 @@ export const EmailComposer: React.FC<EmailComposerProps> = ({
       if (emailError || !emailRecord) {
         throw new Error('Erreur lors de la création de l\'enregistrement email');
       }
+      createdEmailId = emailRecord.id;
 
       // Charger la signature depuis la base de données
       const { data: profileData } = await supabase
@@ -165,13 +176,19 @@ export const EmailComposer: React.FC<EmailComposerProps> = ({
         attachments: attachmentUrls,
       });
 
-      // Mettre à jour le statut de l'email
+      // Mettre à jour le statut de l'email (contenu HTML archivé pour l'historique)
       await supabase
         .from('emails')
-        .update({ status: 'sent', sent_at: new Date().toISOString() })
+        .update({
+          status: 'sent',
+          sent_at: new Date().toISOString(),
+          html_content: htmlContent,
+          attachments: attachmentUrls.length ? attachmentUrls : null,
+        })
         .eq('id', emailRecord.id);
 
       toast.success('Email envoyé avec succès (tracking activé)');
+      onSent?.();
       onClose();
       setTo('');
       setEmailSubject('');
@@ -179,7 +196,26 @@ export const EmailComposer: React.FC<EmailComposerProps> = ({
       setAttachments([]);
     } catch (error: unknown) {
       logger.error('Erreur envoi email:', error);
-      toast.error('Erreur lors de l\'envoi de l\'email');
+      const message = error instanceof Error ? error.message : 'Erreur inconnue';
+      // Tracer l'échec dans l'historique du contact
+      if (createdEmailId) {
+        await supabase
+          .from('emails')
+          .update({
+            status: 'failed',
+            metadata: {
+              kind,
+              in_reply_to_email_id: sourceEmail?.id || null,
+              in_reply_to_message_id: sourceEmail?.message_id || null,
+              in_reply_to_subject: sourceEmail?.subject || null,
+              error: message,
+              failed_at: new Date().toISOString(),
+            },
+          })
+          .eq('id', createdEmailId);
+      }
+      onSent?.();
+      toast.error(`Échec de l'envoi: ${message}`);
     } finally {
       setSending(false);
       setUploading(false);
