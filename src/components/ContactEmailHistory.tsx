@@ -493,22 +493,30 @@ export const ContactEmailHistory: React.FC<ContactEmailHistoryProps> = ({
         </div>
       </div>
       
-      {email.direction === 'received' && (
-        <div className="mt-2 pt-2 border-t">
-          <Button 
-            variant="outline" 
-            size="sm"
-            onClick={(e) => {
-              e.stopPropagation();
-              setSelectedEmail(email);
-              setShowReply(true);
-            }}
-          >
-            <Reply className="h-3 w-3 mr-2" />
-            Répondre
-          </Button>
-        </div>
-      )}
+      <div className="mt-2 pt-2 border-t flex flex-wrap gap-2">
+        <Button
+          variant="outline"
+          size="sm"
+          onClick={(e) => {
+            e.stopPropagation();
+            openCompose(email, 'reply');
+          }}
+        >
+          <Reply className="h-3 w-3 mr-2" />
+          Répondre
+        </Button>
+        <Button
+          variant="outline"
+          size="sm"
+          onClick={(e) => {
+            e.stopPropagation();
+            openCompose(email, 'forward');
+          }}
+        >
+          <Forward className="h-3 w-3 mr-2" />
+          Transférer
+        </Button>
+      </div>
     </div>
   );
 
