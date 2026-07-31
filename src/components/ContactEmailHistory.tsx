@@ -1305,9 +1305,55 @@ export const ContactEmailHistory: React.FC<ContactEmailHistoryProps> = ({
             <Button variant="outline" size="sm" onClick={() => openCompose(selectedEmail, 'forward')}>
               <Forward className="h-4 w-4 mr-2" /> Transférer
             </Button>
+            <Button variant="outline" size="sm" onClick={() => openTaskDialog(selectedEmail)}>
+              <CheckSquare className="h-4 w-4 mr-2" /> Créer une tâche
+            </Button>
           </div>
         </DialogContent>
       </Dialog>
+
+      {/* Dialog création de tâche depuis un email */}
+      <Dialog open={!!taskEmail} onOpenChange={(open) => { if (!open) setTaskEmail(null); }}>
+        <DialogContent className="max-w-md">
+          <DialogHeader>
+            <DialogTitle>Créer une tâche</DialogTitle>
+            <DialogDescription>
+              La tâche sera liée à ce contact et à l'email sélectionné.
+            </DialogDescription>
+          </DialogHeader>
+          <div className="space-y-3">
+            <div className="space-y-1">
+              <label className="text-xs font-medium">Titre</label>
+              <Input value={taskTitle} onChange={(e) => setTaskTitle(e.target.value)} placeholder="Titre de la tâche" />
+            </div>
+            <div className="grid grid-cols-2 gap-3">
+              <div className="space-y-1">
+                <label className="text-xs font-medium">Échéance</label>
+                <Input type="date" value={taskDueDate} onChange={(e) => setTaskDueDate(e.target.value)} />
+              </div>
+              <div className="space-y-1">
+                <label className="text-xs font-medium">Priorité</label>
+                <Select value={taskPriority} onValueChange={(v) => setTaskPriority(v as any)}>
+                  <SelectTrigger><SelectValue /></SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="low">Basse</SelectItem>
+                    <SelectItem value="medium">Moyenne</SelectItem>
+                    <SelectItem value="high">Haute</SelectItem>
+                    <SelectItem value="urgent">Urgente</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+            </div>
+            <div className="flex justify-end gap-2 pt-2">
+              <Button variant="outline" size="sm" onClick={() => setTaskEmail(null)}>Annuler</Button>
+              <Button size="sm" disabled={!taskTitle.trim() || creatingTask} onClick={() => void createTaskFromEmail()}>
+                {creatingTask ? 'Création…' : 'Créer la tâche'}
+              </Button>
+            </div>
+          </div>
+        </DialogContent>
+      </Dialog>
+
 
       {/* Dialog de réponse / transfert */}
       <EmailComposer 
