@@ -399,12 +399,75 @@ export const ContactEmailHistory: React.FC<ContactEmailHistoryProps> = ({
     return contactEmails.find((e: any) => e.id === srcId) || fetchedSources[srcId] || null;
   };
 
+  const loadContactNotes = React.useCallback(async () => {
+    const { data } = await supabase
+      .from('contacts')
+      .select('notes')
+      .eq('id', contactId)
+      .maybeSingle();
+    const lines = (data?.notes || '').split('\n').filter((l: string) => l.trim().length > 0);
+    setContactNotes(lines);
+  }, [contactId]);
+
+  const persistNotes = async (lines: string[]) => {
+    const { error } = await supabase
+      .from('contacts')
+      .update({ notes: lines.join('\n') })
+      .eq('id', contactId);
+    if (error) throw error;
+    setContactNotes(lines);
+  };
+
+  const startEditNote = (index: number) => {
+    setEditingNoteIndex(index);
+    setEditingNoteText(contactNotes[index] ?? '');
+  };
+
+  const saveEditedNote = async () => {
+    if (editingNoteIndex === null) return;
+    const text = editingNoteText.trim();
+    if (!text) return;
+    setSavingAnnotation('note');
+    try {
+      const next = [...contactNotes];
+      next[editingNoteIndex] = text;
+      await persistNotes(next);
+      setEditingNoteIndex(null);
+      setEditingNoteText('');
+      toast.success('Note modifiée');
+    } catch (e: unknown) {
+      toast.error(`Impossible de modifier la note: ${e instanceof Error ? e.message : 'erreur inconnue'}`);
+    } finally {
+      setSavingAnnotation(null);
+    }
+  };
+
+  const deleteNote = async (index: number) => {
+    setSavingAnnotation('note');
+    try {
+      await persistNotes(contactNotes.filter((_, i) => i !== index));
+      if (editingNoteIndex === index) {
+        setEditingNoteIndex(null);
+        setEditingNoteText('');
+      }
+      toast.success('Note supprimée');
+    } catch (e: unknown) {
+      toast.error(`Impossible de supprimer la note: ${e instanceof Error ? e.message : 'erreur inconnue'}`);
+    } finally {
+      setSavingAnnotation(null);
+    }
+  };
+
   const toggleSourcePreview = async (email: any) => {
     const srcId = getSourceEmailId(email);
     if (!srcId) return;
+    const willExpand = expandedSourceId !== srcId;
     setExpandedSourceId((prev) => (prev === srcId ? null : srcId));
     setNoteDraft('');
     setTagDraft('');
+    setEditingNoteIndex(null);
+    setEditingNoteText('');
+    if (willExpand) void loadContactNotes();
     if (findSourceEmail(email)) return;
 
     const { data } = await supabase
@@ -414,6 +477,7 @@ export const ContactEmailHistory: React.FC<ContactEmailHistoryProps> = ({
       .maybeSingle();
     if (data) setFetchedSources((prev) => ({ ...prev, [srcId]: data }));
   };
+
 
   const openSourceEmail = (email: any) => {
     const found = findSourceEmail(email);
