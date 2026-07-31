@@ -538,6 +538,25 @@ export const ContactEmailHistory: React.FC<ContactEmailHistoryProps> = ({
                     : ''}
               </p>
             )}
+
+            {email.status === 'failed' && (email.metadata as any)?.error && (
+              <p className="text-xs text-destructive mt-1">
+                Erreur: {(email.metadata as any).error}
+              </p>
+            )}
+
+            {getSourceEmailId(email) && (
+              <button
+                type="button"
+                className="text-xs text-primary underline mt-1"
+                onClick={(e) => { e.stopPropagation(); openSourceEmail(email); }}
+              >
+                Voir le message d'origine
+                {(email.metadata as any)?.in_reply_to_subject
+                  ? ` : ${decodeMimeHeader((email.metadata as any).in_reply_to_subject)}`
+                  : ''}
+              </button>
+            )}
           </div>
           </div>
         </div>
