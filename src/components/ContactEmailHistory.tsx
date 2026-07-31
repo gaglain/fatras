@@ -3,7 +3,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { Mail, Send, Inbox, Clock, User, RefreshCw, Reply, Forward, Megaphone, MessagesSquare, ChevronDown, ChevronRight, Search, X } from 'lucide-react';
+import { Mail, Send, Inbox, Clock, User, RefreshCw, Reply, Forward, Megaphone, MessagesSquare, ChevronDown, ChevronRight, Search, X, CheckSquare } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
