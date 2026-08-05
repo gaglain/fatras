@@ -111,12 +111,35 @@ function buildRouteSheetDescription(event: any, routeSheet: RouteSheet, quoteAmo
   }
 
   // 🚗 Transport
-  if (routeSheet.transport || routeSheet.departure_address) {
+  if (routeSheet.transport || routeSheet.departure_address || routeSheet.vehicle_type || routeSheet.distance_km || routeSheet.estimated_expenses) {
     lines.push('🚗 TRANSPORT')
     if (routeSheet.transport) lines.push(`  Mode : ${routeSheet.transport}`)
+    if (routeSheet.vehicle_type) lines.push(`  Véhicule : ${routeSheet.vehicle_type}`)
     if (routeSheet.departure_address) lines.push(`  Départ depuis : ${routeSheet.departure_address}`)
+    if (routeSheet.distance_km) lines.push(`  Distance : ${routeSheet.distance_km} km`)
+    if (routeSheet.estimated_expenses) lines.push(`  Frais estimés : ${Number(routeSheet.estimated_expenses).toFixed(2)} €`)
     lines.push('')
   }
+
+  // 🎛️ Équipements / Logistique
+  const equipmentItems = (routeSheet.equipment || [])
+    .flatMap(item => String(item || '').split('\n'))
+    .map(item => item.trim())
+    .filter(item => item.length > 0)
+  if (equipmentItems.length > 0) {
+    lines.push('🎛️ ÉQUIPEMENTS')
+    equipmentItems.forEach(item => lines.push(`  • ${item}`))
+    lines.push('')
+  }
+
+  // 🎟️ Jauge / Billetterie
+  if (routeSheet.capacity || routeSheet.tickets_available) {
+    lines.push('🎟️ JAUGE')
+    if (routeSheet.capacity) lines.push(`  Capacité : ${routeSheet.capacity}`)
+    if (routeSheet.tickets_available) lines.push(`  Billets disponibles : ${routeSheet.tickets_available}`)
+    lines.push('')
+  }
+
 
   // 🏨 Hébergement
   if (routeSheet.accommodation || routeSheet.accommodation_address) {
