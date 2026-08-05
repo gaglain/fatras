@@ -41,6 +41,14 @@ interface RouteSheet {
   crew?: string[]
   equipment?: string[]
   invitations?: string
+  vehicle_type?: string
+  distance_km?: number | null
+  estimated_expenses?: number | null
+  capacity?: number | null
+  tickets_available?: number | null
+  status?: string
+  artists?: string[]
+
 }
 
 function buildRouteSheetDescription(event: any, routeSheet: RouteSheet, quoteAmount?: number | null, crewNames?: string[], documents?: Array<{ name: string; url: string }>): string {
