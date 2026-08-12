@@ -110,8 +110,9 @@ export const BandsintownExporter: React.FC<BandsintownExporterProps> = ({ events
         '',
         '',
         '',
-
+      ].map((field) => escapeField(String(field ?? '')));
     });
+
 
     // Bandsintown limite à 25 événements par fichier
     const CHUNK = 25;
