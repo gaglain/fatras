@@ -47,17 +47,19 @@ export const BandsintownExporter: React.FC<BandsintownExporterProps> = ({ events
       return;
     }
 
-    // Ordre et intitulés exacts du modèle Bandsintown (Event Upload)
+    // Ordre et intitulés exacts du modèle officiel Bandsintown (Bulk Upload Artists Template)
     const headers = [
-      'Venue',
-      'Country',
+      'Artist Name',
+      'Venue*',
+      'Country*',
       'Address',
-      'City',
-      'Region',
+      'City*',
+      'Region*',
       'Postal Code',
-      'Start Date',
+      'Timezone*',
+      'Start Date* (yyyy-mm-dd)',
+      'Start Time* (HH:MM)',
       'End Date',
-      'Start Time',
       'End Time',
       'Streaming Link',
       'Ticket Link',
@@ -68,24 +70,27 @@ export const BandsintownExporter: React.FC<BandsintownExporterProps> = ({ events
       'On-Sale Time',
       'Lineup',
       'Event Name',
+      'Event Display Format',
       'Description',
-      'Scheduled date',
-      'Scheduled time',
-      'Timezone',
-      'Artist Name',
+      'Schedule Date',
+      'Schedule Time',
+      'Do Not Announce',
+      'Setlist',
+      'Event Image',
     ];
 
     const rows = confirmedEvents.map((event) => {
       const start = new Date(event.start_date!);
       return [
+        artistName.trim(),
         event.venue || event.title || '',
         event.country || 'France',
         event.address || '',
         event.city || '',
         '',
         event.postal_code || '',
+        'Europe/Paris',
         format(start, 'yyyy-MM-dd'),
-        '',
         format(start, 'HH:mm'),
         '',
         '',
@@ -98,13 +103,16 @@ export const BandsintownExporter: React.FC<BandsintownExporterProps> = ({ events
         '',
         '',
         event.title || '',
+        '',
         (event.description || '').replace(/<[^>]*>/g, '').replace(/\s+/g, ' ').trim(),
         '',
         '',
-        'Europe/Paris',
-        artistName.trim(),
+        '',
+        '',
+        '',
       ].map((field) => escapeField(String(field ?? '')));
     });
+
 
     // Bandsintown limite à 25 événements par fichier
     const CHUNK = 25;
