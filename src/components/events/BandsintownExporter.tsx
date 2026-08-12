@@ -41,57 +41,94 @@ export const BandsintownExporter: React.FC<BandsintownExporterProps> = ({ events
       return;
     }
 
+    // Ordre et intitulés exacts du modèle Bandsintown (Event Upload)
     const headers = [
-      'Artist Name',
-      'Event Date',
-      'Event Time',
-      'Venue Name',
-      'Venue Address',
-      'Venue City',
-      'Venue Region',
-      'Venue Postal Code',
-      'Venue Country',
-      'Ticket URL',
-      'Ticket Status',
-      'Description',
+      'Venue',
+      'Country',
+      'Address',
+      'City',
+      'Region',
+      'Postal Code',
+      'Start Date',
+      'End Date',
+      'Start Time',
+      'End Time',
+      'Streaming Link',
+      'Ticket Link',
+      'Ticket Type',
+      'Ticket Link 2',
+      'Ticket Type 2',
+      'On-Sale Date',
+      'On-Sale Time',
       'Lineup',
+      'Event Name',
+      'Description',
+      'Scheduled date',
+      'Scheduled time',
+      'Timezone',
+      'Artist Name',
     ];
 
     const rows = confirmedEvents.map((event) => {
       const start = new Date(event.start_date!);
       return [
-        artistName.trim(),
-        format(start, 'yyyy-MM-dd'),
-        format(start, 'HH:mm'),
         event.venue || event.title || '',
+        event.country || 'France',
         event.address || '',
         event.city || '',
         '',
         event.postal_code || '',
-        event.country || 'France',
+        format(start, 'yyyy-MM-dd'),
         '',
-        'available',
+        format(start, 'HH:mm'),
+        '',
+        '',
+        '',
+        '',
+        '',
+        '',
+        '',
+        '',
+        '',
+        '',
+        event.title || '',
         (event.description || '').replace(/<[^>]*>/g, '').replace(/\s+/g, ' ').trim(),
+        '',
+        '',
+        'Europe/Paris',
         artistName.trim(),
       ].map((field) => escapeField(String(field ?? '')));
     });
 
-    const csvContent = '\uFEFF' + [headers.join(','), ...rows.map((r) => r.join(','))].join('\n');
+    // Bandsintown limite à 25 événements par fichier
+    const CHUNK = 25;
+    const chunks: string[][][] = [];
+    for (let i = 0; i < rows.length; i += CHUNK) chunks.push(rows.slice(i, i + CHUNK));
 
-    const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
-    const url = URL.createObjectURL(blob);
-    const link = document.createElement('a');
-    link.href = url;
-    link.download = `bandsintown_${format(new Date(), 'yyyy-MM-dd')}.csv`;
-    link.style.visibility = 'hidden';
-    document.body.appendChild(link);
-    link.click();
-    document.body.removeChild(link);
-    URL.revokeObjectURL(url);
+    chunks.forEach((chunk, index) => {
+      const csvContent =
+        '\uFEFF' + [headers.join(','), ...chunk.map((r) => r.join(','))].join('\r\n');
+      const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+      const url = URL.createObjectURL(blob);
+      const link = document.createElement('a');
+      link.href = url;
+      link.download =
+        chunks.length > 1
+          ? `bandsintown_${format(new Date(), 'yyyy-MM-dd')}_${index + 1}.csv`
+          : `bandsintown_${format(new Date(), 'yyyy-MM-dd')}.csv`;
+      link.style.visibility = 'hidden';
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+      URL.revokeObjectURL(url);
+    });
 
-    toast.success(`${confirmedEvents.length} date(s) exportée(s) au format Bandsintown`);
+    toast.success(
+      `${confirmedEvents.length} date(s) exportée(s)${chunks.length > 1 ? ` en ${chunks.length} fichiers de 25 max` : ''}`
+    );
     setOpen(false);
   };
+
 
   return (
     <>
