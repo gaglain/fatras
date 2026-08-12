@@ -23,10 +23,16 @@ export const BandsintownExporter: React.FC<BandsintownExporterProps> = ({ events
   const confirmedEvents = useMemo(
     () =>
       events
-        .filter((e) => (e.status || '').toLowerCase() === 'confirmed' && !!e.start_date)
+        .filter(
+          (e) =>
+            (e.status || '').toLowerCase() === 'confirmed' &&
+            !!e.start_date &&
+            new Date(e.start_date).getTime() > Date.now()
+        )
         .sort((a, b) => new Date(a.start_date!).getTime() - new Date(b.start_date!).getTime()),
     [events]
   );
+
 
   const escapeField = (value: string) =>
     /[",\n;]/.test(value) ? `"${value.replace(/"/g, '""')}"` : value;
