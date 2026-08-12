@@ -10,6 +10,7 @@ import { EventDialog } from '@/components/events/EventDialog';
 import { EventsMap } from '@/components/events/EventsMap';
 import { CSVEventImporter } from '@/components/events/CSVEventImporter';
 import { CSVEventExporter } from '@/components/events/CSVEventExporter';
+import { BandsintownExporter } from '@/components/events/BandsintownExporter';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/hooks/useAuth';
 import { useEventTypes } from '@/hooks/useEventTypes';
