@@ -197,6 +197,7 @@ export const Events: React.FC = () => {
         </div>
         <div className="flex flex-wrap gap-2">
           <CSVEventExporter events={filteredEvents} />
+          <BandsintownExporter events={filteredEvents} />
           <Button 
             variant="outline" 
             size="sm"
