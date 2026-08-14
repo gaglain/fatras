@@ -194,7 +194,7 @@ export const AdminPublicChatFeed: React.FC<AdminPublicChatFeedProps> = ({ initia
   const totalUnread = conversations.reduce((sum, c) => sum + c.unread_count, 0);
 
   // Composant liste des conversations
-  const ConversationsList = () => (
+  const renderConversationsList = () => (
     <Card className={isMobile ? "h-full" : ""}>
       <CardHeader className="pb-3">
         <div className="flex items-center justify-between">
@@ -273,7 +273,7 @@ export const AdminPublicChatFeed: React.FC<AdminPublicChatFeedProps> = ({ initia
   );
 
   // Composant vue des messages
-  const MessagesView = () => (
+  const renderMessagesView = () => (
     <Card className={`flex flex-col ${isMobile ? "h-full" : ""}`}>
       <CardHeader className="pb-3 border-b px-3 sm:px-6">
         {selectedConv ? (
@@ -373,7 +373,7 @@ export const AdminPublicChatFeed: React.FC<AdminPublicChatFeedProps> = ({ initia
   if (isMobile) {
     return (
       <div className="h-[calc(100vh-12rem)]">
-        {selectedConversation ? <MessagesView /> : <ConversationsList />}
+        {selectedConversation ? renderMessagesView() : renderConversationsList()}
       </div>
     );
   }
@@ -382,10 +382,10 @@ export const AdminPublicChatFeed: React.FC<AdminPublicChatFeedProps> = ({ initia
   return (
     <div className="grid grid-cols-1 md:grid-cols-3 gap-4 h-[600px]">
       <div className="md:col-span-1">
-        <ConversationsList />
+        {renderConversationsList()}
       </div>
       <div className="md:col-span-2">
-        <MessagesView />
+        {renderMessagesView()}
       </div>
     </div>
   );
