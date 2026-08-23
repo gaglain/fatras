@@ -1,7 +1,10 @@
 import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate, Link } from 'react-router-dom';
+import { Helmet } from 'react-helmet-async';
 import { FrontLayout } from '@/components/FrontLayout';
+import { SEOHead, buildCanonicalUrl } from '@/components/SEOHead';
 import { supabase } from '@/integrations/supabase/client';
+
 
 interface PageBlock {
   id: string;
@@ -271,6 +274,10 @@ export const FrontDynamicPage: React.FC = () => {
   if (notFound || !page) {
     return (
       <FrontLayout>
+        <Helmet>
+          <meta name="robots" content="noindex, follow" />
+          <title>Page non trouvée | Fatras</title>
+        </Helmet>
         <div className="min-h-screen flex items-center justify-center">
           <div className="text-center">
             <h1 className="text-4xl font-bold text-foreground mb-4">404</h1>
@@ -292,6 +299,12 @@ export const FrontDynamicPage: React.FC = () => {
 
   return (
     <FrontLayout>
+      <SEOHead
+        title={page.meta_title || page.seo?.title || page.title}
+        description={page.meta_description || page.seo?.description || undefined}
+        url={buildCanonicalUrl(`/${(rawSlug || '').replace(/^\/+/, '')}`)}
+      />
+
       <div className="min-h-screen">
         {/* En-tête de page si pas de bloc hero */}
         {!pageBlocks.some((b: PageBlock) => b.type === 'hero') && (
