@@ -1,7 +1,10 @@
 import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate, Link } from 'react-router-dom';
+import { Helmet } from 'react-helmet-async';
 import { FrontLayout } from '@/components/FrontLayout';
+import { SEOHead, buildCanonicalUrl } from '@/components/SEOHead';
 import { supabase } from '@/integrations/supabase/client';
+
 
 interface PageBlock {
   id: string;
