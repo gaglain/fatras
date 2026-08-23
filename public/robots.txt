@@ -15,7 +15,12 @@ Allow: /
 User-agent: *
 Allow: /
 
+# Éviter l'exploration des URLs techniques dupliquées (/front/... = duplicata des URLs propres)
+Disallow: /front/
+Disallow: /*?_r=
+
 # Disallow admin/dashboard routes
+
 Disallow: /dashboard
 Disallow: /admin
 Disallow: /auth
