@@ -112,24 +112,44 @@ const getBreadcrumbSchema = (items: { name: string; url: string }[]) => ({
   }))
 });
 
+// Construit une URL canonique propre : pas de query string (?_r=...),
+// pas de slash final, et suppression du préfixe technique /front
+export const buildCanonicalUrl = (pathname?: string) => {
+  const base = "https://fatras.net";
+  let path = pathname;
+  if (path === undefined) {
+    path = typeof window !== 'undefined' ? window.location.pathname : '/';
+  }
+  path = (path || '/').split('?')[0].split('#')[0];
+  if (!path.startsWith('/')) path = `/${path}`;
+  // /front, /front/ -> /   |   /front/cgv -> /cgv
+  path = path.replace(/^\/front(?=\/|$)/, '');
+  path = path.replace(/\/+$/, '');
+  return `${base}${path || '/'}`;
+};
+
 export const SEOHead: React.FC<SEOHeadProps> = ({
   title = "Fatras - Spectacle de rue & de scène",
   description = "Fatras, compagnie de spectacle de rue et de scène. Découvrez nos créations artistiques uniques et réservez nos spectacles pour vos événements.",
   keywords = "spectacle de rue, spectacle de scène, compagnie artistique, Fatras, événements, festivals, arts de la rue",
   image: imageProp,
-  url = typeof window !== 'undefined' ? `https://fatras.net${window.location.pathname.replace(/\/+$/, '') || '/'}` : "https://fatras.net",
+  url: urlProp,
   type = "website",
   siteName = "Fatras",
   locale = "fr_FR",
   artistData,
   eventData
 }) => {
+  const url = buildCanonicalUrl(
+    urlProp ? urlProp.replace(/^https?:\/\/[^/]+/, '') : undefined
+  );
   const ensureAbsoluteUrl = (imgUrl: string) => {
     if (!imgUrl) return "https://fatras.net/og-image.jpg";
     if (imgUrl.startsWith('http://') || imgUrl.startsWith('https://')) return imgUrl;
     if (imgUrl.startsWith('/')) return `https://fatras.net${imgUrl}`;
     return `https://fatras.net/${imgUrl}`;
   };
+
   
   const image = ensureAbsoluteUrl(imageProp || "https://fatras.net/og-image.jpg");
   const fullTitle = title.includes(siteName) ? title : `${title} | ${siteName}`;
