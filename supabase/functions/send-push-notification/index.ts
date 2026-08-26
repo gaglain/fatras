@@ -400,15 +400,43 @@ Deno.serve(async (req) => {
     console.log(`📬 Sending push to user ${targetUserId}, type: ${notification.data?.type || 'unknown'}`);
 
     const supabaseAdmin = createClient(supabaseUrl, serviceRoleKey);
-    const subscriptions = await getStoredPushSubscriptions(supabaseAdmin, targetUserId);
+    const allSubscriptions = await getStoredPushSubscriptions(supabaseAdmin, targetUserId);
+
+    // Apple Web Push (iOS/iPadOS installed PWAs) refuses "invisible" pushes:
+    // a push that does not result in a user-visible notification burns the
+    // subscription's budget and Safari eventually throttles / revokes it,
+    // which silently kills ALL push delivery on the iPhone. Badge-only sync
+    // pushes must therefore never be sent to web.push.apple.com endpoints;
+    // the badge is refreshed there by real (visible) notifications instead.
+    const isAppleEndpoint = (endpoint: string) => {
+      try {
+        return new URL(endpoint).host.endsWith('push.apple.com');
+      } catch {
+        return false;
+      }
+    };
+
+    const subscriptions = isSilentBadgeSync
+      ? allSubscriptions.filter((s) => !isAppleEndpoint(s.endpoint))
+      : allSubscriptions;
 
     if (subscriptions.length === 0) {
-      console.log('⚠️ No push subscription for user', targetUserId);
+      console.log(
+        allSubscriptions.length === 0
+          ? `⚠️ No push subscription for user ${targetUserId}`
+          : `⏭️ Skipping silent badge sync (Apple endpoints only) for user ${targetUserId}`
+      );
       return new Response(
-        JSON.stringify({ success: false, message: 'No push subscription found' }),
+        JSON.stringify({
+          success: false,
+          message: allSubscriptions.length === 0
+            ? 'No push subscription found'
+            : 'Silent badge sync skipped for Apple endpoints',
+        }),
         { headers: { ...corsHeaders, 'Content-Type': 'application/json' }, status: 200 }
       );
     }
+
 
     const normalizedTitle = notification.title || 'Synchronisation badge';
     const normalizedBody = notification.body || 'Mise à jour du badge en arrière-plan';
