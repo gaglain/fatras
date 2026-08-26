@@ -248,6 +248,9 @@ export const NotificationsTab: React.FC = () => {
         </CardContent>
       </Card>
 
+      <IOSPushSetupCard />
+
+
       {/* Par module */}
       <Card>
         <CardHeader>
