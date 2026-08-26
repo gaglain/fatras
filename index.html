@@ -35,7 +35,8 @@
     <meta name="apple-mobile-web-app-capable" content="yes" />
     <meta name="apple-mobile-web-app-status-bar-style" content="default" />
     <meta name="apple-mobile-web-app-title" content="Fatras" />
-    <link rel="apple-touch-icon" href="https://nhoemjarkxqwruupqgyd.supabase.co/storage/v1/object/public/app-assets/pwa-icons/apple-touch-icon.png" />
+    <link rel="apple-touch-icon" href="/apple-touch-icon.png" />
+    <link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png" />
     <link rel="manifest" href="/manifest.json" />
 
     <!-- Open Graph / Facebook -->
@@ -80,24 +81,17 @@
     <script>
       (function() {
         try {
-          // Charger le manifest depuis localStorage
+          // NOTE: on ne remplace JAMAIS le lien manifest par un blob: URL.
+          // iOS Safari refuse les manifests blob: ce qui casse l'installation PWA
+          // et donc les notifications push sur iPhone. On garde /manifest.json.
           var storedManifest = localStorage.getItem('pwaManifest');
           if (storedManifest) {
             var manifest = JSON.parse(storedManifest);
-            // Créer un blob URL pour le manifest
-            var blob = new Blob([JSON.stringify(manifest)], { type: 'application/json' });
-            var url = URL.createObjectURL(blob);
-            // Mettre à jour le lien manifest
-            var link = document.querySelector('link[rel="manifest"]');
-            if (link) {
-              link.href = url;
-            }
-            // Mettre à jour le titre
-            if (manifest.name) {
+            if (manifest && manifest.name) {
               document.title = manifest.name;
             }
-            console.log('✅ PWA Manifest chargé depuis localStorage');
           }
+
           
           // Charger le favicon depuis localStorage / companySettings
           var FAVICON_DEFAULT = '/favicon.png?v=20260219';

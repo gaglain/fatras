@@ -39,18 +39,11 @@ export const usePWAManifest = () => {
         scope: "/"
       };
 
-      // Convertir en blob et créer une URL
-      const manifestBlob = new Blob([JSON.stringify(manifest)], { type: 'application/json' });
-      const manifestURL = URL.createObjectURL(manifestBlob);
+      // On ne remplace PAS le lien manifest par un blob: URL :
+      // iOS Safari rejette les manifests blob:, ce qui empêche l'installation
+      // PWA correcte et donc les notifications push sur iPhone.
+      // Le manifest statique /manifest.json reste la source de vérité.
 
-      // Mettre à jour ou créer le lien vers le manifest
-      let manifestLink = document.querySelector('link[rel="manifest"]') as HTMLLinkElement;
-      if (!manifestLink) {
-        manifestLink = document.createElement('link');
-        manifestLink.rel = 'manifest';
-        document.head.appendChild(manifestLink);
-      }
-      manifestLink.href = manifestURL;
 
       // Mettre à jour le favicon
       if (data.iconUrl) {

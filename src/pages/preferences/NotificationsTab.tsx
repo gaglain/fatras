@@ -9,6 +9,7 @@ import { toast } from "sonner";
 import { Separator } from "@/components/ui/separator";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
+import { IOSPushSetupCard } from "@/components/notifications/IOSPushSetupCard";
 
 interface NotificationSettings {
   email: boolean;
@@ -247,6 +248,9 @@ export const NotificationsTab: React.FC = () => {
           </div>
         </CardContent>
       </Card>
+
+      <IOSPushSetupCard />
+
 
       {/* Par module */}
       <Card>
