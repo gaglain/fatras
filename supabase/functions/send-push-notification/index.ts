@@ -402,12 +402,9 @@ Deno.serve(async (req) => {
     const supabaseAdmin = createClient(supabaseUrl, serviceRoleKey);
     const allSubscriptions = await getStoredPushSubscriptions(supabaseAdmin, targetUserId);
 
-    // Apple Web Push (iOS/iPadOS installed PWAs) refuses "invisible" pushes:
-    // a push that does not result in a user-visible notification burns the
-    // subscription's budget and Safari eventually throttles / revokes it,
-    // which silently kills ALL push delivery on the iPhone. Badge-only sync
-    // pushes must therefore never be sent to web.push.apple.com endpoints;
-    // the badge is refreshed there by real (visible) notifications instead.
+    // Apple Web Push (iOS/iPadOS installed PWAs) refuses invisible pushes.
+    // Badge syncs are therefore converted to a visible generic notification
+    // for Apple endpoints, while remaining silent on other platforms.
     const isAppleEndpoint = (endpoint: string) => {
       try {
         return new URL(endpoint).host.endsWith('push.apple.com');
@@ -416,22 +413,14 @@ Deno.serve(async (req) => {
       }
     };
 
-    const subscriptions = isSilentBadgeSync
-      ? allSubscriptions.filter((s) => !isAppleEndpoint(s.endpoint))
-      : allSubscriptions;
+    const subscriptions = allSubscriptions;
 
     if (subscriptions.length === 0) {
-      console.log(
-        allSubscriptions.length === 0
-          ? `⚠️ No push subscription for user ${targetUserId}`
-          : `⏭️ Skipping silent badge sync (Apple endpoints only) for user ${targetUserId}`
-      );
+      console.log(`⚠️ No push subscription for user ${targetUserId}`);
       return new Response(
         JSON.stringify({
           success: false,
-          message: allSubscriptions.length === 0
-            ? 'No push subscription found'
-            : 'Silent badge sync skipped for Apple endpoints',
+          message: 'No push subscription found',
         }),
         { headers: { ...corsHeaders, 'Content-Type': 'application/json' }, status: 200 }
       );
@@ -468,23 +457,29 @@ Deno.serve(async (req) => {
     const vapidPrivateKey = Deno.env.get('VAPID_PRIVATE_KEY');
     if (!vapidPublicKey || !vapidPrivateKey) throw new Error('VAPID keys not configured');
 
-    const pushPayload = JSON.stringify({
-      title: normalizedTitle,
-      body: normalizedBody,
-      icon: notification.icon || '/favicon.png',
-      badge: notification.badge || '/favicon.png',
-      tag: notification.tag || 'notification',
-      requireInteraction: notification.requireInteraction ?? !isSilentBadgeSync,
-      renotify: notification.renotify ?? !isSilentBadgeSync,
-      data: { ...baseData, badgeCount, silentBadgeSync: isSilentBadgeSync },
-    });
-
     const { privateKey, publicKeyBytes } = await importVapidKeys(vapidPublicKey, vapidPrivateKey);
     const deliveryErrors: string[] = [];
     let deliveredCount = 0;
 
     for (const subscription of subscriptions) {
       try {
+        const appleVisibleBadgeSync = isSilentBadgeSync && isAppleEndpoint(subscription.endpoint);
+        const pushPayload = JSON.stringify({
+          title: appleVisibleBadgeSync ? 'Nouvelle notification Fatras' : normalizedTitle,
+          body: appleVisibleBadgeSync
+            ? 'Vous avez une nouvelle notification.'
+            : normalizedBody,
+          icon: notification.icon || '/favicon.png',
+          badge: notification.badge || '/favicon.png',
+          tag: notification.tag || (appleVisibleBadgeSync ? 'fatras-notification' : 'notification'),
+          requireInteraction: notification.requireInteraction ?? appleVisibleBadgeSync,
+          renotify: notification.renotify ?? appleVisibleBadgeSync,
+          data: {
+            ...baseData,
+            badgeCount,
+            silentBadgeSync: isSilentBadgeSync && !appleVisibleBadgeSync,
+          },
+        });
         const { ciphertext } = await encryptPayload(pushPayload, subscription.keys);
         const endpoint = new URL(subscription.endpoint);
         const audience = `${endpoint.protocol}//${endpoint.host}`;
