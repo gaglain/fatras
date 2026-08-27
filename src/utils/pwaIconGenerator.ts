@@ -116,8 +116,8 @@ export async function generatePWAIcons(file: File): Promise<{
 }
 
 /**
- * Met à jour le manifest PWA avec les nouvelles URLs d'icônes
- * Crée un manifest dynamique avec les vraies URLs des icônes
+ * Enregistre la personnalisation PWA sans remplacer le manifest statique.
+ * iOS exige une URL de manifest stable pour conserver l'installation et le push.
  */
 export function updatePWAManifest(config: {
   name: string;
@@ -161,19 +161,6 @@ export function updatePWAManifest(config: {
     categories: ["business", "productivity"]
   };
 
-  // Convertir en blob et créer une URL dynamique
-  const manifestBlob = new Blob([JSON.stringify(manifest)], { type: 'application/json' });
-  const manifestURL = URL.createObjectURL(manifestBlob);
-
-  // Mettre à jour le lien du manifest
-  let manifestLink = document.querySelector('link[rel="manifest"]') as HTMLLinkElement;
-  if (!manifestLink) {
-    manifestLink = document.createElement('link');
-    manifestLink.rel = 'manifest';
-    document.head.appendChild(manifestLink);
-  }
-  manifestLink.href = manifestURL;
-
   // Sauvegarder dans localStorage pour persistance
   localStorage.setItem('pwaManifest', JSON.stringify(manifest));
   localStorage.setItem('pwaConfig', JSON.stringify({
@@ -196,8 +183,9 @@ export function updatePWAManifest(config: {
   faviconLink.href = config.icon192Url;
   faviconLink.type = 'image/png';
 
-  // Ajouter les meta tags pour iOS
-  updateIOSMetaTags(config.appleIconUrl, config.name, themeColor);
+  // Garder l'icône iOS locale et stable : une URL distante ou blob peut
+  // transformer l'installation en simple raccourci sans notifications push.
+  updateIOSMetaTags('/apple-touch-icon.png', config.name, themeColor);
 
   // Mettre à jour le titre
   document.title = config.name;
