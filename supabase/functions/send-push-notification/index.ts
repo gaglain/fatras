@@ -184,17 +184,24 @@ async function encryptPayload(
   );
 
   const salt = crypto.getRandomValues(new Uint8Array(16));
-  const authInfo = encoder.encode('Content-Encoding: auth\0');
+  // RFC 8291 (aes128gcm): derive the input key material with the
+  // WebPush context, then derive the content key and nonce from the salt.
+  const authInfo = new Uint8Array([
+    ...encoder.encode('WebPush: info\0'),
+    ...clientPublicKey,
+    ...localPublicKeyRaw,
+  ]);
   const ikm = await hkdfDerive(sharedSecret, clientAuth, authInfo, 32);
 
-  const keyInfo = createInfo('aesgcm', clientPublicKey, localPublicKeyRaw);
-  const nonceInfo = createInfo('nonce', clientPublicKey, localPublicKeyRaw);
+  const keyInfo = encoder.encode('Content-Encoding: aes128gcm\0');
+  const nonceInfo = encoder.encode('Content-Encoding: nonce\0');
   const contentKey = await hkdfDerive(ikm, salt, keyInfo, 16);
   const nonce = await hkdfDerive(ikm, salt, nonceInfo, 12);
 
-  const paddedPayload = new Uint8Array(2 + encoder.encode(payload).length);
-  paddedPayload.set([0, 0]);
-  paddedPayload.set(encoder.encode(payload), 2);
+  const payloadBytes = encoder.encode(payload);
+  const paddedPayload = new Uint8Array(payloadBytes.length + 1);
+  paddedPayload.set(payloadBytes);
+  paddedPayload[payloadBytes.length] = 0x02;
 
   const cryptoKey = await crypto.subtle.importKey(
     'raw', contentKey, { name: 'AES-GCM' }, false, ['encrypt']
@@ -216,21 +223,6 @@ async function encryptPayload(
   body.set(encrypted, offset);
 
   return { ciphertext: body };
-}
-
-function createInfo(type: string, clientPublicKey: Uint8Array, serverPublicKey: Uint8Array): Uint8Array {
-  const encoder = new TextEncoder();
-  const typeBytes = encoder.encode(`Content-Encoding: ${type}\0`);
-  const header = encoder.encode('P-256\0');
-  const info = new Uint8Array(typeBytes.length + header.length + 2 + clientPublicKey.length + 2 + serverPublicKey.length);
-  let offset = 0;
-  info.set(typeBytes, offset); offset += typeBytes.length;
-  info.set(header, offset); offset += header.length;
-  info[offset++] = 0; info[offset++] = clientPublicKey.length;
-  info.set(clientPublicKey, offset); offset += clientPublicKey.length;
-  info[offset++] = 0; info[offset++] = serverPublicKey.length;
-  info.set(serverPublicKey, offset);
-  return info;
 }
 
 async function hkdfDerive(ikm: Uint8Array, salt: Uint8Array, info: Uint8Array, length: number): Promise<Uint8Array> {
