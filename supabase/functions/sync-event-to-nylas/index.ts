@@ -1,4 +1,4 @@
-import { createClient } from 'https://esm.sh/@supabase/supabase-js@2.49.9'
+import { createClient } from 'npm:@supabase/supabase-js@2'
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
@@ -49,6 +49,25 @@ interface RouteSheet {
   status?: string
   artists?: string[]
 
+}
+
+// Google Calendar (et l'app iOS/Android) interprète la description comme du HTML :
+// tout balisage venant des champs libres (notes riches, invitations, équipements)
+// s'affiche alors en "ligne de code". On repasse donc tout en texte brut.
+function toPlainText(input: string): string {
+  return input
+    .replace(/<\s*br\s*\/?\s*>/gi, '\n')
+    .replace(/<\s*\/\s*(p|div|li|h[1-6]|tr)\s*>/gi, '\n')
+    .replace(/<\s*li[^>]*>/gi, '• ')
+    .replace(/<[^>]*>/g, '')
+    .replace(/&nbsp;/gi, ' ')
+    .replace(/&amp;/gi, '&')
+    .replace(/&lt;/gi, '<')
+    .replace(/&gt;/gi, '>')
+    .replace(/&quot;/gi, '"')
+    .replace(/&#39;/gi, "'")
+    .replace(/\n{3,}/g, '\n\n')
+    .trim()
 }
 
 function buildRouteSheetDescription(event: any, routeSheet: RouteSheet, quoteAmount?: number | null, crewNames?: string[], documents?: Array<{ name: string; url: string }>): string {
@@ -194,7 +213,7 @@ function buildRouteSheetDescription(event: any, routeSheet: RouteSheet, quoteAmo
   lines.push('━━━━━━━━━━━━━━━━━━━━')
   lines.push('Généré automatiquement par Fatras')
 
-  return lines.join('\n')
+  return toPlainText(lines.join('\n'))
 }
 
 function buildGenericDescription(event: any): string {
