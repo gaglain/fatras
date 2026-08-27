@@ -213,7 +213,7 @@ function buildRouteSheetDescription(event: any, routeSheet: RouteSheet, quoteAmo
   lines.push('━━━━━━━━━━━━━━━━━━━━')
   lines.push('Généré automatiquement par Fatras')
 
-  return lines.join('\n')
+  return toPlainText(lines.join('\n'))
 }
 
 function buildGenericDescription(event: any): string {
