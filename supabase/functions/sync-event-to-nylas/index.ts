@@ -578,12 +578,19 @@ Deno.serve(async (req) => {
       ? { date: startDateStr }
       : { start_date: startDateStr, end_date: addUtcDays(endDateStr, 1) }
 
-    const nylasEventBody = {
+    const nylasEventBody: Record<string, unknown> = {
       title: eventTitle,
       description,
       when: nylasWhen,
       location: fullLocation,
     }
+
+    // Re-attach the team as Google Agenda guests (lost when an event is recreated)
+    if (participants.length > 0) {
+      nylasEventBody.participants = participants
+      console.log(`📨 Participants synced: ${participants.map((p) => p.email).join(', ')}`)
+    }
+
 
     // A forced recreation is used after mobile calendar rendering issues. Google
     // clients can retain a stale cached representation after repeated updates;
