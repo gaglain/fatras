@@ -54,21 +54,41 @@ interface RouteSheet {
 // Google Calendar (et l'app iOS/Android) interprète la description comme du HTML :
 // tout balisage venant des champs libres (notes riches, invitations, équipements)
 // s'affiche alors en "ligne de code". On repasse donc tout en texte brut.
-function toPlainText(input: string): string {
+function decodeEntities(input: string): string {
   return input
-    .replace(/<\s*br\s*\/?\s*>/gi, '\n')
-    .replace(/<\s*\/\s*(p|div|li|h[1-6]|tr)\s*>/gi, '\n')
-    .replace(/<\s*li[^>]*>/gi, '• ')
-    .replace(/<[^>]*>/g, '')
     .replace(/&nbsp;/gi, ' ')
-    .replace(/&amp;/gi, '&')
     .replace(/&lt;/gi, '<')
     .replace(/&gt;/gi, '>')
     .replace(/&quot;/gi, '"')
-    .replace(/&#39;/gi, "'")
+    .replace(/&#0?39;/gi, "'")
+    .replace(/&apos;/gi, "'")
+    .replace(/&amp;/gi, '&')
+}
+
+function stripTags(input: string): string {
+  return input
+    .replace(/<\s*br\s*\/?\s*>/gi, '\n')
+    .replace(/<\s*\/\s*(p|div|li|h[1-6]|tr|ul|ol)\s*>/gi, '\n')
+    .replace(/<\s*li[^>]*>/gi, '• ')
+    .replace(/<[^>]*>/g, '')
+}
+
+function toPlainText(input: string): string {
+  // Les champs riches peuvent contenir du HTML déjà échappé (&lt;br /&gt;).
+  // On décode puis on nettoie, en répétant jusqu'à stabilisation, sinon
+  // le décodage recrée des balises littérales affichées en "ligne de code".
+  let out = input
+  for (let i = 0; i < 3; i++) {
+    const next = stripTags(decodeEntities(out))
+    if (next === out) break
+    out = next
+  }
+  return out
+    .replace(/[ \t]+\n/g, '\n')
     .replace(/\n{3,}/g, '\n\n')
     .trim()
 }
+
 
 function buildRouteSheetDescription(event: any, routeSheet: RouteSheet, quoteAmount?: number | null, crewNames?: string[], documents?: Array<{ name: string; url: string }>): string {
   const lines: string[] = []
