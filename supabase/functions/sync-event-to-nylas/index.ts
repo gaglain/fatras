@@ -62,6 +62,8 @@ function decodeEntities(input: string): string {
     .replace(/&quot;/gi, '"')
     .replace(/&#0?39;/gi, "'")
     .replace(/&apos;/gi, "'")
+    .replace(/&#(\d+);/g, (_match, decimal: string) => String.fromCodePoint(Number(decimal)))
+    .replace(/&#x([0-9a-f]+);/gi, (_match, hexadecimal: string) => String.fromCodePoint(parseInt(hexadecimal, 16)))
     .replace(/&amp;/gi, '&')
 }
 
@@ -84,6 +86,8 @@ function toPlainText(input: string): string {
     out = next
   }
   return out
+    .replace(/[<>]/g, '')
+    .replace(/[\u0000-\u0008\u000B\u000C\u000E-\u001F\u007F]/g, '')
     .replace(/[ \t]+\n/g, '\n')
     .replace(/\n{3,}/g, '\n\n')
     .trim()
@@ -332,7 +336,7 @@ Deno.serve(async (req) => {
     const nylasApiKey = Deno.env.get('NYLAS_API_KEY')!
 
     const supabase = createClient(supabaseUrl, supabaseKey)
-    const { event_id, trigger, grant_id_override } = await req.json()
+    const { event_id, trigger, grant_id_override, force_recreate = false } = await req.json()
 
     console.log(`🔄 sync-event-to-nylas: event_id=${event_id}, trigger=${trigger}`)
 
@@ -352,6 +356,7 @@ Deno.serve(async (req) => {
     }
 
     const { status, nylas_event_id } = event
+    let effectiveNylasEventId: string | null = nylas_event_id
     let grantId = await getCalendarCapableGrantId(supabase, event.user_id, grant_id_override || event.nylas_grant_id)
 
     // If no grant_id configured, try to find one from email_accounts
@@ -559,8 +564,33 @@ Deno.serve(async (req) => {
       location: fullLocation,
     }
 
+    // A forced recreation is used after mobile calendar rendering issues. Google
+    // clients can retain a stale cached representation after repeated updates;
+    // deleting then recreating gives every device a fresh event and description.
+    if (force_recreate && effectiveNylasEventId) {
+      console.log(`♻️ Force recreating Nylas event ${effectiveNylasEventId} for "${event.title}"...`)
+      const deleteUrl = `${NYLAS_API_BASE}/grants/${grantId}/events/${effectiveNylasEventId}?calendar_id=${encodeURIComponent(calendarId)}&notify_participants=false`
+      const deleteResponse = await fetch(deleteUrl, {
+        method: 'DELETE',
+        headers: {
+          'Authorization': `Bearer ${nylasApiKey}`,
+          'Accept': 'application/json',
+        },
+      })
+      if (!deleteResponse.ok && deleteResponse.status !== 404 && deleteResponse.status !== 410) {
+        const errorText = await deleteResponse.text()
+        console.error('Nylas force-delete error:', deleteResponse.status, errorText)
+        return new Response(
+          JSON.stringify({ success: false, error: `Nylas force-delete failed: ${deleteResponse.status}`, details: errorText }),
+          { headers: { ...corsHeaders, 'Content-Type': 'application/json' }, status: 500 }
+        )
+      }
+      effectiveNylasEventId = null
+      await supabase.from('events').update({ nylas_event_id: null }).eq('id', event_id)
+    }
+
     // CREATE or UPDATE
-    if (!nylas_event_id) {
+    if (!effectiveNylasEventId) {
       // Create new Nylas event
       console.log(`Creating Nylas event for "${event.title}" on calendar ${calendarId}...`)
       const url = `${NYLAS_API_BASE}/grants/${grantId}/events?calendar_id=${encodeURIComponent(calendarId)}`
@@ -599,8 +629,8 @@ Deno.serve(async (req) => {
       )
     } else {
       // Update existing Nylas event
-      console.log(`Updating Nylas event ${nylas_event_id} for "${event.title}"...`)
-      const url = `${NYLAS_API_BASE}/grants/${grantId}/events/${nylas_event_id}?calendar_id=${encodeURIComponent(calendarId)}&notify_participants=false`
+      console.log(`Updating Nylas event ${effectiveNylasEventId} for "${event.title}"...`)
+      const url = `${NYLAS_API_BASE}/grants/${grantId}/events/${effectiveNylasEventId}?calendar_id=${encodeURIComponent(calendarId)}&notify_participants=false`
       const response = await fetch(url, {
         method: 'PUT',
         headers: {
@@ -617,7 +647,7 @@ Deno.serve(async (req) => {
 
         // If the remote event no longer exists (deleted on Google/Nylas), recreate it.
         if (response.status === 404 || response.status === 410) {
-          console.log(`⚠️ Nylas event ${nylas_event_id} missing remotely — recreating.`)
+          console.log(`⚠️ Nylas event ${effectiveNylasEventId} missing remotely — recreating.`)
           const createUrl = `${NYLAS_API_BASE}/grants/${grantId}/events?calendar_id=${encodeURIComponent(calendarId)}&notify_participants=false`
           const createResp = await fetch(createUrl, {
             method: 'POST',
@@ -656,9 +686,9 @@ Deno.serve(async (req) => {
 
       const _body = await response.text() // consume response body
 
-      console.log(`✅ Nylas event updated: ${nylas_event_id} for "${event.title}"`)
+      console.log(`✅ Nylas event updated: ${effectiveNylasEventId} for "${event.title}"`)
       return new Response(
-        JSON.stringify({ success: true, action: 'updated', nylas_event_id }),
+        JSON.stringify({ success: true, action: 'updated', nylas_event_id: effectiveNylasEventId }),
         { headers: { ...corsHeaders, 'Content-Type': 'application/json' }, status: 200 }
       )
     }
