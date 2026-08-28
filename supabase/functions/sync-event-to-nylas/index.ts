@@ -501,6 +501,9 @@ Deno.serve(async (req) => {
       }
     }
 
+    // Participants (Google Agenda guests) rebuilt from the crew of the route sheet
+    const participants: { email: string; name?: string }[] = []
+
     if (routeSheet) {
       // Resolve crew UUIDs to names
       let crewNames: string[] = []
@@ -512,7 +515,7 @@ Deno.serve(async (req) => {
         if (areUuids) {
           const { data: profiles } = await supabase
             .from('user_profiles')
-            .select('user_id, first_name, last_name, function_title')
+            .select('user_id, first_name, last_name, function_title, email')
             .in('user_id', crewIds)
 
           if (profiles && profiles.length > 0) {
@@ -525,10 +528,20 @@ Deno.serve(async (req) => {
               }
               return id
             })
-            console.log(`👥 Resolved ${crewNames.length} crew members`)
+            for (const p of profiles as any[]) {
+              const email = (p.email || '').trim().toLowerCase()
+              if (!email || !email.includes('@')) continue
+              if (participants.some((x) => x.email === email)) continue
+              participants.push({
+                email,
+                name: [p.first_name, p.last_name].filter(Boolean).join(' ') || undefined,
+              })
+            }
+            console.log(`👥 Resolved ${crewNames.length} crew members, ${participants.length} invitable emails`)
           }
         }
       }
+
 
       // Fetch attached documents for this route sheet
       const { data: docsRows } = await supabase
@@ -565,12 +578,19 @@ Deno.serve(async (req) => {
       ? { date: startDateStr }
       : { start_date: startDateStr, end_date: addUtcDays(endDateStr, 1) }
 
-    const nylasEventBody = {
+    const nylasEventBody: Record<string, unknown> = {
       title: eventTitle,
       description,
       when: nylasWhen,
       location: fullLocation,
     }
+
+    // Re-attach the team as Google Agenda guests (lost when an event is recreated)
+    if (participants.length > 0) {
+      nylasEventBody.participants = participants
+      console.log(`📨 Participants synced: ${participants.map((p) => p.email).join(', ')}`)
+    }
+
 
     // A forced recreation is used after mobile calendar rendering issues. Google
     // clients can retain a stale cached representation after repeated updates;
@@ -638,7 +658,7 @@ Deno.serve(async (req) => {
     } else {
       // Update existing Nylas event
       console.log(`Updating Nylas event ${effectiveNylasEventId} for "${event.title}"...`)
-      const url = `${NYLAS_API_BASE}/grants/${grantId}/events/${effectiveNylasEventId}?calendar_id=${encodeURIComponent(calendarId)}&notify_participants=false`
+      const url = `${NYLAS_API_BASE}/grants/${grantId}/events/${effectiveNylasEventId}?calendar_id=${encodeURIComponent(calendarId)}&notify_participants=${participants.length > 0 ? 'true' : 'false'}`
       const response = await fetch(url, {
         method: 'PUT',
         headers: {
@@ -656,7 +676,7 @@ Deno.serve(async (req) => {
         // If the remote event no longer exists (deleted on Google/Nylas), recreate it.
         if (response.status === 404 || response.status === 410) {
           console.log(`⚠️ Nylas event ${effectiveNylasEventId} missing remotely — recreating.`)
-          const createUrl = `${NYLAS_API_BASE}/grants/${grantId}/events?calendar_id=${encodeURIComponent(calendarId)}&notify_participants=false`
+          const createUrl = `${NYLAS_API_BASE}/grants/${grantId}/events?calendar_id=${encodeURIComponent(calendarId)}&notify_participants=${participants.length > 0 ? 'true' : 'false'}`
           const createResp = await fetch(createUrl, {
             method: 'POST',
             headers: {
