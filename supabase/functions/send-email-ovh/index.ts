@@ -40,7 +40,7 @@ const handler = async (req: Request): Promise<Response> => {
     // Créer le client Supabase
     const supabaseUrl = Deno.env.get('SUPABASE_URL')!;
     const supabaseKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!;
-    const { createClient } = await import('https://esm.sh/@supabase/supabase-js@2');
+    const { createClient } = await import('npm:@supabase/supabase-js@2');
     const supabase = createClient(supabaseUrl, supabaseKey);
 
     // Récupérer la configuration SMTP depuis les préférences utilisateur
