@@ -242,11 +242,17 @@ function buildRouteSheetDescription(event: any, routeSheet: RouteSheet, quoteAmo
 
 function buildGenericDescription(event: any): string {
   const statusLabel = event.status === 'option' ? 'en option' : event.status
-  return `Événement ${statusLabel} dans l'app.\nLa feuille de route détaillée sera ajoutée lorsqu'il sera confirmé.`
+  return toPlainText(`Événement ${statusLabel} dans l'app.\nLa feuille de route détaillée sera ajoutée lorsqu'il sera confirmé.`)
 }
 
 function toUnixTimestamp(dateStr: string): number {
   return Math.floor(new Date(dateStr).getTime() / 1000)
+}
+
+function addUtcDays(dateStr: string, days: number): string {
+  const date = new Date(`${dateStr}T00:00:00.000Z`)
+  date.setUTCDate(date.getUTCDate() + days)
+  return date.toISOString().substring(0, 10)
 }
 
 // IMAP grants are email-only in Nylas and cannot access calendars.
@@ -424,6 +430,7 @@ Deno.serve(async (req) => {
     if (artistName) {
       eventTitle += ` - ${artistName}`
     }
+    eventTitle = toPlainText(eventTitle)
 
     // Build all-day date(s) — extract YYYY-MM-DD only
     const startDateStr = event.start_date ? event.start_date.substring(0, 10) : new Date().toISOString().substring(0, 10)
@@ -553,9 +560,10 @@ Deno.serve(async (req) => {
     if (event.country) locationParts.push(event.country)
     const fullLocation = locationParts.join(', ')
 
+    // Nylas/Google treat end_date as exclusive for all-day ranges.
     const nylasWhen = startDateStr === endDateStr
       ? { date: startDateStr }
-      : { start_date: startDateStr, end_date: endDateStr }
+      : { start_date: startDateStr, end_date: addUtcDays(endDateStr, 1) }
 
     const nylasEventBody = {
       title: eventTitle,
