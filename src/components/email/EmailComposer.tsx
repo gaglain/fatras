@@ -123,7 +123,10 @@ export const EmailComposer: React.FC<EmailComposerProps> = ({
         .single();
 
       if (emailError || !emailRecord) {
-        throw new Error('Erreur lors de la création de l\'enregistrement email');
+        logger.error('Erreur création enregistrement email:', emailError);
+        throw new Error(
+          `Erreur lors de la création de l'enregistrement email${emailError?.message ? `: ${emailError.message}` : ''}`
+        );
       }
       createdEmailId = emailRecord.id;
 
