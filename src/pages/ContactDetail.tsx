@@ -247,6 +247,17 @@ export const ContactDetail: React.FC = () => {
           </div>
         </TabsContent>
       </Tabs>
+        </div>
+
+        <div className="min-w-0">
+          <ContactNotesPanel
+            contactId={id!}
+            initialNotes={contact.notes}
+            onSaved={(notes) => setContact((prev) => (prev ? { ...prev, notes } : prev))}
+          />
+        </div>
+      </div>
+
 
       <ContactDialog
         isOpen={editDialogOpen}
