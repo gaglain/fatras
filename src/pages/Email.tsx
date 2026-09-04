@@ -104,7 +104,7 @@ export const Email: React.FC = () => {
   const handleSendEmail = async () => {
     if (!validateForm()) { toast.error('Veuillez corriger les erreurs dans le formulaire'); return; }
     try {
-      await sendEmail({ to: [composeData.to], subject: composeData.subject, html: `<div style="font-family: Arial, sans-serif;">${composeData.content.replace(/\n/g, '<br>')}</div>` });
+      await sendEmail({ to: [composeData.to], subject: composeData.subject, html: `<div style="font-family: Arial, sans-serif;">${composeData.content.replace(/\n/g, '<br>')}</div>`, includeSignature: true });
       setEmails(prev => [{ id: Date.now().toString(), from: 'user@showmanager.com', to: composeData.to, subject: composeData.subject, content: composeData.content, date: new Date().toISOString(), isRead: true, isStarred: false }, ...prev]);
       setComposeData({ to: '', cc: '', subject: '', content: '', selectedTemplateId: '' });
       setValidationErrors({});

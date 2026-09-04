@@ -3,6 +3,7 @@ import { supabase } from '@/integrations/supabase/client';
 import { useIndividualEmailTracking } from './useIndividualEmailTracking';
 import { logger } from '@/lib/logger';
 import { invokeEdgeFunction } from '@/lib/edgeFunctionClient';
+import { addAvatarToEmailSignature } from './useEmailSignature';
 
 export interface EmailData {
   to: string[];
@@ -17,6 +18,7 @@ export interface EmailData {
     contentType?: string;
     filename?: string;
   }>;
+  includeSignature?: boolean;
 }
 
 export const useEmailSender = () => {
@@ -63,8 +65,21 @@ export const useEmailSender = () => {
 
       emailRecordId = emailRecord.id;
 
+      let htmlWithSignature = emailData.html;
+      if (emailData.includeSignature) {
+        const { data: profile } = await supabase
+          .from('user_profiles')
+          .select('email_signature, avatar_url')
+          .eq('user_id', user.id)
+          .single();
+        const signature = addAvatarToEmailSignature(profile?.email_signature || '', profile?.avatar_url);
+        if (signature) {
+          htmlWithSignature += `<div style="margin-top:24px;padding-top:16px;border-top:1px solid #e5e7eb;">${signature}</div>`;
+        }
+      }
+
       // Injecter le pixel de tracking et les liens trackés
-      const trackedHtml = injectEmailTracking(emailRecord.id, emailData.html);
+      const trackedHtml = injectEmailTracking(emailRecord.id, htmlWithSignature);
 
       // Vérifier si config SMTP existe pour utiliser SMTP, sinon fallback sur Resend
       const { data: smtpConfig } = await supabase
