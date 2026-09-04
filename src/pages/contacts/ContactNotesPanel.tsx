@@ -1,6 +1,6 @@
 import React, { useEffect, useRef, useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Textarea } from '@/components/ui/textarea';
+import { RichTextEditor } from '@/components/RichTextEditor';
 import { Button } from '@/components/ui/button';
 import { StickyNote, Check, Loader2, ChevronDown, ChevronUp } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
@@ -72,13 +72,14 @@ export const ContactNotesPanel: React.FC<Props> = ({ contactId, initialNotes, on
       </CardHeader>
       {!collapsed && (
         <CardContent className="space-y-2">
-          <Textarea
-            value={value}
-            onChange={(e) => handleChange(e.target.value)}
-            onBlur={() => save(value)}
-            placeholder="Prenez vos notes ici… elles restent visibles quel que soit l'onglet."
-            className="min-h-[260px] lg:min-h-[420px] resize-y text-sm"
-          />
+          <div onBlur={() => save(value)}>
+            <RichTextEditor
+              value={value}
+              onChange={handleChange}
+              placeholder="Prenez vos notes ici… mise en page, listes, images."
+              className="[&_.richtext-content]:min-h-[260px] lg:[&_.richtext-content]:min-h-[420px]"
+            />
+          </div>
           <p className="text-xs text-muted-foreground">Enregistrement automatique</p>
         </CardContent>
       )}
