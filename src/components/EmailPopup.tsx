@@ -6,8 +6,8 @@ import { Badge } from '@/components/ui/badge';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { X, Send, Paperclip, FileText, Image, Video, Music, Upload, Signature } from 'lucide-react';
 import { useUser } from '@/contexts/UserContext';
-import { generateEmailSignature, getPlainTextSignature } from '@/utils/emailSignature';
 import { toast } from 'sonner';
+import { useEmailSignature } from '@/hooks/useEmailSignature';
 
 interface EmailHistory {
   id: string;
@@ -78,6 +78,7 @@ const emailTemplates: EmailTemplate[] = [
 
 export const EmailPopup: React.FC<EmailPopupProps> = ({ isOpen, onClose, email, contactName }) => {
   const { currentUser } = useUser();
+  const { signatureHtml } = useEmailSignature();
   const [showCompose, setShowCompose] = useState(false);
   const [showBibleFiles, setShowBibleFiles] = useState(false);
   const [showTemplates, setShowTemplates] = useState(false);
@@ -161,8 +162,8 @@ export const EmailPopup: React.FC<EmailPopupProps> = ({ isOpen, onClose, email, 
 
     let finalContent = emailContent;
     
-    if (includeSignature && currentUser) {
-      finalContent += '\n\n' + getPlainTextSignature(currentUser);
+    if (includeSignature && signatureHtml) {
+      finalContent += '\n\n' + signatureHtml;
     }
     
     try {
@@ -293,7 +294,7 @@ export const EmailPopup: React.FC<EmailPopupProps> = ({ isOpen, onClose, email, 
                   onChange={(e) => setEmailContent(e.target.value)}
                 />
                 
-                {includeSignature && currentUser && (
+                {includeSignature && signatureHtml && (
                   <div className="border border-purple-200 bg-purple-50 rounded-md p-3">
                     <div className="flex items-center mb-2">
                       <Signature className="h-4 w-4 text-purple-600 mr-2" />
@@ -301,7 +302,7 @@ export const EmailPopup: React.FC<EmailPopupProps> = ({ isOpen, onClose, email, 
                     </div>
                     <div 
                       className="text-xs"
-                      dangerouslySetInnerHTML={{ __html: generateEmailSignature(currentUser) }}
+                      dangerouslySetInnerHTML={{ __html: signatureHtml }}
                     />
                   </div>
                 )}

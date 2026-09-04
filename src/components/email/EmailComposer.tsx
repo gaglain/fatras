@@ -14,6 +14,7 @@ import { useIndividualEmailTracking } from '@/hooks/useIndividualEmailTracking';
 import { ImageGalleryPicker } from '@/components/website/ImageGalleryPicker';
 import { UniversalSearch } from '@/components/UniversalSearch';
 import { logger } from '@/lib/logger';
+import { addAvatarToEmailSignature } from '@/hooks/useEmailSignature';
 interface EmailComposerProps {
   isOpen: boolean;
   onClose: () => void;
@@ -129,11 +130,11 @@ export const EmailComposer: React.FC<EmailComposerProps> = ({
       // Charger la signature depuis la base de données
       const { data: profileData } = await supabase
         .from('user_profiles')
-        .select('email_signature')
+        .select('email_signature, avatar_url')
         .eq('user_id', currentUser?.id)
         .single();
 
-      const signature = profileData?.email_signature || '';
+      const signature = addAvatarToEmailSignature(profileData?.email_signature || '', profileData?.avatar_url);
       let htmlContent = `
         <div style="font-family: Arial, sans-serif; line-height: 1.6;">
           ${content}
@@ -174,6 +175,7 @@ export const EmailComposer: React.FC<EmailComposerProps> = ({
         content,
         html: htmlContent,
         attachments: attachmentUrls,
+        includeSignature: false,
       });
 
       // Mettre à jour le statut de l'email (contenu HTML archivé pour l'historique)

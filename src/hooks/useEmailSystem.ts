@@ -4,6 +4,7 @@ import { useAuth } from './useAuth';
 import { toast } from 'sonner';
 import { logger } from '@/lib/logger';
 import { invokeEdgeFunction } from '@/lib/edgeFunctionClient';
+import { addAvatarToEmailSignature } from './useEmailSignature';
 
 export interface EmailMessage {
   to: string[];
@@ -15,6 +16,7 @@ export interface EmailMessage {
   fromName?: string;
   replyTo?: string;
   attachments?: EmailAttachment[];
+  includeSignature?: boolean;
 }
 
 export interface EmailAttachment {
@@ -90,7 +92,21 @@ export const useEmailSystem = () => {
 
       logger.debug('Envoi email via:', selectedProvider.name);
 
-      const emailData = { ...message, userId: user.id };
+      let html = message.html;
+      if (message.includeSignature !== false) {
+        const { data: profile } = await supabase
+          .from('user_profiles')
+          .select('email_signature, avatar_url')
+          .eq('user_id', user.id)
+          .single();
+        const signature = addAvatarToEmailSignature(profile?.email_signature || '', profile?.avatar_url);
+        if (signature) {
+          html += `<div style="margin-top:24px;padding-top:16px;border-top:1px solid #e5e7eb;">${signature}</div>`;
+        }
+      }
+
+      const finalMessage = { ...message, html };
+      const emailData = { ...finalMessage, userId: user.id };
 
       let functionName = 'send-email';
       if (selectedProvider.id === 'ovh') functionName = 'send-email-ovh';
@@ -105,7 +121,7 @@ export const useEmailSystem = () => {
         throw new Error(result.error || result.data?.error || 'Erreur lors de l\'envoi');
       }
 
-      await saveEmailToDatabase(message, selectedProvider.id, result.data.id);
+      await saveEmailToDatabase(finalMessage, selectedProvider.id, result.data.id);
 
       toast.success(`Email envoyé avec succès via ${selectedProvider.name}`);
       return { success: true, messageId: result.data.id };
