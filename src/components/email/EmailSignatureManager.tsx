@@ -9,7 +9,7 @@ import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/hooks/useAuth';
 import { toast } from 'sonner';
 import { RichTextEditor } from '@/components/RichTextEditor';
-import { addAvatarToEmailSignature } from '@/hooks/useEmailSignature';
+import { addAvatarToEmailSignature, EMAIL_SIGNATURE_UPDATED_EVENT } from '@/hooks/useEmailSignature';
 
 interface EmailSignatureManagerProps {
   isOpen: boolean;
@@ -25,6 +25,7 @@ export const EmailSignatureManager: React.FC<EmailSignatureManagerProps> = ({
   const [trackingEnabled, setTrackingEnabled] = useState(true);
   const [loading, setLoading] = useState(false);
   const [showPreview, setShowPreview] = useState(false);
+  const [avatarUrl, setAvatarUrl] = useState<string | null>(null);
 
   useEffect(() => {
     if (isOpen && user) {
@@ -43,7 +44,10 @@ export const EmailSignatureManager: React.FC<EmailSignatureManagerProps> = ({
       if (error) throw error;
       
       if (data) {
-        setSignature(addAvatarToEmailSignature(data.email_signature || '', data.avatar_url));
+        // Keep only the editable signature in the database. The avatar is
+        // composed dynamically so changing it never leaves an old image embedded.
+        setSignature(data.email_signature || '');
+        setAvatarUrl(data.avatar_url || null);
         setTrackingEnabled(data.email_tracking_enabled ?? true);
       }
     } catch {
@@ -66,6 +70,7 @@ export const EmailSignatureManager: React.FC<EmailSignatureManagerProps> = ({
 
       if (error) throw error;
 
+      window.dispatchEvent(new CustomEvent(EMAIL_SIGNATURE_UPDATED_EVENT));
       toast.success('Signature email sauvegardée');
       onClose();
     } catch {
@@ -164,7 +169,7 @@ export const EmailSignatureManager: React.FC<EmailSignatureManagerProps> = ({
                   <CardContent className="pt-4">
                     <h4 className="font-medium mb-2">Aperçu de la signature:</h4>
                     <div className="bg-background p-3 rounded border">
-                      <div dangerouslySetInnerHTML={{ __html: signature || defaultSignature }} />
+                      <div dangerouslySetInnerHTML={{ __html: addAvatarToEmailSignature(signature || defaultSignature, avatarUrl) }} />
                     </div>
                   </CardContent>
                 </Card>

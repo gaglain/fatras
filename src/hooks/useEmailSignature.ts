@@ -2,6 +2,8 @@ import { useEffect, useState } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/hooks/useAuth';
 
+export const EMAIL_SIGNATURE_UPDATED_EVENT = 'fatras:email-signature-updated';
+
 const hasImage = (html: string) => /<img\b/i.test(html);
 const escapeAttribute = (value: string) => value
   .replace(/&/g, '&amp;')
@@ -51,8 +53,10 @@ export const useEmailSignature = () => {
     };
 
     loadSignature();
+    window.addEventListener(EMAIL_SIGNATURE_UPDATED_EVENT, loadSignature);
     return () => {
       active = false;
+      window.removeEventListener(EMAIL_SIGNATURE_UPDATED_EVENT, loadSignature);
     };
   }, [user?.id]);
 
