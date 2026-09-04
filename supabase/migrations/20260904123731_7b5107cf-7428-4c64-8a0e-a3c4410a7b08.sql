@@ -1,0 +1,2 @@
+ALTER TABLE public.emails DROP CONSTRAINT IF EXISTS emails_status_check;
+ALTER TABLE public.emails ADD CONSTRAINT emails_status_check CHECK (status = ANY (ARRAY['draft','queued','sending','scheduled','sent','delivered','opened','clicked','bounced','failed']));
