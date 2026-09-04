@@ -5,6 +5,7 @@ import { toast } from 'sonner';
 import { useIndividualEmailTracking } from './useIndividualEmailTracking';
 import { logger } from '@/lib/logger';
 import { invokeEdgeFunction } from '@/lib/edgeFunctionClient';
+import { addAvatarToEmailSignature } from './useEmailSignature';
 
 interface EmailAccount {
   id: string;
@@ -151,11 +152,13 @@ export const useNylasEmail = () => {
 
       const { data: profileData } = await supabase
         .from('user_profiles')
-        .select('email_signature')
+        .select('email_signature, avatar_url')
         .eq('user_id', user.id)
         .single();
 
-      const signature = email.includeSignature === false ? '' : (profileData?.email_signature || '');
+      const signature = email.includeSignature === false
+        ? ''
+        : addAvatarToEmailSignature(profileData?.email_signature || '', profileData?.avatar_url);
       let emailWithSignature = email.html 
         ? `${email.html}<br><br>${signature}`
         : `<div>${email.content.replace(/\n/g, '<br>')}<br><br>${signature}</div>`;
