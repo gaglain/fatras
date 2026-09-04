@@ -213,11 +213,9 @@ export const ContactDetail: React.FC = () => {
             defaultRecipient={contact?.email}
             defaultSubject={searchParams.get('subject') ? decodeURIComponent(searchParams.get('subject')!) : ''}
           />
-        </TabsContent>
-
-        <TabsContent value="emails" className="space-y-4">
           <ContactEmailHistory contactId={id!} contactEmail={contact?.email} />
         </TabsContent>
+
 
         <TabsContent value="details" className="space-y-4">
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
