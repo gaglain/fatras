@@ -10,10 +10,9 @@ import { useNylasEmail } from '@/hooks/useNylasEmail';
 import { useAuth } from '@/hooks/useAuth';
 import { toast } from 'sonner';
 import { useEmailTemplates } from '@/hooks/useEmailTemplates';
-import { generateEmailSignature } from '@/utils/emailSignature';
-import { useUser } from '@/contexts/UserContext';
 import { replaceEmailVariables } from '@/utils/emailVariables';
 import { EmailComposerForm } from './EmailComposerForm';
+import { useEmailSignature } from '@/hooks/useEmailSignature';
 
 interface EmailTemplate {
   id: string;
@@ -43,7 +42,7 @@ const fileToDataUrl = (file: File): Promise<string> =>
 
 export const EmailTemplateComposer: React.FC<EmailTemplateComposerProps> = ({ defaultRecipient = '', defaultSubject = '', contactData, eventData, quoteData }) => {
   const { user } = useAuth();
-  const { currentUser } = useUser();
+  const { signatureHtml } = useEmailSignature();
   const { sendEmail, sending } = useEmailSender();
   const { accounts, loadAccounts, sendEmail: sendViaNylas } = useNylasEmail();
   const { templates } = useEmailTemplates();
@@ -121,7 +120,7 @@ export const EmailTemplateComposer: React.FC<EmailTemplateComposerProps> = ({ de
       const ctx = { contact: contactData, event: eventData, quote: quoteData };
       const processedContent = replaceEmailVariables(content, ctx);
       const processedSubject = replaceEmailVariables(subject, ctx);
-      const signature = includeSignature && currentUser ? generateEmailSignature(currentUser) : '';
+      const signature = includeSignature ? signatureHtml : '';
       const finalContent = signature ? `${processedContent}\n\n${signature}` : processedContent;
       const htmlContent = `<div style="font-family: Arial, sans-serif; line-height: 1.6;">${finalContent.replace(/\n/g, '<br>')}</div>`;
 
@@ -134,7 +133,7 @@ export const EmailTemplateComposer: React.FC<EmailTemplateComposerProps> = ({ de
           const { data: { publicUrl } } = supabase.storage.from('email-attachments').getPublicUrl(fileName);
           attachmentUrls.push({ name: file.name, url: publicUrl });
         }
-        await sendViaNylas(selectedAccount, { to, subject: processedSubject, content: finalContent, html: htmlContent, attachments: attachmentUrls });
+        await sendViaNylas(selectedAccount, { to, subject: processedSubject, content: finalContent, html: htmlContent, attachments: attachmentUrls, includeSignature: false });
       } else {
         const resendAttachments = await Promise.all(attachments.map(async (file) => ({
           name: file.name, filename: file.name, content: await fileToDataUrl(file), contentType: file.type || undefined,
@@ -161,7 +160,7 @@ export const EmailTemplateComposer: React.FC<EmailTemplateComposerProps> = ({ de
     onRemoveAttachment: (i: number) => setAttachments(prev => prev.filter((_, idx) => idx !== i)),
     onMediaBankSelect: handleMediaBankSelect, addingFromMediaBank,
     includeSignature, onIncludeSignatureChange: setIncludeSignature,
-    signatureHtml: currentUser ? generateEmailSignature(currentUser) : undefined,
+    signatureHtml,
     sending, uploading, onSend: async () => { await handleSend(); setOpen(false); },
   };
 

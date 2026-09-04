@@ -9,6 +9,7 @@ import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/hooks/useAuth';
 import { toast } from 'sonner';
 import { RichTextEditor } from '@/components/RichTextEditor';
+import { addAvatarToEmailSignature } from '@/hooks/useEmailSignature';
 
 interface EmailSignatureManagerProps {
   isOpen: boolean;
@@ -35,14 +36,14 @@ export const EmailSignatureManager: React.FC<EmailSignatureManagerProps> = ({
     try {
       const { data, error } = await supabase
         .from('user_profiles')
-        .select('email_signature, email_tracking_enabled')
+        .select('email_signature, email_tracking_enabled, avatar_url')
         .eq('user_id', user?.id)
         .single();
 
       if (error) throw error;
       
       if (data) {
-        setSignature(data.email_signature || '');
+        setSignature(addAvatarToEmailSignature(data.email_signature || '', data.avatar_url));
         setTrackingEnabled(data.email_tracking_enabled ?? true);
       }
     } catch {

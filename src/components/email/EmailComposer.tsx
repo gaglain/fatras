@@ -174,6 +174,7 @@ export const EmailComposer: React.FC<EmailComposerProps> = ({
         content,
         html: htmlContent,
         attachments: attachmentUrls,
+        includeSignature: false,
       });
 
       // Mettre à jour le statut de l'email (contenu HTML archivé pour l'historique)

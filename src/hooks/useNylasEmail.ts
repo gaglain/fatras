@@ -117,6 +117,7 @@ export const useNylasEmail = () => {
     content: string;
     html?: string;
     attachments?: Array<{ name: string; url: string }>;
+    includeSignature?: boolean;
   }) => {
     if (!user) throw new Error('User must be authenticated');
 
@@ -154,7 +155,7 @@ export const useNylasEmail = () => {
         .eq('user_id', user.id)
         .single();
 
-      const signature = profileData?.email_signature || '';
+      const signature = email.includeSignature === false ? '' : (profileData?.email_signature || '');
       let emailWithSignature = email.html 
         ? `${email.html}<br><br>${signature}`
         : `<div>${email.content.replace(/\n/g, '<br>')}<br><br>${signature}</div>`;
