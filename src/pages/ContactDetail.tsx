@@ -20,6 +20,7 @@ import { ContactDetailHeader } from './contacts/ContactDetailHeader';
 import { ContactOverviewTab, getAllConnections } from './contacts/ContactOverviewTab';
 import { ContactLinkedEntities } from './contacts/ContactLinkedEntities';
 import { ContactQuickActions } from './contacts/ContactQuickActions';
+import { ContactNotesPanel } from './contacts/ContactNotesPanel';
 
 export const ContactDetail: React.FC = () => {
   const { id } = useParams<{ id: string }>();
@@ -241,7 +242,6 @@ export const ContactDetail: React.FC = () => {
                     {contact.tags && contact.tags.length > 0 ? contact.tags.map((tag, index) => (<Badge key={index} variant="secondary">{tag}</Badge>)) : <span className="text-muted-foreground">Aucun tag</span>}
                   </div>
                 </div>
-                {contact.notes && <div><label className="text-sm font-medium text-muted-foreground">Notes</label><p className="text-sm">{contact.notes}</p></div>}
               </CardContent>
             </Card>
           </div>
