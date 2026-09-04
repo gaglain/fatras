@@ -3,13 +3,19 @@ import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/hooks/useAuth';
 
 const hasImage = (html: string) => /<img\b/i.test(html);
+const escapeAttribute = (value: string) => value
+  .replace(/&/g, '&amp;')
+  .replace(/"/g, '&quot;')
+  .replace(/</g, '&lt;')
+  .replace(/>/g, '&gt;');
 
 export const addAvatarToEmailSignature = (signature: string, avatarUrl?: string | null) => {
   const trimmedSignature = signature.trim();
   if (!avatarUrl || hasImage(trimmedSignature)) return trimmedSignature;
+  const safeAvatarUrl = escapeAttribute(avatarUrl);
 
   return `<div style="display:flex;align-items:flex-start;gap:14px;">
-    <img src="${avatarUrl}" alt="Photo de profil" width="72" height="72" style="width:72px;height:72px;border-radius:50%;object-fit:cover;display:block;" />
+    <img src="${safeAvatarUrl}" alt="Photo de profil" width="72" height="72" style="width:72px;height:72px;border-radius:50%;object-fit:cover;display:block;" />
     <div>${trimmedSignature}</div>
   </div>`;
 };

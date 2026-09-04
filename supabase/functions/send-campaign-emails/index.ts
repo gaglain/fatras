@@ -291,7 +291,8 @@ const handler = async (req: Request): Promise<Response> => {
         .maybeSingle();
       let signatureHtml = profile?.email_signature?.trim();
       if (signatureHtml && profile?.avatar_url && !/<img\b/i.test(signatureHtml)) {
-        signatureHtml = `<div style="display:flex;align-items:flex-start;gap:14px;"><img src="${profile.avatar_url}" alt="Photo de profil" width="72" height="72" style="width:72px;height:72px;border-radius:50%;object-fit:cover;display:block;" /><div>${signatureHtml}</div></div>`;
+        const safeAvatarUrl = profile.avatar_url.replace(/&/g, '&amp;').replace(/"/g, '&quot;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+        signatureHtml = `<div style="display:flex;align-items:flex-start;gap:14px;"><img src="${safeAvatarUrl}" alt="Photo de profil" width="72" height="72" style="width:72px;height:72px;border-radius:50%;object-fit:cover;display:block;" /><div>${signatureHtml}</div></div>`;
       }
       if (signatureHtml) {
         // Append signature at the END of the email content (below the body)
