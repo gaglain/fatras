@@ -20,6 +20,7 @@ import { ContactDetailHeader } from './contacts/ContactDetailHeader';
 import { ContactOverviewTab, getAllConnections } from './contacts/ContactOverviewTab';
 import { ContactLinkedEntities } from './contacts/ContactLinkedEntities';
 import { ContactQuickActions } from './contacts/ContactQuickActions';
+import { ContactNotesPanel } from './contacts/ContactNotesPanel';
 
 export const ContactDetail: React.FC = () => {
   const { id } = useParams<{ id: string }>();
@@ -164,14 +165,16 @@ export const ContactDetail: React.FC = () => {
         <Card><CardContent className="p-4"><div className="text-sm"><p className="font-medium">Statut</p><Badge variant="outline">{contact.status}</Badge></div></CardContent></Card>
       </div>
 
+      <div className="grid grid-cols-1 lg:grid-cols-[minmax(0,1fr)_320px] gap-6 items-start">
+        <div className="min-w-0">
       <Tabs value={defaultActiveTab} onValueChange={setDefaultActiveTab} className="space-y-4">
-        <TabsList>
+        <TabsList className="flex-wrap h-auto">
           <TabsTrigger value="overview">Vue d'ensemble</TabsTrigger>
           <TabsTrigger value="activity">Activité ({allConnections.length})</TabsTrigger>
-          <TabsTrigger value="email"><Mail className="h-4 w-4 mr-2" />Envoyer un Email</TabsTrigger>
-          <TabsTrigger value="emails">Historique Emails</TabsTrigger>
+          <TabsTrigger value="email"><Mail className="h-4 w-4 mr-2" />Emails</TabsTrigger>
           <TabsTrigger value="details">Détails</TabsTrigger>
         </TabsList>
+
 
         <TabsContent value="overview" className="space-y-4">
           <ContactQuickActions contactId={id!} contactName={`${contact.first_name} ${contact.last_name}`} onCreated={loadConnections} />
@@ -211,11 +214,9 @@ export const ContactDetail: React.FC = () => {
             defaultRecipient={contact?.email}
             defaultSubject={searchParams.get('subject') ? decodeURIComponent(searchParams.get('subject')!) : ''}
           />
-        </TabsContent>
-
-        <TabsContent value="emails" className="space-y-4">
           <ContactEmailHistory contactId={id!} contactEmail={contact?.email} />
         </TabsContent>
+
 
         <TabsContent value="details" className="space-y-4">
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
@@ -241,12 +242,22 @@ export const ContactDetail: React.FC = () => {
                     {contact.tags && contact.tags.length > 0 ? contact.tags.map((tag, index) => (<Badge key={index} variant="secondary">{tag}</Badge>)) : <span className="text-muted-foreground">Aucun tag</span>}
                   </div>
                 </div>
-                {contact.notes && <div><label className="text-sm font-medium text-muted-foreground">Notes</label><p className="text-sm">{contact.notes}</p></div>}
               </CardContent>
             </Card>
           </div>
         </TabsContent>
       </Tabs>
+        </div>
+
+        <div className="min-w-0">
+          <ContactNotesPanel
+            contactId={id!}
+            initialNotes={contact.notes}
+            onSaved={(notes) => setContact((prev) => (prev ? { ...prev, notes } : prev))}
+          />
+        </div>
+      </div>
+
 
       <ContactDialog
         isOpen={editDialogOpen}
