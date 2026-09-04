@@ -164,14 +164,16 @@ export const ContactDetail: React.FC = () => {
         <Card><CardContent className="p-4"><div className="text-sm"><p className="font-medium">Statut</p><Badge variant="outline">{contact.status}</Badge></div></CardContent></Card>
       </div>
 
+      <div className="grid grid-cols-1 lg:grid-cols-[minmax(0,1fr)_320px] gap-6 items-start">
+        <div className="min-w-0">
       <Tabs value={defaultActiveTab} onValueChange={setDefaultActiveTab} className="space-y-4">
-        <TabsList>
+        <TabsList className="flex-wrap h-auto">
           <TabsTrigger value="overview">Vue d'ensemble</TabsTrigger>
           <TabsTrigger value="activity">Activité ({allConnections.length})</TabsTrigger>
-          <TabsTrigger value="email"><Mail className="h-4 w-4 mr-2" />Envoyer un Email</TabsTrigger>
-          <TabsTrigger value="emails">Historique Emails</TabsTrigger>
+          <TabsTrigger value="email"><Mail className="h-4 w-4 mr-2" />Emails</TabsTrigger>
           <TabsTrigger value="details">Détails</TabsTrigger>
         </TabsList>
+
 
         <TabsContent value="overview" className="space-y-4">
           <ContactQuickActions contactId={id!} contactName={`${contact.first_name} ${contact.last_name}`} onCreated={loadConnections} />
