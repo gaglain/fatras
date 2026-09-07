@@ -65,7 +65,7 @@ const mapUnifiedRow = (ue: any, myEmailsSet: Set<string>): UnifiedEmail => {
   const direction = classifyDirection(ue.from_email || '', ue.to_email || '', ue.labels || [], myEmailsSet);
   return {
     id: ue.id, message_id: ue.message_id, direction,
-    from_email: ue.from_email, from_name: ue.from_name, to_email: ue.to_email, to_name: ue.to_name,
+    from_email: ue.from_email, from_name: cleanName(ue.from_name), to_email: ue.to_email, to_name: ue.to_name,
     subject: ue.subject, content: ue.content, html_content: ue.html_content,
     status: ue.status, provider: ue.provider, thread_id: ue.thread_id, labels: ue.labels, metadata: ue.metadata,
     attachments: ue.attachments, contact_id: ue.contact_id,
@@ -79,7 +79,7 @@ const mapInboundRow = (ie: any, myEmailsSet: Set<string>, myDomainsSet: Set<stri
   const direction = classifyDirection(ie.from_email || '', ie.to_email || '', ie.labels || [], myEmailsSet, myDomainsSet);
   return {
     id: ie.id, message_id: ie.message_id, direction,
-    from_email: ie.from_email, from_name: ie.from_name || ie.sender_name,
+    from_email: ie.from_email, from_name: cleanName(ie.from_name) || cleanName(ie.sender_name),
     to_email: ie.to_email, to_name: ie.to_name,
     subject: ie.subject, content: ie.content, html_content: ie.html_content,
     status: 'delivered', provider: ie.provider || 'imap',
@@ -236,7 +236,7 @@ export const useUnifiedEmails = (options: UseUnifiedEmailsOptions = {}) => {
     if (email.direction !== 'received' || !user) return;
     supabase.from('notifications').insert({
       user_id: user.id, type: 'new_email', title: 'Nouveau email reçu',
-      message: `De: ${email.from_name || email.from_email} - ${email.subject || 'Sans objet'}`,
+      message: `De: ${senderLabel(email)} - ${email.subject || 'Sans objet'}`,
       data: { email_id: email.id, from_email: email.from_email, from_name: email.from_name, subject: email.subject },
       read: false
     }).then(({ error }) => { if (error) logger.error('Erreur création notification email:', error); });
@@ -255,7 +255,7 @@ export const useUnifiedEmails = (options: UseUnifiedEmailsOptions = {}) => {
           const mapped = mapUnifiedRow(payload.new, myEmailsSet);
           setEmails(prev => [mapped, ...prev]);
           if (mapped.direction === 'received') {
-            toast.success(`📧 Nouveau email de ${mapped.from_name || mapped.from_email}`, { description: mapped.subject || 'Sans objet', duration: 5000 });
+            toast.success(`📧 Nouveau email de ${senderLabel(mapped)}`, { description: mapped.subject || 'Sans objet', duration: 5000 });
             createEmailNotification(mapped);
           }
         }
@@ -267,7 +267,7 @@ export const useUnifiedEmails = (options: UseUnifiedEmailsOptions = {}) => {
         (payload) => {
           const mapped = mapInboundRow(payload.new, myEmailsSet, myDomainsSet);
           setEmails(prev => [mapped, ...prev]);
-          toast.success(`📧 Nouveau email de ${mapped.from_name || mapped.from_email}`, { description: mapped.subject || 'Sans objet', duration: 5000 });
+          toast.success(`📧 Nouveau email de ${senderLabel(mapped)}`, { description: mapped.subject || 'Sans objet', duration: 5000 });
           createEmailNotification(mapped);
         }
       )
