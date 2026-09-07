@@ -3,6 +3,7 @@ import { ConfirmProvider } from "@/components/ui/confirm-dialog";
 import { Toaster } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
+import { TrailingSlashRedirect } from '@/components/TrailingSlashRedirect';
 import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
 import { ThemeProvider } from "next-themes";
 import { HelmetProvider } from "react-helmet-async";
@@ -217,6 +218,7 @@ const App = () => {
                 <ConfirmProvider>
                 <BrowserRouter>
                   <WebsiteConfigProvider>
+                    <TrailingSlashRedirect />
                     <PWAManifestSync />
                     <Toaster />
                     <WebsiteMenuSyncBridge />
