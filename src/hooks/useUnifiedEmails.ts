@@ -50,7 +50,18 @@ interface UseUnifiedEmailsOptions {
   autoLoad?: boolean;
 }
 
+// Certaines en-têtes IMAP donnent littéralement "null"/"undefined" comme nom.
+const cleanName = (value?: string | null): string | undefined => {
+  const v = (value ?? '').trim();
+  if (!v || ['null', 'undefined', '""', "''"].includes(v.toLowerCase())) return undefined;
+  return v.replace(/^["'<]+|["'>]+$/g, '').trim() || undefined;
+};
+
+export const senderLabel = (email: { from_name?: string; from_email?: string }): string =>
+  cleanName(email.from_name) || cleanName(email.from_email) || 'Expéditeur inconnu';
+
 const mapUnifiedRow = (ue: any, myEmailsSet: Set<string>): UnifiedEmail => {
+
   const direction = classifyDirection(ue.from_email || '', ue.to_email || '', ue.labels || [], myEmailsSet);
   return {
     id: ue.id, message_id: ue.message_id, direction,
