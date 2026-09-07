@@ -19,10 +19,17 @@ export const ContactNotesPanel: React.FC<Props> = ({ contactId, initialNotes, on
   const timer = useRef<ReturnType<typeof setTimeout>>();
   const lastSaved = useRef(initialNotes || '');
 
+  // Ne réinitialise l'éditeur que lors du changement de contact.
+  // Les mises à jour renvoyées par le parent après sauvegarde ne doivent jamais
+  // écraser ce que l'utilisateur est en train de taper.
+  const loadedContactId = useRef<string | null>(null);
   useEffect(() => {
+    if (loadedContactId.current === contactId) return;
+    loadedContactId.current = contactId;
     setValue(initialNotes || '');
     lastSaved.current = initialNotes || '';
   }, [contactId, initialNotes]);
+
 
   const save = async (next: string) => {
     if (next === lastSaved.current) return;
