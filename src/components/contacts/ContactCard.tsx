@@ -173,11 +173,11 @@ export const ContactCard: React.FC<ContactCardProps> = ({
               <span className="text-lg">{getRoleIcon(contact.role)}</span>
             </div>
             <div className="min-w-0 flex-1">
-              <h3 className="font-semibold text-base sm:text-lg truncate">
+              <h3 className="font-semibold text-base sm:text-lg break-words leading-snug">
                 {contact.first_name} {contact.last_name}
               </h3>
               {contact.position && (
-                <p className="text-sm text-muted-foreground truncate">{contact.position}</p>
+                <p className="text-sm text-muted-foreground break-words">{contact.position}</p>
               )}
               <Badge className={`${getStatusColor(contact.status)} mt-1 sm:hidden`}>
                 {contact.status}
