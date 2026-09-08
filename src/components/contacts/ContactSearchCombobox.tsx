@@ -52,8 +52,14 @@ export const ContactSearchCombobox: React.FC<ContactSearchComboboxProps> = ({
         </Button>
       </PopoverTrigger>
       <PopoverContent className="w-[400px] p-0 z-[9999]" align="start">
-        <Command shouldFilter={true}>
-          <CommandInput autoFocus placeholder="Rechercher un contact..." className="h-9" />
+        <Command shouldFilter={false}>
+          <CommandInput
+            autoFocus
+            placeholder="Rechercher un contact..."
+            className="h-9"
+            value={searchTerm}
+            onValueChange={setSearchTerm}
+          />
           <CommandList>
             <CommandEmpty>Aucun contact trouvé.</CommandEmpty>
             <CommandGroup className="max-h-64 overflow-auto">
@@ -61,6 +67,7 @@ export const ContactSearchCombobox: React.FC<ContactSearchComboboxProps> = ({
                 value=""
                 onSelect={() => {
                   onValueChange("");
+                  setSearchTerm('');
                   setOpen(false);
                 }}
               >
@@ -72,12 +79,20 @@ export const ContactSearchCombobox: React.FC<ContactSearchComboboxProps> = ({
                 />
                 Aucun contact
               </CommandItem>
-              {contacts.map((contact) => (
+              {contactsList
+                .filter((contact) => {
+                  const q = searchTerm.trim().toLowerCase();
+                  if (!q) return true;
+                  const hay = `${contact.first_name || ''} ${contact.last_name || ''} ${contact.email || ''}`.toLowerCase();
+                  return hay.includes(q);
+                })
+                .map((contact) => (
                 <CommandItem
                   key={contact.id}
                   value={`${contact.first_name} ${contact.last_name} ${contact.email || ''}`}
                   onSelect={() => {
                     onValueChange(contact.id);
+                    setSearchTerm('');
                     setOpen(false);
                   }}
                 >
