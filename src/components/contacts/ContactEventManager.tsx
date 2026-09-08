@@ -60,6 +60,16 @@ export const ContactEventManager: React.FC<ContactEventManagerProps> = ({
 
       if (error) throw error;
       
+      // Si l'événement n'a pas de contact principal, on définit celui-ci
+      const { data: ev } = await supabase
+        .from('events')
+        .select('contact_id')
+        .eq('id', eventId)
+        .maybeSingle();
+      if (!ev?.contact_id) {
+        await supabase.from('events').update({ contact_id: entity.id }).eq('id', eventId);
+      }
+
       toast.success('Contact lié à l\'événement avec succès');
       fetchLinkedContacts();
     } catch (error: any) {
@@ -85,6 +95,16 @@ export const ContactEventManager: React.FC<ContactEventManagerProps> = ({
 
       if (error) throw error;
       
+      // Si le contact retiré était le contact principal, on le retire aussi de l'événement
+      const { data: ev } = await supabase
+        .from('events')
+        .select('contact_id')
+        .eq('id', eventId)
+        .maybeSingle();
+      if (ev?.contact_id === contactId) {
+        await supabase.from('events').update({ contact_id: null }).eq('id', eventId);
+      }
+
       toast.success('Contact délié de l\'événement');
       fetchLinkedContacts();
     } catch {

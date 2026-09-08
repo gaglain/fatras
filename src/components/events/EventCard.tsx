@@ -78,6 +78,13 @@ export const EventCard: React.FC<EventCardProps> = ({
     }
   };
 
+  // Le contact affiché doit refléter les contacts réellement liés à l'événement.
+  // Si le contact "principal" enregistré n'est plus lié, on n'affiche plus son nom.
+  const displayContact: Contact | null =
+    linkedContacts.length > 0
+      ? (linkedContacts.find(c => c.id === event.contact_id) || linkedContacts[0])
+      : contact;
+
   const getStatusColor = (status: string) => {
     switch (status) {
       case 'confirmed': return 'bg-green-100 text-green-800 border-green-200';
@@ -147,10 +154,10 @@ export const EventCard: React.FC<EventCardProps> = ({
               </div>
 
               <div className="space-y-1">
-                {contact && (
+                {displayContact && (
                   <div className="flex items-center text-sm text-muted-foreground">
                     <User className="h-4 w-4 mr-1" />
-                    {contact.first_name} {contact.last_name}
+                    {displayContact.first_name} {displayContact.last_name}
                   </div>
                 )}
                 {linkedContacts.length > 0 && (
@@ -212,7 +219,7 @@ export const EventCard: React.FC<EventCardProps> = ({
         
         <ContactEventManager
           isOpen={contactManagerOpen}
-          onClose={() => setContactManagerOpen(false)}
+          onClose={() => { setContactManagerOpen(false); fetchLinkedContacts(); }}
           eventId={event.id!}
           eventTitle={event.title}
         />
@@ -282,10 +289,10 @@ export const EventCard: React.FC<EventCardProps> = ({
             </div>
           )}
 
-          {contact && (
+          {displayContact && (
             <div className="flex items-center text-sm text-muted-foreground">
               <User className="h-4 w-4 mr-2 flex-shrink-0" />
-              <span className="truncate">{contact.first_name} {contact.last_name}</span>
+              <span className="truncate">{displayContact.first_name} {displayContact.last_name}</span>
             </div>
           )}
 
@@ -335,7 +342,7 @@ export const EventCard: React.FC<EventCardProps> = ({
 
       <ContactEventManager
         isOpen={contactManagerOpen}
-        onClose={() => setContactManagerOpen(false)}
+        onClose={() => { setContactManagerOpen(false); fetchLinkedContacts(); }}
         eventId={event.id!}
         eventTitle={event.title}
       />
