@@ -266,25 +266,25 @@ export const QuoteTemplateManager: React.FC<QuoteTemplateManagerProps> = ({
 
             <div className="space-y-3">
               {formData.items.map((item, index) => (
-                <Card key={index} className="p-3">
-                  <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-3">
-                    <div className="space-y-1.5">
-                      <Label>Nom de l'élément</Label>
-                      <Input
-                        value={item.name}
-                        onChange={(e) => updateItem(index, 'name', e.target.value)}
-                        placeholder="Service ou produit"
-                      />
-                    </div>
-                    <div className="space-y-1.5">
-                      <Label>Description</Label>
-                      <Input
-                        value={item.description}
-                        onChange={(e) => updateItem(index, 'description', e.target.value)}
-                        placeholder="Détails"
-                      />
-                    </div>
-                    <div className="space-y-1.5">
+                <Card key={index} className="p-3 space-y-3">
+                  <div className="space-y-1.5">
+                    <Label>Nom de l'élément</Label>
+                    <Input
+                      value={item.name}
+                      onChange={(e) => updateItem(index, 'name', e.target.value)}
+                      placeholder="Service ou produit"
+                    />
+                  </div>
+                  <div className="space-y-1.5">
+                    <Label>Description</Label>
+                    <Input
+                      value={item.description}
+                      onChange={(e) => updateItem(index, 'description', e.target.value)}
+                      placeholder="Détails"
+                    />
+                  </div>
+                  <div className="flex items-end gap-2">
+                    <div className="w-24 shrink-0 space-y-1.5">
                       <Label>Quantité</Label>
                       <Input
                         type="number"
@@ -293,28 +293,26 @@ export const QuoteTemplateManager: React.FC<QuoteTemplateManagerProps> = ({
                         min="1"
                       />
                     </div>
-                    <div className="flex items-end gap-2">
-                      <div className="flex-1 space-y-1.5">
-                        <Label>Prix unitaire (€)</Label>
-                        <Input
-                          type="number"
-                          step="0.01"
-                          value={item.unit_price}
-                          onChange={(e) => updateItem(index, 'unit_price', parseFloat(e.target.value) || 0)}
-                          min="0"
-                        />
-                      </div>
-                      {formData.items.length > 1 && (
-                        <Button
-                          onClick={() => removeItem(index)}
-                          variant="outline"
-                          size="sm"
-                          className="text-destructive shrink-0"
-                        >
-                          <Trash2 className="h-4 w-4" />
-                        </Button>
-                      )}
+                    <div className="flex-1 space-y-1.5">
+                      <Label>Prix unitaire (€)</Label>
+                      <Input
+                        type="number"
+                        step="0.01"
+                        value={item.unit_price}
+                        onChange={(e) => updateItem(index, 'unit_price', parseFloat(e.target.value) || 0)}
+                        min="0"
+                      />
                     </div>
+                    {formData.items.length > 1 && (
+                      <Button
+                        onClick={() => removeItem(index)}
+                        variant="outline"
+                        size="icon"
+                        className="text-destructive shrink-0"
+                      >
+                        <Trash2 className="h-4 w-4" />
+                      </Button>
+                    )}
                   </div>
                 </Card>
               ))}
