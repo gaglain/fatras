@@ -68,10 +68,10 @@ export const ContactCard: React.FC<ContactCardProps> = ({
                 <span className="text-sm">{getRoleIcon(contact.role)}</span>
               </div>
               <div className="flex-1 min-w-0">
-                <h3 className="font-semibold text-base truncate">
+                <h3 className="font-semibold text-base break-words leading-snug">
                   {contact.first_name} {contact.last_name}
                 </h3>
-                <div className="flex items-center space-x-4 text-sm text-muted-foreground">
+                <div className="flex flex-wrap items-center gap-x-4 gap-y-0.5 text-sm text-muted-foreground">
                   {contact.position && <span>{contact.position}</span>}
                   {contact.company && <span>{contact.company}</span>}
                   {contact.city && <span>{contact.city}</span>}
