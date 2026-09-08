@@ -145,10 +145,28 @@ export const Contacts: React.FC = () => {
         supabase.from('contact_artists').select('contact_id, artist_id').in('contact_id', contactIds),
       ]);
       if (!eventsRes.error && eventsRes.data) {
-        setContactEvents(prev => { const next = { ...prev }; for (const ce of eventsRes.data) { const arr = next[ce.contact_id] ?? []; if (!arr.includes(ce.event_id)) next[ce.contact_id] = [...arr, ce.event_id]; } return next; });
+        setContactEvents(prev => {
+          const next: Record<string, string[]> = { ...prev };
+          const seen = new Map<string, Set<string>>();
+          for (const ce of eventsRes.data) {
+            let set = seen.get(ce.contact_id);
+            if (!set) { set = new Set(next[ce.contact_id] ?? []); seen.set(ce.contact_id, set); next[ce.contact_id] = next[ce.contact_id] ? [...next[ce.contact_id]] : []; }
+            if (!set.has(ce.event_id)) { set.add(ce.event_id); next[ce.contact_id].push(ce.event_id); }
+          }
+          return next;
+        });
       }
       if (!artistsRes.error && artistsRes.data) {
-        setContactArtists(prev => { const next = { ...prev }; for (const ca of artistsRes.data) { const arr = next[ca.contact_id] ?? []; if (!arr.includes(ca.artist_id)) next[ca.contact_id] = [...arr, ca.artist_id]; } return next; });
+        setContactArtists(prev => {
+          const next: Record<string, string[]> = { ...prev };
+          const seen = new Map<string, Set<string>>();
+          for (const ca of artistsRes.data) {
+            let set = seen.get(ca.contact_id);
+            if (!set) { set = new Set(next[ca.contact_id] ?? []); seen.set(ca.contact_id, set); next[ca.contact_id] = next[ca.contact_id] ? [...next[ca.contact_id]] : []; }
+            if (!set.has(ca.artist_id)) { set.add(ca.artist_id); next[ca.contact_id].push(ca.artist_id); }
+          }
+          return next;
+        });
       }
     } catch {}
   };
