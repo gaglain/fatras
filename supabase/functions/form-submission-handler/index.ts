@@ -75,15 +75,24 @@ serve(async (req: Request) => {
 
     const { formId, data, honeypot }: FormSubmissionPayload = await req.json();
 
-    // Honeypot anti-spam check
+    // Honeypot anti-spam check — only reject when the payload also looks non-human
+    // (browser/password-manager autofill used to trigger false positives and silently drop
+    // real submissions).
     if (honeypot && honeypot.trim() !== '') {
-      console.log("🤖 Bot detected via honeypot, rejecting submission");
-      // Return fake success to not alert the bot
-      return new Response(
-        JSON.stringify({ success: true, submissionId: "fake_id", emailSent: false }),
-        { status: 200, headers: { "Content-Type": "application/json", ...corsHeaders } }
+      const looksHuman = Object.values(data || {}).some((v) =>
+        typeof v === 'string' && /^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/.test(v.trim())
       );
+      if (!looksHuman) {
+        console.log("🤖 Bot detected via honeypot, rejecting submission");
+        // Return fake success to not alert the bot
+        return new Response(
+          JSON.stringify({ success: true, submissionId: "fake_id", emailSent: false }),
+          { status: 200, headers: { "Content-Type": "application/json", ...corsHeaders } }
+        );
+      }
+      console.warn("⚠️ Honeypot rempli mais soumission valide (autofill probable) — traitement maintenu");
     }
+
 
     if (!formId || !data) {
       return new Response(JSON.stringify({ error: "Missing formId or data" }), {
