@@ -109,7 +109,7 @@ export const FormRendererStepped: React.FC<FormRendererSteppedProps> = ({ form, 
     <FormThemeWrapper theme={theme}>
       <div ref={containerRef} className="min-h-[50vh] sm:min-h-[60vh] flex flex-col">
         <div className="absolute left-[-9999px]" aria-hidden="true" style={{ position: 'absolute', left: '-9999px' }}>
-          <Input type="text" name="fx_hp_check" id="fx_hp_check" value={honeypot} onChange={(e) => setHoneypot(e.target.value)} tabIndex={-1} autoComplete="off" data-lpignore="true" data-form-type="other" />
+          <input type="text" name="fx_hp_check" id="fx_hp_check" value={honeypot} onChange={(e) => setHoneypot(e.target.value)} tabIndex={-1} autoComplete="off" readOnly data-lpignore="true" data-form-type="other" />
         </div>
 
         {form.settings.showProgressBar !== false && (

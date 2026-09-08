@@ -75,15 +75,17 @@ serve(async (req: Request) => {
 
     const { formId, data, honeypot }: FormSubmissionPayload = await req.json();
 
-    // Honeypot anti-spam check — only reject when the payload also looks non-human
-    // (browser/password-manager autofill used to trigger false positives and silently drop
-    // real submissions).
+    // Honeypot anti-spam check — only reject when the rest of the payload is empty.
+    // Browser / password-manager autofill fills the hidden trap on legitimate submissions,
+    // which used to silently drop real answers (including forms without a required email).
     if (honeypot && honeypot.trim() !== '') {
-      const looksHuman = Object.values(data || {}).some((v) =>
-        typeof v === 'string' && /^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/.test(v.trim())
-      );
-      if (!looksHuman) {
-        console.log("🤖 Bot detected via honeypot, rejecting submission");
+      const filledCount = Object.values(data || {}).filter((v) => {
+        if (v === null || v === undefined) return false;
+        if (Array.isArray(v)) return v.length > 0;
+        return String(v).trim() !== '';
+      }).length;
+      if (filledCount < 2) {
+        console.log("🤖 Bot detected via honeypot (payload quasi vide), rejecting submission");
         // Return fake success to not alert the bot
         return new Response(
           JSON.stringify({ success: true, submissionId: "fake_id", emailSent: false }),
