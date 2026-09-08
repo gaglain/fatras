@@ -5,9 +5,7 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
-import { Plus, Trash2, Edit, Save, Copy, File } from 'lucide-react';
+import { Plus, Trash2, Edit, Save, Copy, File, ArrowLeft } from 'lucide-react';
 import { useConfirm } from '@/components/ui/confirm-dialog';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/hooks/useAuth';
@@ -35,21 +33,24 @@ interface QuoteTemplateManagerProps {
   onApplyTemplate?: (template: QuoteTemplate) => void;
 }
 
+const emptyForm = () => ({
+  name: '',
+  description: '',
+  category: 'standard',
+  default_terms: 'Paiement à 30 jours. Acompte de 30% à la signature.',
+  items: [{ name: '', description: '', quantity: 1, unit_price: 0 }] as TemplateItem[]
+});
+
 export const QuoteTemplateManager: React.FC<QuoteTemplateManagerProps> = ({
   onApplyTemplate
 }) => {
   const { user } = useAuth();
   const [templates, setTemplates] = useState<QuoteTemplate[]>([]);
   const [loading, setLoading] = useState(true);
-  const [showCreateDialog, setShowCreateDialog] = useState(false);
+  const [saving, setSaving] = useState(false);
+  const [showForm, setShowForm] = useState(false);
   const [editingTemplate, setEditingTemplate] = useState<QuoteTemplate | null>(null);
-  const [formData, setFormData] = useState({
-    name: '',
-    description: '',
-    category: 'standard',
-    default_terms: 'Paiement à 30 jours. Acompte de 30% à la signature.',
-    items: [{ name: '', description: '', quantity: 1, unit_price: 0 }] as TemplateItem[]
-  });
+  const [formData, setFormData] = useState(emptyForm());
 
   useEffect(() => {
     fetchTemplates();
@@ -68,7 +69,7 @@ export const QuoteTemplateManager: React.FC<QuoteTemplateManagerProps> = ({
       if (error) throw error;
       setTemplates((data || []).map(template => ({
         ...template,
-        default_items: Array.isArray(template.default_items) 
+        default_items: Array.isArray(template.default_items)
           ? (template.default_items as unknown as TemplateItem[])
           : typeof template.default_items === 'string'
           ? JSON.parse(template.default_items) as TemplateItem[]
@@ -95,30 +96,33 @@ export const QuoteTemplateManager: React.FC<QuoteTemplateManagerProps> = ({
       return;
     }
 
+    setSaving(true);
     try {
       const templateData = {
         name: formData.name,
         description: formData.description,
         category: formData.category,
         default_terms: formData.default_terms,
-        default_items: JSON.stringify(formData.items)
+        default_items: formData.items as unknown as never
       };
 
       if (editingTemplate) {
-        const { error } = await supabase
+        const { data, error } = await supabase
           .from('quote_templates')
           .update(templateData)
-          .eq('id', editingTemplate.id);
+          .eq('id', editingTemplate.id)
+          .select('id');
 
         if (error) throw error;
+        if (!data || data.length === 0) {
+          toast.error("Modification refusée : ce modèle n'est pas modifiable par votre compte");
+          return;
+        }
         toast.success('Modèle mis à jour avec succès');
       } else {
         const { error } = await supabase
           .from('quote_templates')
-          .insert([{
-            user_id: user.id,
-            ...templateData
-          }]);
+          .insert([{ user_id: user.id, ...templateData }]);
 
         if (error) throw error;
         toast.success('Modèle créé avec succès');
@@ -126,9 +130,11 @@ export const QuoteTemplateManager: React.FC<QuoteTemplateManagerProps> = ({
 
       resetForm();
       fetchTemplates();
-    } catch (error) {
+    } catch (error: any) {
       console.error('Erreur lors de la sauvegarde du modèle:', error);
-      toast.error('Erreur lors de la sauvegarde du modèle');
+      toast.error(error?.message || 'Erreur lors de la sauvegarde du modèle');
+    } finally {
+      setSaving(false);
     }
   };
 
@@ -161,19 +167,13 @@ export const QuoteTemplateManager: React.FC<QuoteTemplateManagerProps> = ({
       default_terms: template.default_terms || '',
       items: template.default_items.length > 0 ? template.default_items : [{ name: '', description: '', quantity: 1, unit_price: 0 }]
     });
-    setShowCreateDialog(true);
+    setShowForm(true);
   };
 
   const resetForm = () => {
-    setFormData({
-      name: '',
-      description: '',
-      category: 'standard',
-      default_terms: 'Paiement à 30 jours. Acompte de 30% à la signature.',
-      items: [{ name: '', description: '', quantity: 1, unit_price: 0 }]
-    });
+    setFormData(emptyForm());
     setEditingTemplate(null);
-    setShowCreateDialog(false);
+    setShowForm(false);
   };
 
   const addItem = () => {
@@ -193,170 +193,174 @@ export const QuoteTemplateManager: React.FC<QuoteTemplateManagerProps> = ({
   const updateItem = (index: number, field: keyof TemplateItem, value: any) => {
     setFormData(prev => ({
       ...prev,
-      items: prev.items.map((item, i) => 
+      items: prev.items.map((item, i) =>
         i === index ? { ...item, [field]: value } : item
       )
     }));
   };
 
   if (loading) {
-    return <div>Chargement des modèles...</div>;
+    return <div className="p-4 text-sm text-muted-foreground">Chargement des modèles...</div>;
+  }
+
+  if (showForm) {
+    return (
+      <Card className="border-0 shadow-none sm:border sm:shadow-sm">
+        <CardHeader className="p-3 sm:p-6">
+          <div className="flex items-center gap-2">
+            <Button variant="ghost" size="sm" onClick={resetForm} className="shrink-0">
+              <ArrowLeft className="h-4 w-4" />
+            </Button>
+            <CardTitle className="text-base sm:text-lg">
+              {editingTemplate ? 'Modifier le modèle' : 'Créer un nouveau modèle'}
+            </CardTitle>
+          </div>
+        </CardHeader>
+        <CardContent className="p-3 pt-0 sm:p-6 sm:pt-0 space-y-5">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div className="space-y-1.5">
+              <Label htmlFor="templateName">Nom du modèle *</Label>
+              <Input
+                id="templateName"
+                value={formData.name}
+                onChange={(e) => setFormData(prev => ({ ...prev, name: e.target.value }))}
+                placeholder="Ex: Spectacle standard"
+              />
+            </div>
+            <div className="space-y-1.5">
+              <Label htmlFor="templateCategory">Catégorie</Label>
+              <Select value={formData.category} onValueChange={(value) => setFormData(prev => ({ ...prev, category: value }))}>
+                <SelectTrigger id="templateCategory">
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="standard">Standard</SelectItem>
+                  <SelectItem value="spectacle">Spectacle</SelectItem>
+                  <SelectItem value="formation">Formation</SelectItem>
+                  <SelectItem value="location">Location</SelectItem>
+                  <SelectItem value="autre">Autre</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+          </div>
+
+          <div className="space-y-1.5">
+            <Label htmlFor="templateDescription">Description</Label>
+            <Textarea
+              id="templateDescription"
+              value={formData.description}
+              onChange={(e) => setFormData(prev => ({ ...prev, description: e.target.value }))}
+              placeholder="Description du modèle"
+              rows={2}
+            />
+          </div>
+
+          <div>
+            <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between mb-3">
+              <Label>Éléments par défaut</Label>
+              <Button onClick={addItem} variant="outline" size="sm" className="w-full sm:w-auto">
+                <Plus className="h-4 w-4 mr-1" />
+                Ajouter un élément
+              </Button>
+            </div>
+
+            <div className="space-y-3">
+              {formData.items.map((item, index) => (
+                <Card key={index} className="p-3">
+                  <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-3">
+                    <div className="space-y-1.5">
+                      <Label>Nom de l'élément</Label>
+                      <Input
+                        value={item.name}
+                        onChange={(e) => updateItem(index, 'name', e.target.value)}
+                        placeholder="Service ou produit"
+                      />
+                    </div>
+                    <div className="space-y-1.5">
+                      <Label>Description</Label>
+                      <Input
+                        value={item.description}
+                        onChange={(e) => updateItem(index, 'description', e.target.value)}
+                        placeholder="Détails"
+                      />
+                    </div>
+                    <div className="space-y-1.5">
+                      <Label>Quantité</Label>
+                      <Input
+                        type="number"
+                        value={item.quantity}
+                        onChange={(e) => updateItem(index, 'quantity', parseInt(e.target.value) || 0)}
+                        min="1"
+                      />
+                    </div>
+                    <div className="flex items-end gap-2">
+                      <div className="flex-1 space-y-1.5">
+                        <Label>Prix unitaire (€)</Label>
+                        <Input
+                          type="number"
+                          step="0.01"
+                          value={item.unit_price}
+                          onChange={(e) => updateItem(index, 'unit_price', parseFloat(e.target.value) || 0)}
+                          min="0"
+                        />
+                      </div>
+                      {formData.items.length > 1 && (
+                        <Button
+                          onClick={() => removeItem(index)}
+                          variant="outline"
+                          size="sm"
+                          className="text-destructive shrink-0"
+                        >
+                          <Trash2 className="h-4 w-4" />
+                        </Button>
+                      )}
+                    </div>
+                  </div>
+                </Card>
+              ))}
+            </div>
+          </div>
+
+          <div className="space-y-1.5">
+            <Label htmlFor="templateTerms">Conditions générales par défaut</Label>
+            <Textarea
+              id="templateTerms"
+              value={formData.default_terms}
+              onChange={(e) => setFormData(prev => ({ ...prev, default_terms: e.target.value }))}
+              placeholder="Conditions de paiement, délais, etc."
+              rows={3}
+            />
+          </div>
+
+          <div className="flex flex-col-reverse gap-2 sm:flex-row sm:justify-end">
+            <Button variant="outline" onClick={resetForm} className="w-full sm:w-auto">
+              Annuler
+            </Button>
+            <Button onClick={handleSaveTemplate} disabled={saving} className="w-full sm:w-auto">
+              <Save className="h-4 w-4 mr-2" />
+              {editingTemplate ? 'Enregistrer' : 'Créer'} le modèle
+            </Button>
+          </div>
+        </CardContent>
+      </Card>
+    );
   }
 
   return (
-    <Card>
-      <CardHeader>
-        <div className="flex items-center justify-between">
-          <CardTitle className="flex items-center gap-2">
+    <Card className="border-0 shadow-none sm:border sm:shadow-sm">
+      <CardHeader className="p-3 sm:p-6">
+        <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+          <CardTitle className="flex items-center gap-2 text-base sm:text-lg">
             <File className="h-5 w-5" />
             Modèles de Devis
           </CardTitle>
-          <Dialog open={showCreateDialog} onOpenChange={setShowCreateDialog}>
-            <DialogTrigger asChild>
-              <Button onClick={() => setShowCreateDialog(true)}>
-                <Plus className="h-4 w-4 mr-2" />
-                Nouveau Modèle
-              </Button>
-            </DialogTrigger>
-            <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto">
-              <DialogHeader>
-                <DialogTitle>
-                  {editingTemplate ? 'Modifier le modèle' : 'Créer un nouveau modèle'}
-                </DialogTitle>
-              </DialogHeader>
-              
-              <div className="space-y-6">
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                  <div>
-                    <Label htmlFor="templateName">Nom du modèle *</Label>
-                    <Input
-                      id="templateName"
-                      value={formData.name}
-                      onChange={(e) => setFormData(prev => ({ ...prev, name: e.target.value }))}
-                      placeholder="Ex: Spectacle standard"
-                    />
-                  </div>
-                  <div>
-                    <Label htmlFor="templateCategory">Catégorie</Label>
-                    <Select value={formData.category} onValueChange={(value) => setFormData(prev => ({ ...prev, category: value }))}>
-                      <SelectTrigger>
-                        <SelectValue />
-                      </SelectTrigger>
-                      <SelectContent>
-                        <SelectItem value="standard">Standard</SelectItem>
-                        <SelectItem value="spectacle">Spectacle</SelectItem>
-                        <SelectItem value="formation">Formation</SelectItem>
-                        <SelectItem value="location">Location</SelectItem>
-                        <SelectItem value="autre">Autre</SelectItem>
-                      </SelectContent>
-                    </Select>
-                  </div>
-                </div>
-
-                <div>
-                  <Label htmlFor="templateDescription">Description</Label>
-                  <Textarea
-                    id="templateDescription"
-                    value={formData.description}
-                    onChange={(e) => setFormData(prev => ({ ...prev, description: e.target.value }))}
-                    placeholder="Description du modèle"
-                    rows={2}
-                  />
-                </div>
-
-                {/* Items du modèle */}
-                <div>
-                  <div className="flex items-center justify-between mb-4">
-                    <Label>Éléments par défaut</Label>
-                    <Button onClick={addItem} variant="outline" size="sm">
-                      <Plus className="h-4 w-4 mr-1" />
-                      Ajouter un élément
-                    </Button>
-                  </div>
-
-                  <div className="space-y-4">
-                    {formData.items.map((item, index) => (
-                      <Card key={index} className="p-4">
-                        <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-                          <div>
-                            <Label>Nom de l'élément</Label>
-                            <Input
-                              value={item.name}
-                              onChange={(e) => updateItem(index, 'name', e.target.value)}
-                              placeholder="Service ou produit"
-                            />
-                          </div>
-                          <div>
-                            <Label>Description</Label>
-                            <Input
-                              value={item.description}
-                              onChange={(e) => updateItem(index, 'description', e.target.value)}
-                              placeholder="Détails"
-                            />
-                          </div>
-                          <div>
-                            <Label>Quantité</Label>
-                            <Input
-                              type="number"
-                              value={item.quantity}
-                              onChange={(e) => updateItem(index, 'quantity', parseInt(e.target.value) || 0)}
-                              min="1"
-                            />
-                          </div>
-                          <div className="flex items-end space-x-2">
-                            <div className="flex-1">
-                              <Label>Prix unitaire (€)</Label>
-                              <Input
-                                type="number"
-                                step="0.01"
-                                value={item.unit_price}
-                                onChange={(e) => updateItem(index, 'unit_price', parseFloat(e.target.value) || 0)}
-                                min="0"
-                              />
-                            </div>
-                            {formData.items.length > 1 && (
-                              <Button
-                                onClick={() => removeItem(index)}
-                                variant="outline"
-                                size="sm"
-                                className="text-red-600"
-                              >
-                                <Trash2 className="h-4 w-4" />
-                              </Button>
-                            )}
-                          </div>
-                        </div>
-                      </Card>
-                    ))}
-                  </div>
-                </div>
-
-                <div>
-                  <Label htmlFor="templateTerms">Conditions générales par défaut</Label>
-                  <Textarea
-                    id="templateTerms"
-                    value={formData.default_terms}
-                    onChange={(e) => setFormData(prev => ({ ...prev, default_terms: e.target.value }))}
-                    placeholder="Conditions de paiement, délais, etc."
-                    rows={3}
-                  />
-                </div>
-
-                <div className="flex justify-end space-x-2">
-                  <Button variant="outline" onClick={resetForm}>
-                    Annuler
-                  </Button>
-                  <Button onClick={handleSaveTemplate}>
-                    <Save className="h-4 w-4 mr-2" />
-                    {editingTemplate ? 'Modifier' : 'Créer'} le modèle
-                  </Button>
-                </div>
-              </div>
-            </DialogContent>
-          </Dialog>
+          <Button onClick={() => { setEditingTemplate(null); setFormData(emptyForm()); setShowForm(true); }} className="w-full sm:w-auto">
+            <Plus className="h-4 w-4 mr-2" />
+            Nouveau Modèle
+          </Button>
         </div>
       </CardHeader>
-      <CardContent>
+      <CardContent className="p-3 pt-0 sm:p-6 sm:pt-0">
         {templates.length === 0 ? (
           <div className="text-center py-8 text-muted-foreground">
             <File className="h-12 w-12 mx-auto mb-4 text-muted-foreground/50" />
@@ -364,64 +368,56 @@ export const QuoteTemplateManager: React.FC<QuoteTemplateManagerProps> = ({
             <p className="text-sm">Créez votre premier modèle pour gagner du temps</p>
           </div>
         ) : (
-          <Table>
-            <TableHeader>
-              <TableRow>
-                <TableHead>Nom</TableHead>
-                <TableHead>Catégorie</TableHead>
-                <TableHead>Description</TableHead>
-                <TableHead>Éléments</TableHead>
-                <TableHead>Actions</TableHead>
-              </TableRow>
-            </TableHeader>
-            <TableBody>
-              {templates.map((template) => (
-                <TableRow key={template.id}>
-                  <TableCell className="font-medium">{template.name}</TableCell>
-                  <TableCell>
-                    <span className="px-2 py-1 rounded-full text-xs bg-blue-100 text-blue-800">
+          <div className="space-y-3">
+            {templates.map((template) => (
+              <div key={template.id} className="rounded-lg border p-3 sm:flex sm:items-center sm:justify-between sm:gap-4">
+                <div className="min-w-0">
+                  <div className="flex flex-wrap items-center gap-2">
+                    <span className="font-medium break-words">{template.name}</span>
+                    <span className="px-2 py-0.5 rounded-full text-xs bg-accent text-accent-foreground">
                       {template.category}
                     </span>
-                  </TableCell>
-                  <TableCell className="text-muted-foreground">
-                    {template.description || '-'}
-                  </TableCell>
-                  <TableCell>
+                  </div>
+                  <p className="text-sm text-muted-foreground mt-1 break-words">
+                    {template.description || '—'}
+                  </p>
+                  <p className="text-xs text-muted-foreground mt-1">
                     {template.default_items.length} élément(s)
-                  </TableCell>
-                  <TableCell>
-                    <div className="flex space-x-2">
-                      {onApplyTemplate && (
-                        <Button
-                          variant="outline"
-                          size="sm"
-                          onClick={() => onApplyTemplate(template)}
-                        >
-                          <Copy className="h-4 w-4 mr-1" />
-                          Utiliser
-                        </Button>
-                      )}
-                      <Button
-                        variant="outline"
-                        size="sm"
-                        onClick={() => handleEditTemplate(template)}
-                      >
-                        <Edit className="h-4 w-4" />
-                      </Button>
-                      <Button
-                        variant="outline"
-                        size="sm"
-                        onClick={() => handleDeleteTemplate(template.id)}
-                        className="text-red-600 hover:text-red-800"
-                      >
-                        <Trash2 className="h-4 w-4" />
-                      </Button>
-                    </div>
-                  </TableCell>
-                </TableRow>
-              ))}
-            </TableBody>
-          </Table>
+                  </p>
+                </div>
+                <div className="flex flex-wrap gap-2 mt-3 sm:mt-0 sm:shrink-0">
+                  {onApplyTemplate && (
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={() => onApplyTemplate(template)}
+                      className="flex-1 sm:flex-initial"
+                    >
+                      <Copy className="h-4 w-4 mr-1" />
+                      Utiliser
+                    </Button>
+                  )}
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={() => handleEditTemplate(template)}
+                    className="flex-1 sm:flex-initial"
+                  >
+                    <Edit className="h-4 w-4 mr-1" />
+                    Modifier
+                  </Button>
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={() => handleDeleteTemplate(template.id)}
+                    className="text-destructive flex-1 sm:flex-initial"
+                  >
+                    <Trash2 className="h-4 w-4" />
+                  </Button>
+                </div>
+              </div>
+            ))}
+          </div>
         )}
       </CardContent>
     </Card>
