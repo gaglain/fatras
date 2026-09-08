@@ -303,7 +303,7 @@ export const Contracts: React.FC = () => {
       </Dialog>
 
       <Dialog open={showTemplates} onOpenChange={setShowTemplates}>
-        <DialogContent className="max-w-6xl max-h-[90vh] overflow-y-auto">
+        <DialogContent className="w-[calc(100vw-1.5rem)] max-w-6xl max-h-[90vh] overflow-y-auto p-4 sm:p-6">
           <DialogHeader><DialogTitle>Modèles de Devis</DialogTitle></DialogHeader>
           <QuoteTemplateManager onApplyTemplate={handleApplyTemplate} />
         </DialogContent>
