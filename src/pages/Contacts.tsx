@@ -175,19 +175,25 @@ export const Contacts: React.FC = () => {
   const fetchEvents = async () => { try { const { data } = await supabase.from('events').select('id, title').order('start_date', { ascending: false }); setEvents(data || []); } catch {} };
   const fetchArtists = async () => { try { const { data } = await supabase.from('centralized_artists').select('id, name').order('name'); setArtists(data || []); } catch {} };
 
-  const filterContacts = () => {
-    let filtered = contacts;
-    if (searchTerm) filtered = filtered.filter(c => `${c.first_name} ${c.last_name}`.toLowerCase().includes(searchTerm.toLowerCase()) || c.email?.toLowerCase().includes(searchTerm.toLowerCase()) || c.position?.toLowerCase().includes(searchTerm.toLowerCase()) || c.city?.toLowerCase().includes(searchTerm.toLowerCase()) || c.company?.toLowerCase().includes(searchTerm.toLowerCase()));
-    if (statusFilter !== 'all') filtered = filtered.filter(c => c.status === statusFilter);
-    if (roleFilter !== 'all') filtered = filtered.filter(c => c.role === roleFilter);
-    if (tagFilters.length > 0) filtered = filtered.filter(c => c.tags && c.tags.some(tag => tagFilters.includes(tag)));
-    if (sourceFilter !== 'all') filtered = filtered.filter(c => c.source === sourceFilter);
-    if (cityFilter !== 'all') filtered = filtered.filter(c => c.city === cityFilter);
-    if (departmentFilter) filtered = filtered.filter(c => c.postal_code && c.postal_code.startsWith(departmentFilter));
-    if (eventFilter !== 'all') filtered = filtered.filter(c => c.id && (contactEvents[c.id] || []).includes(eventFilter));
-    if (artistFilter !== 'all') filtered = filtered.filter(c => c.id && (contactArtists[c.id] || []).includes(artistFilter));
-    setFilteredContacts(filtered);
-  };
+  // Derived (memoized) filtering: single pass, no extra render cycle
+  const filteredContacts = useMemo(() => {
+    const q = debouncedSearch.trim().toLowerCase();
+    return contacts.filter((c) => {
+      if (q) {
+        const haystack = `${c.first_name || ''} ${c.last_name || ''} ${c.email || ''} ${c.position || ''} ${c.city || ''} ${c.company || ''}`.toLowerCase();
+        if (!haystack.includes(q)) return false;
+      }
+      if (statusFilter !== 'all' && c.status !== statusFilter) return false;
+      if (roleFilter !== 'all' && c.role !== roleFilter) return false;
+      if (tagFilters.length > 0 && !(c.tags && c.tags.some(tag => tagFilters.includes(tag)))) return false;
+      if (sourceFilter !== 'all' && c.source !== sourceFilter) return false;
+      if (cityFilter !== 'all' && c.city !== cityFilter) return false;
+      if (departmentFilter && !(c.postal_code && c.postal_code.startsWith(departmentFilter))) return false;
+      if (eventFilter !== 'all' && !(c.id && (contactEvents[c.id] || []).includes(eventFilter))) return false;
+      if (artistFilter !== 'all' && !(c.id && (contactArtists[c.id] || []).includes(artistFilter))) return false;
+      return true;
+    });
+  }, [contacts, debouncedSearch, statusFilter, roleFilter, tagFilters, sourceFilter, cityFilter, departmentFilter, eventFilter, artistFilter, contactEvents, contactArtists]);
 
   const confirmAction = useConfirm();
   const handleDelete = async (id: string) => {
