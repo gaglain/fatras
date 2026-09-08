@@ -158,7 +158,7 @@ export const useMessagingOptimized = () => {
 
   useEffect(() => {
     if (!user?.id) return;
-    const channel = supabase.channel(`msg-rt-${user.id}-${Date.now()}`)
+    const channel = supabase.channel(`msg-rt-${user.id}`)
       .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'messaging_messages' }, async (payload) => {
         const newMessage = payload.new as Message;
         let userProfile: UserProfile | undefined;
