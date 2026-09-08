@@ -279,7 +279,7 @@ export const FormRenderer: React.FC<FormRendererProps> = ({ form, onSubmit }) =>
               aria-hidden="true"
               style={{ position: 'absolute', left: '-9999px' }}
             >
-              <Input
+              <input
                 type="text"
                 name="fx_hp_check"
                 id="fx_hp_check"
@@ -287,6 +287,7 @@ export const FormRenderer: React.FC<FormRendererProps> = ({ form, onSubmit }) =>
                 onChange={(e) => setHoneypot(e.target.value)}
                 tabIndex={-1}
                 autoComplete="off"
+                readOnly
                 data-lpignore="true"
                 data-form-type="other"
               />
