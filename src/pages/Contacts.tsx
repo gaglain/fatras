@@ -72,7 +72,7 @@ export const Contacts: React.FC = () => {
 
   // Auto-load all remaining pages when any filter is active so search/filters cover the full DB
   const hasActiveFilter = (
-    searchTerm.trim() !== '' ||
+    debouncedSearch.trim() !== '' ||
     statusFilter !== 'all' ||
     roleFilter !== 'all' ||
     tagFilters.length > 0 ||
