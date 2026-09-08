@@ -425,14 +425,15 @@ export const useUnifiedAuth = () => {
 // Backward compatibility hooks
 export const useAuthContext = () => {
   const { authUser, session, loading, signIn, signUp, signOut } = useUnifiedAuth();
-  return {
+  // Memoized so consumers with `[auth]` style deps don't refetch on every render
+  return React.useMemo(() => ({
     user: authUser,
     session,
     loading,
     signIn,
     signUp,
     signOut
-  };
+  }), [authUser, session, loading, signIn, signUp, signOut]);
 };
 
 export const useUser = () => {

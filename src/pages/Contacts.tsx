@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useMemo, useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Plus, Upload, Download, Mail, List, Grid, LayoutList, Loader2, Merge, Users, MailWarning } from 'lucide-react';
@@ -31,7 +31,7 @@ export const Contacts: React.FC = () => {
   const { contactLists, createContactList } = useContactLists();
 
   const [contacts, setContacts] = useState<Contact[]>([]);
-  const [filteredContacts, setFilteredContacts] = useState<Contact[]>([]);
+  const [debouncedSearch, setDebouncedSearch] = useState('');
   const [loading, setLoading] = useState(true);
   const [dialogOpen, setDialogOpen] = useState(false);
   const [editingContact, setEditingContact] = useState<Contact | null>(null);
@@ -62,12 +62,17 @@ export const Contacts: React.FC = () => {
   const [totalContactsCount, setTotalContactsCount] = useState<number>(0);
   const [contactStats, setContactStats] = useState({ total: 0, clients: 0, prospects: 0, inactifs: 0 });
 
-  useEffect(() => { if (user) { fetchContacts({ reset: true }); fetchEvents(); fetchArtists(); } }, [user]);
-  useEffect(() => { filterContacts(); }, [contacts, searchTerm, statusFilter, roleFilter, tagFilters, sourceFilter, cityFilter, departmentFilter, eventFilter, artistFilter, contactEvents, contactArtists]);
+  useEffect(() => { if (user?.id) { fetchContacts({ reset: true }); fetchEvents(); fetchArtists(); } }, [user?.id]);
+
+  // Debounce the search input so typing never re-filters thousands of rows on every keystroke
+  useEffect(() => {
+    const t = setTimeout(() => setDebouncedSearch(searchTerm), 250);
+    return () => clearTimeout(t);
+  }, [searchTerm]);
 
   // Auto-load all remaining pages when any filter is active so search/filters cover the full DB
   const hasActiveFilter = (
-    searchTerm.trim() !== '' ||
+    debouncedSearch.trim() !== '' ||
     statusFilter !== 'all' ||
     roleFilter !== 'all' ||
     tagFilters.length > 0 ||
@@ -130,7 +135,7 @@ export const Contacts: React.FC = () => {
       }
     };
     fetchStats();
-  }, [user, contacts.length]);
+  }, [user?.id, totalContactsCount]);
 
   const fetchRelationsForContacts = async (contactIds: string[]) => {
     if (contactIds.length === 0) return;
@@ -140,10 +145,28 @@ export const Contacts: React.FC = () => {
         supabase.from('contact_artists').select('contact_id, artist_id').in('contact_id', contactIds),
       ]);
       if (!eventsRes.error && eventsRes.data) {
-        setContactEvents(prev => { const next = { ...prev }; for (const ce of eventsRes.data) { const arr = next[ce.contact_id] ?? []; if (!arr.includes(ce.event_id)) next[ce.contact_id] = [...arr, ce.event_id]; } return next; });
+        setContactEvents(prev => {
+          const next: Record<string, string[]> = { ...prev };
+          const seen = new Map<string, Set<string>>();
+          for (const ce of eventsRes.data) {
+            let set = seen.get(ce.contact_id);
+            if (!set) { set = new Set(next[ce.contact_id] ?? []); seen.set(ce.contact_id, set); next[ce.contact_id] = next[ce.contact_id] ? [...next[ce.contact_id]] : []; }
+            if (!set.has(ce.event_id)) { set.add(ce.event_id); next[ce.contact_id].push(ce.event_id); }
+          }
+          return next;
+        });
       }
       if (!artistsRes.error && artistsRes.data) {
-        setContactArtists(prev => { const next = { ...prev }; for (const ca of artistsRes.data) { const arr = next[ca.contact_id] ?? []; if (!arr.includes(ca.artist_id)) next[ca.contact_id] = [...arr, ca.artist_id]; } return next; });
+        setContactArtists(prev => {
+          const next: Record<string, string[]> = { ...prev };
+          const seen = new Map<string, Set<string>>();
+          for (const ca of artistsRes.data) {
+            let set = seen.get(ca.contact_id);
+            if (!set) { set = new Set(next[ca.contact_id] ?? []); seen.set(ca.contact_id, set); next[ca.contact_id] = next[ca.contact_id] ? [...next[ca.contact_id]] : []; }
+            if (!set.has(ca.artist_id)) { set.add(ca.artist_id); next[ca.contact_id].push(ca.artist_id); }
+          }
+          return next;
+        });
       }
     } catch {}
   };
@@ -152,7 +175,7 @@ export const Contacts: React.FC = () => {
     const targetPage = reset ? 0 : page;
     const from = targetPage * PAGE_SIZE;
     const to = from + PAGE_SIZE - 1;
-    if (reset) { if (!silent) setLoading(true); setContacts([]); setFilteredContacts([]); setSelectedContactIds([]); setContactEvents({}); setContactArtists({}); setPage(0); } else { setIsLoadingMore(true); }
+    if (reset) { if (!silent) setLoading(true); setContacts([]); setSelectedContactIds([]); setContactEvents({}); setContactArtists({}); setPage(0); } else { setIsLoadingMore(true); }
     try {
       const { data, error, count } = await supabase.from('contacts').select('*', { count: 'exact' }).order('created_at', { ascending: false }).range(from, to);
       if (error) throw error;
@@ -170,19 +193,25 @@ export const Contacts: React.FC = () => {
   const fetchEvents = async () => { try { const { data } = await supabase.from('events').select('id, title').order('start_date', { ascending: false }); setEvents(data || []); } catch {} };
   const fetchArtists = async () => { try { const { data } = await supabase.from('centralized_artists').select('id, name').order('name'); setArtists(data || []); } catch {} };
 
-  const filterContacts = () => {
-    let filtered = contacts;
-    if (searchTerm) filtered = filtered.filter(c => `${c.first_name} ${c.last_name}`.toLowerCase().includes(searchTerm.toLowerCase()) || c.email?.toLowerCase().includes(searchTerm.toLowerCase()) || c.position?.toLowerCase().includes(searchTerm.toLowerCase()) || c.city?.toLowerCase().includes(searchTerm.toLowerCase()) || c.company?.toLowerCase().includes(searchTerm.toLowerCase()));
-    if (statusFilter !== 'all') filtered = filtered.filter(c => c.status === statusFilter);
-    if (roleFilter !== 'all') filtered = filtered.filter(c => c.role === roleFilter);
-    if (tagFilters.length > 0) filtered = filtered.filter(c => c.tags && c.tags.some(tag => tagFilters.includes(tag)));
-    if (sourceFilter !== 'all') filtered = filtered.filter(c => c.source === sourceFilter);
-    if (cityFilter !== 'all') filtered = filtered.filter(c => c.city === cityFilter);
-    if (departmentFilter) filtered = filtered.filter(c => c.postal_code && c.postal_code.startsWith(departmentFilter));
-    if (eventFilter !== 'all') filtered = filtered.filter(c => c.id && (contactEvents[c.id] || []).includes(eventFilter));
-    if (artistFilter !== 'all') filtered = filtered.filter(c => c.id && (contactArtists[c.id] || []).includes(artistFilter));
-    setFilteredContacts(filtered);
-  };
+  // Derived (memoized) filtering: single pass, no extra render cycle
+  const filteredContacts = useMemo(() => {
+    const q = debouncedSearch.trim().toLowerCase();
+    return contacts.filter((c) => {
+      if (q) {
+        const haystack = `${c.first_name || ''} ${c.last_name || ''} ${c.email || ''} ${c.position || ''} ${c.city || ''} ${c.company || ''}`.toLowerCase();
+        if (!haystack.includes(q)) return false;
+      }
+      if (statusFilter !== 'all' && c.status !== statusFilter) return false;
+      if (roleFilter !== 'all' && c.role !== roleFilter) return false;
+      if (tagFilters.length > 0 && !(c.tags && c.tags.some(tag => tagFilters.includes(tag)))) return false;
+      if (sourceFilter !== 'all' && c.source !== sourceFilter) return false;
+      if (cityFilter !== 'all' && c.city !== cityFilter) return false;
+      if (departmentFilter && !(c.postal_code && c.postal_code.startsWith(departmentFilter))) return false;
+      if (eventFilter !== 'all' && !(c.id && (contactEvents[c.id] || []).includes(eventFilter))) return false;
+      if (artistFilter !== 'all' && !(c.id && (contactArtists[c.id] || []).includes(artistFilter))) return false;
+      return true;
+    });
+  }, [contacts, debouncedSearch, statusFilter, roleFilter, tagFilters, sourceFilter, cityFilter, departmentFilter, eventFilter, artistFilter, contactEvents, contactArtists]);
 
   const confirmAction = useConfirm();
   const handleDelete = async (id: string) => {

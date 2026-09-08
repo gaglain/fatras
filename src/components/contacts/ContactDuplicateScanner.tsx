@@ -47,6 +47,8 @@ export const ContactDuplicateScanner: React.FC<{ onMergeComplete: () => void }> 
         all = all.concat(rows);
         if (rows.length < PAGE) break;
         from += PAGE;
+        // Yield to the browser between pages so the UI stays responsive
+        await new Promise(resolve => setTimeout(resolve, 0));
       }
       const data = all;
 
