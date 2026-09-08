@@ -135,7 +135,7 @@ export const Contacts: React.FC = () => {
       }
     };
     fetchStats();
-  }, [user, contacts.length]);
+  }, [user?.id, totalContactsCount]);
 
   const fetchRelationsForContacts = async (contactIds: string[]) => {
     if (contactIds.length === 0) return;
