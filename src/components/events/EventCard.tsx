@@ -154,10 +154,10 @@ export const EventCard: React.FC<EventCardProps> = ({
               </div>
 
               <div className="space-y-1">
-                {contact && (
+                {displayContact && (
                   <div className="flex items-center text-sm text-muted-foreground">
                     <User className="h-4 w-4 mr-1" />
-                    {contact.first_name} {contact.last_name}
+                    {displayContact.first_name} {displayContact.last_name}
                   </div>
                 )}
                 {linkedContacts.length > 0 && (
@@ -219,7 +219,7 @@ export const EventCard: React.FC<EventCardProps> = ({
         
         <ContactEventManager
           isOpen={contactManagerOpen}
-          onClose={() => setContactManagerOpen(false)}
+          onClose={() => { setContactManagerOpen(false); fetchLinkedContacts(); }}
           eventId={event.id!}
           eventTitle={event.title}
         />
@@ -289,10 +289,10 @@ export const EventCard: React.FC<EventCardProps> = ({
             </div>
           )}
 
-          {contact && (
+          {displayContact && (
             <div className="flex items-center text-sm text-muted-foreground">
               <User className="h-4 w-4 mr-2 flex-shrink-0" />
-              <span className="truncate">{contact.first_name} {contact.last_name}</span>
+              <span className="truncate">{displayContact.first_name} {displayContact.last_name}</span>
             </div>
           )}
 
@@ -342,7 +342,7 @@ export const EventCard: React.FC<EventCardProps> = ({
 
       <ContactEventManager
         isOpen={contactManagerOpen}
-        onClose={() => setContactManagerOpen(false)}
+        onClose={() => { setContactManagerOpen(false); fetchLinkedContacts(); }}
         eventId={event.id!}
         eventTitle={event.title}
       />
