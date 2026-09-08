@@ -157,7 +157,7 @@ export const Contacts: React.FC = () => {
     const targetPage = reset ? 0 : page;
     const from = targetPage * PAGE_SIZE;
     const to = from + PAGE_SIZE - 1;
-    if (reset) { if (!silent) setLoading(true); setContacts([]); setFilteredContacts([]); setSelectedContactIds([]); setContactEvents({}); setContactArtists({}); setPage(0); } else { setIsLoadingMore(true); }
+    if (reset) { if (!silent) setLoading(true); setContacts([]); setSelectedContactIds([]); setContactEvents({}); setContactArtists({}); setPage(0); } else { setIsLoadingMore(true); }
     try {
       const { data, error, count } = await supabase.from('contacts').select('*', { count: 'exact' }).order('created_at', { ascending: false }).range(from, to);
       if (error) throw error;
