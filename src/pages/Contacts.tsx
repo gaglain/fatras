@@ -62,8 +62,13 @@ export const Contacts: React.FC = () => {
   const [totalContactsCount, setTotalContactsCount] = useState<number>(0);
   const [contactStats, setContactStats] = useState({ total: 0, clients: 0, prospects: 0, inactifs: 0 });
 
-  useEffect(() => { if (user) { fetchContacts({ reset: true }); fetchEvents(); fetchArtists(); } }, [user]);
-  useEffect(() => { filterContacts(); }, [contacts, searchTerm, statusFilter, roleFilter, tagFilters, sourceFilter, cityFilter, departmentFilter, eventFilter, artistFilter, contactEvents, contactArtists]);
+  useEffect(() => { if (user?.id) { fetchContacts({ reset: true }); fetchEvents(); fetchArtists(); } }, [user?.id]);
+
+  // Debounce the search input so typing never re-filters thousands of rows on every keystroke
+  useEffect(() => {
+    const t = setTimeout(() => setDebouncedSearch(searchTerm), 250);
+    return () => clearTimeout(t);
+  }, [searchTerm]);
 
   // Auto-load all remaining pages when any filter is active so search/filters cover the full DB
   const hasActiveFilter = (
