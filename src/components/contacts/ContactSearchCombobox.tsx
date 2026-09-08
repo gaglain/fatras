@@ -18,6 +18,7 @@ export const ContactSearchCombobox: React.FC<ContactSearchComboboxProps> = ({
   placeholder = "Sélectionner un contact..."
 }) => {
   const [open, setOpen] = React.useState(false);
+  const [searchTerm, setSearchTerm] = useState('');
   const { contacts, loading } = useContacts();
 
   const contactsList = Array.isArray(contacts) ? contacts : [];
