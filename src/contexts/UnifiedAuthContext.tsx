@@ -228,22 +228,24 @@ export const UnifiedAuthProvider: React.FC<{ children: ReactNode }> = ({ childre
   // Setup auth listener
   useEffect(() => {
     logger.log('🔐 Setting up unified auth...');
-    
+
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
       async (event, session) => {
         logger.log('🔐 Auth state changed:', event, session?.user?.email || 'No user');
         setSession(session);
         setAuthUser(session?.user ?? null);
-        
+
         if (session?.user) {
           // Use setTimeout to avoid potential race conditions with Supabase
           setTimeout(() => {
             fetchCurrentUserProfile(session.user.id, session.user.email);
+            refreshUsers();
           }, 0);
         } else {
           setCurrentUser(null);
+          setUsers([]);
         }
-        
+
         setLoading(false);
       }
     );
@@ -253,22 +255,22 @@ export const UnifiedAuthProvider: React.FC<{ children: ReactNode }> = ({ childre
       logger.log('🔐 Initial session:', session?.user?.email || 'No session');
       setSession(session);
       setAuthUser(session?.user ?? null);
-      
+
       if (session?.user) {
         fetchCurrentUserProfile(session.user.id, session.user.email);
+        // Load team profiles only for authenticated users (RPC is auth-only)
+        refreshUsers();
       }
-      
+
       setLoading(false);
     });
-
-    // Load all users
-    refreshUsers();
 
     return () => {
       logger.log('🔐 Cleaning up auth listener');
       subscription.unsubscribe();
     };
   }, [fetchCurrentUserProfile, refreshUsers]);
+
 
   // Auth methods
   const signIn = async (email: string, password: string) => {
