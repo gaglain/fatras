@@ -44,11 +44,8 @@ export const FormRenderer: React.FC<FormRendererProps> = ({ form, onSubmit }) =>
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    
-    if (honeypot) {
-      toast.success(form.settings.successMessage);
-      return;
-    }
+
+
     
     setIsSubmitting(true);
 
@@ -284,13 +281,17 @@ export const FormRenderer: React.FC<FormRendererProps> = ({ form, onSubmit }) =>
             >
               <Input
                 type="text"
-                name="website_url"
+                name="fx_hp_check"
+                id="fx_hp_check"
                 value={honeypot}
                 onChange={(e) => setHoneypot(e.target.value)}
                 tabIndex={-1}
                 autoComplete="off"
+                data-lpignore="true"
+                data-form-type="other"
               />
             </div>
+
 
             {form.fields.map((field) => {
               const isVisible = evaluateFieldVisibility(field, formData, form.fields);
