@@ -78,12 +78,13 @@ export const EventCard: React.FC<EventCardProps> = ({
     }
   };
 
-  // Le contact affiché doit refléter les contacts réellement liés à l'événement.
-  // Si le contact "principal" enregistré n'est plus lié, on n'affiche plus son nom.
+  // Le contact affiché est toujours celui choisi sur l'événement.
+  // On ne retombe sur un contact lié que si aucun contact principal n'est défini.
   const displayContact: Contact | null =
-    linkedContacts.length > 0
-      ? (linkedContacts.find(c => c.id === event.contact_id) || linkedContacts[0])
-      : contact;
+    contact || (event.contact_id
+      ? (linkedContacts.find(c => c.id === event.contact_id) || null)
+      : (linkedContacts[0] || null));
+
 
   const getStatusColor = (status: string) => {
     switch (status) {
