@@ -61,8 +61,13 @@ export const senderLabel = (email: { from_name?: string; from_email?: string }):
   cleanName(email.from_name) || cleanName(email.from_email) || 'Expéditeur inconnu';
 
 const mapUnifiedRow = (ue: any, myEmailsSet: Set<string>): UnifiedEmail => {
-
-  const direction = classifyDirection(ue.from_email || '', ue.to_email || '', ue.labels || [], myEmailsSet);
+  // The unified table already stores the authoritative direction. Outgoing
+  // records can be inserted before their sender metadata is populated; trying
+  // to infer direction from an empty from_email incorrectly turns them into
+  // received emails and immediately raises a "new email" notification.
+  const direction = ue.direction === 'sent' || ue.direction === 'received'
+    ? ue.direction
+    : classifyDirection(ue.from_email || '', ue.to_email || '', ue.labels || [], myEmailsSet);
   return {
     id: ue.id, message_id: ue.message_id, direction,
     from_email: ue.from_email, from_name: cleanName(ue.from_name), to_email: ue.to_email, to_name: ue.to_name,
