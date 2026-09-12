@@ -272,8 +272,10 @@ export const useUnifiedEmails = (options: UseUnifiedEmailsOptions = {}) => {
         (payload) => {
           const mapped = mapInboundRow(payload.new, myEmailsSet, myDomainsSet);
           setEmails(prev => [mapped, ...prev]);
-          toast.success(`📧 Nouveau email de ${senderLabel(mapped)}`, { description: mapped.subject || 'Sans objet', duration: 5000 });
-          createEmailNotification(mapped);
+          if (mapped.direction === 'received') {
+            toast.success(`📧 Nouveau email de ${senderLabel(mapped)}`, { description: mapped.subject || 'Sans objet', duration: 5000 });
+            createEmailNotification(mapped);
+          }
         }
       )
       .on('postgres_changes', { event: 'UPDATE', schema: 'public', table: 'inbound_emails', filter: `user_id=eq.${user.id}` },
