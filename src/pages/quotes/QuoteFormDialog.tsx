@@ -48,8 +48,38 @@ interface QuoteTemplateOption {
 export const QuoteFormDialog: React.FC<QuoteFormDialogProps> = ({
   dialogOpen, onDialogOpenChange, selectedQuote, formData, setFormData, onSubmit,
   contacts, events, artists, users = [], calculation, setCalculation, currentItems, setCurrentItems,
-  updateQuote, setSelectedQuote, QuoteCalculator, QuoteItemManager,
+  updateQuote, setSelectedQuote, QuoteCalculator, QuoteItemManager, onApplyTemplate,
 }) => {
+  const [templates, setTemplates] = useState<QuoteTemplateOption[]>([]);
+  const [selectedTemplateId, setSelectedTemplateId] = useState('');
+
+  useEffect(() => {
+    if (!dialogOpen) return;
+    (async () => {
+      const { data, error } = await supabase.from('quote_templates').select('*').order('name');
+      if (!error && data) setTemplates(data as QuoteTemplateOption[]);
+    })();
+  }, [dialogOpen]);
+
+  const applyTemplate = (templateId: string) => {
+    const template = templates.find(t => t.id === templateId);
+    if (!template) return;
+    const items = Array.isArray(template.default_items)
+      ? template.default_items
+      : typeof template.default_items === 'string'
+        ? JSON.parse(template.default_items)
+        : [];
+    setFormData({
+      ...formData,
+      title: formData.title || template.name,
+      description: template.description || formData.description,
+      terms: template.default_terms || formData.terms,
+    });
+    onApplyTemplate?.(template, items);
+    setSelectedTemplateId('');
+    toast.success(`Modèle « ${template.name} » appliqué (${items.length} ligne(s))`);
+  };
+
   return (
     <Dialog open={dialogOpen} onOpenChange={onDialogOpenChange}>
       <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto">
