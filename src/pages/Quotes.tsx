@@ -153,6 +153,7 @@ export const Quotes: React.FC = () => {
         setSelectedQuote={setSelectedQuote}
         QuoteCalculator={QuoteCalculator}
         QuoteItemManager={QuoteItemManager}
+        onApplyTemplate={(_template, items) => setPendingTemplateItems(items)}
       />
 
       <div className="flex flex-col sm:flex-row items-start sm:items-center gap-4">
