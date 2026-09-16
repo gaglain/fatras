@@ -155,7 +155,17 @@ export const QuoteFormDialog: React.FC<QuoteFormDialogProps> = ({
           </TabsContent>
 
           <TabsContent value="items">
+            {!selectedQuote && (
+              <div className="rounded-lg border border-dashed p-8 text-center space-y-2">
+                <FileText className="h-6 w-6 mx-auto text-muted-foreground" />
+                <p className="font-medium">Enregistrez d'abord le devis</p>
+                <p className="text-sm text-muted-foreground">
+                  Remplissez l'onglet « Informations » puis cliquez sur « Créer le devis » pour pouvoir ajouter des lignes.
+                </p>
+              </div>
+            )}
             {selectedQuote && (
+
               <>
                 <Card className="mb-6 border-2 border-primary/20">
                   <CardContent className="pt-6">
