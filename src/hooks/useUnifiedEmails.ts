@@ -257,9 +257,8 @@ export const useUnifiedEmails = (options: UseUnifiedEmailsOptions = {}) => {
           if (mapped.direction === 'received') {
             toast.success(`📧 Nouveau email de ${senderLabel(mapped)}`, { description: mapped.subject || 'Sans objet', duration: 5000 });
           }
-
-          }
         }
+
       )
       .on('postgres_changes', { event: 'UPDATE', schema: 'public', table: 'emails', filter: `user_id=eq.${user.id}` },
         (payload) => { setEmails(prev => prev.map(email => email.id === payload.new.id ? payload.new as UnifiedEmail : email)); }
