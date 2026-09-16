@@ -237,15 +237,10 @@ export const useUnifiedEmails = (options: UseUnifiedEmailsOptions = {}) => {
     }
   };
 
-  const createEmailNotification = (email: UnifiedEmail) => {
-    if (email.direction !== 'received' || !user) return;
-    supabase.from('notifications').insert({
-      user_id: user.id, type: 'new_email', title: 'Nouveau email reçu',
-      message: `De: ${senderLabel(email)} - ${email.subject || 'Sans objet'}`,
-      data: { email_id: email.id, from_email: email.from_email, from_name: email.from_name, subject: email.subject },
-      read: false
-    }).then(({ error }) => { if (error) logger.error('Erreur création notification email:', error); });
-  };
+  // La notification d'email reçu est créée côté base (trigger sur `emails`),
+  // dans `email_notifications`. On n'insère donc plus rien ici pour éviter
+  // d'afficher deux fois la même notification.
+
 
   const setupRealtimeSubscription = () => {
     if (!user) return;
