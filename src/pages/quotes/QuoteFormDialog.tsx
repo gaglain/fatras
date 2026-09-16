@@ -49,7 +49,7 @@ export const QuoteFormDialog: React.FC<QuoteFormDialogProps> = ({
           <TabsList className="grid w-full grid-cols-3">
             <TabsTrigger value="info">Informations</TabsTrigger>
             <TabsTrigger value="calculator">Calculateur</TabsTrigger>
-            <TabsTrigger value="items">Lignes</TabsTrigger>
+            <TabsTrigger value="items" disabled={!selectedQuote}>Lignes</TabsTrigger>
           </TabsList>
 
           <TabsContent value="info" className="space-y-4">
