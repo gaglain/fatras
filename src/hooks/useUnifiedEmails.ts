@@ -269,8 +269,8 @@ export const useUnifiedEmails = (options: UseUnifiedEmailsOptions = {}) => {
           setEmails(prev => [mapped, ...prev]);
           if (mapped.direction === 'received') {
             toast.success(`📧 Nouveau email de ${senderLabel(mapped)}`, { description: mapped.subject || 'Sans objet', duration: 5000 });
-            createEmailNotification(mapped);
           }
+
         }
       )
       .on('postgres_changes', { event: 'UPDATE', schema: 'public', table: 'inbound_emails', filter: `user_id=eq.${user.id}` },
