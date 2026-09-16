@@ -29,6 +29,7 @@ export const Quotes: React.FC = () => {
   const [showSimpleCalculator, setShowSimpleCalculator] = useState(false);
   const [quoteTemplates, setQuoteTemplates] = useState<QuoteFormData[]>([]);
   const [currentItems, setCurrentItems] = useState<QuoteItem[]>([]);
+  const [pendingTemplateItems, setPendingTemplateItems] = useState<any[]>([]);
   const { quotes, loading, addQuote, updateQuote, deleteQuote, generateQuoteNumber } = useQuotes();
   const { contacts } = useContacts();
   const { events } = useEvents();
