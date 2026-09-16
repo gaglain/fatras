@@ -136,7 +136,7 @@ export const Quotes: React.FC = () => {
 
       <QuoteFormDialog
         dialogOpen={dialogOpen}
-        onDialogOpenChange={(open) => { setDialogOpen(open); if (!open) setSelectedQuote(null); }}
+        onDialogOpenChange={(open) => { setDialogOpen(open); if (!open) { setSelectedQuote(null); setPendingTemplateItems([]); } }}
         selectedQuote={selectedQuote}
         formData={formData}
         setFormData={setFormData}
