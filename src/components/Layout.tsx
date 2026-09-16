@@ -24,10 +24,11 @@ import { openChatWithChannel, openChatWithChannelId, openChatWithRoadshowStop } 
 
 const adminRoutes = [
   '/admin', '/dashboard', '/artists', '/events', '/agenda', '/contacts',
-  '/contact-lists', '/contact-types', '/contracts', '/tasks', '/roadshow', '/road-show', '/email', '/email-campaigns', '/email-sequences',
-  '/messagerie', '/forms', '/merchandise', '/show-bible', '/opportunities', '/event-types',
-  '/user-management', '/preferences', '/application', '/publication-calendar', '/website', '/website-editor', '/assignments'
+  '/contact-lists', '/contact-types', '/contracts', '/quotes', '/tasks', '/roadshow', '/road-show', '/email', '/email-campaigns', '/email-sequences',
+  '/messagerie', '/forms', '/merchandise', '/merchandise-backoffice', '/show-bible', '/opportunities', '/event-types',
+  '/user-management', '/role-permissions', '/preferences', '/application', '/publication-calendar', '/website', '/website-editor', '/website-manager', '/website-backoffice', '/assignments'
 ];
+
 
 interface LayoutProps {
   children: React.ReactNode;
