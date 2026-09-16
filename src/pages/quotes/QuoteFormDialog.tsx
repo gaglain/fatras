@@ -34,6 +34,15 @@ interface QuoteFormDialogProps {
   setSelectedQuote: (q: any) => void;
   QuoteCalculator: React.FC<any>;
   QuoteItemManager: React.FC<any>;
+  onApplyTemplate?: (template: any, items: any[]) => void;
+}
+
+interface QuoteTemplateOption {
+  id: string;
+  name: string;
+  description?: string;
+  default_terms?: string;
+  default_items: any[];
 }
 
 export const QuoteFormDialog: React.FC<QuoteFormDialogProps> = ({
