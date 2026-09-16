@@ -32,23 +32,27 @@ export const EventCard: React.FC<EventCardProps> = ({
   const [contactManagerOpen, setContactManagerOpen] = useState(false);
 
   useEffect(() => {
+    // Réinitialiser immédiatement pour éviter d'afficher l'ancien contact
+    // pendant le chargement ou quand le contact principal est retiré.
+    setContact(null);
     if (event.contact_id) {
-      fetchContact();
+      fetchContact(event.contact_id);
     }
     fetchLinkedContacts();
   }, [event.contact_id, event.id]);
 
-  const fetchContact = async () => {
-    if (!event.contact_id) return;
-    
+  const fetchContact = async (contactId: string) => {
     try {
       const { data } = await supabase
         .from('contacts')
         .select('*')
-        .eq('id', event.contact_id)
+        .eq('id', contactId)
         .single();
-      
-      setContact(data);
+
+      // Ne pas écraser l'état si le contact principal a changé entre-temps
+      if (data && data.id === event.contact_id) {
+        setContact(data);
+      }
     } catch (error: unknown) {
       logger.error('Erreur lors du chargement du contact:', error);
     }
