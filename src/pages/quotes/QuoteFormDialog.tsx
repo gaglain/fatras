@@ -95,6 +95,24 @@ export const QuoteFormDialog: React.FC<QuoteFormDialogProps> = ({
 
           <TabsContent value="info" className="space-y-4">
             <form onSubmit={onSubmit} className="space-y-4">
+              {!selectedQuote && templates.length > 0 && (
+                <div className="rounded-lg border border-dashed p-3 flex flex-col sm:flex-row sm:items-end gap-2">
+                  <div className="flex-1 space-y-1.5">
+                    <Label>Appliquer un modèle</Label>
+                    <Select value={selectedTemplateId} onValueChange={setSelectedTemplateId}>
+                      <SelectTrigger><SelectValue placeholder="Choisir un modèle de devis..." /></SelectTrigger>
+                      <SelectContent>
+                        {templates.map(t => (
+                          <SelectItem key={t.id} value={t.id}>{t.name}</SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  </div>
+                  <Button type="button" variant="secondary" disabled={!selectedTemplateId} onClick={() => applyTemplate(selectedTemplateId)} className="w-full sm:w-auto">
+                    Appliquer
+                  </Button>
+                </div>
+              )}
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div className="space-y-2">
                   <Label>Titre *</Label>
