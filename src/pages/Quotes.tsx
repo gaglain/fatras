@@ -29,6 +29,7 @@ export const Quotes: React.FC = () => {
   const [showSimpleCalculator, setShowSimpleCalculator] = useState(false);
   const [quoteTemplates, setQuoteTemplates] = useState<QuoteFormData[]>([]);
   const [currentItems, setCurrentItems] = useState<QuoteItem[]>([]);
+  const [pendingTemplateItems, setPendingTemplateItems] = useState<any[]>([]);
   const { quotes, loading, addQuote, updateQuote, deleteQuote, generateQuoteNumber } = useQuotes();
   const { contacts } = useContacts();
   const { events } = useEvents();
@@ -82,7 +83,19 @@ export const Quotes: React.FC = () => {
         setDialogOpen(false);
         return;
       }
-      const newQuote = await addQuote({ user_id: user.id, quote_number: generateQuoteNumber(), title: formData.title, description: formData.description, contact_id: formData.contact_id !== 'none' ? formData.contact_id : undefined, event_id: formData.event_id !== 'none' ? formData.event_id : undefined, artist_id: formData.artist_id !== 'none' ? formData.artist_id : undefined, status: formData.status, total_amount: calculation?.finalPrice || 0, tax_amount: calculation?.vatAmount || 0, vat_rate: formData.vat_rate ?? 0, valid_until: formData.valid_until || undefined, terms: formData.terms, notes: formData.notes, owner_id: formData.owner_id || user.id });
+      const templateSubtotal = pendingTemplateItems.reduce((sum, i) => sum + (Number(i.quantity) || 0) * (Number(i.unit_price) || 0), 0);
+      const templateTax = templateSubtotal * ((formData.vat_rate ?? 0) / 100);
+      const newQuote = await addQuote({ user_id: user.id, quote_number: generateQuoteNumber(), title: formData.title, description: formData.description, contact_id: formData.contact_id !== 'none' ? formData.contact_id : undefined, event_id: formData.event_id !== 'none' ? formData.event_id : undefined, artist_id: formData.artist_id !== 'none' ? formData.artist_id : undefined, status: formData.status, total_amount: pendingTemplateItems.length > 0 ? templateSubtotal + templateTax : (calculation?.finalPrice || 0), tax_amount: pendingTemplateItems.length > 0 ? templateTax : (calculation?.vatAmount || 0), vat_rate: formData.vat_rate ?? 0, valid_until: formData.valid_until || undefined, terms: formData.terms, notes: formData.notes, owner_id: formData.owner_id || user.id });
+      if (newQuote && pendingTemplateItems.length > 0) {
+        const rows = pendingTemplateItems
+          .filter(i => (i.name || '').trim())
+          .map(i => ({ quote_id: newQuote.id, name: i.name, description: i.description || '', quantity: Number(i.quantity) || 1, unit_price: Number(i.unit_price) || 0, total_price: (Number(i.quantity) || 1) * (Number(i.unit_price) || 0) }));
+        if (rows.length > 0) {
+          const { error } = await supabase.from('quote_items').insert(rows);
+          if (error) toast.error('Devis créé mais erreur lors de l\'ajout des lignes du modèle');
+        }
+      }
+      setPendingTemplateItems([]);
       toast.success('Devis créé');
       resetForm();
       setCalculation(null);
@@ -123,7 +136,7 @@ export const Quotes: React.FC = () => {
 
       <QuoteFormDialog
         dialogOpen={dialogOpen}
-        onDialogOpenChange={(open) => { setDialogOpen(open); if (!open) setSelectedQuote(null); }}
+        onDialogOpenChange={(open) => { setDialogOpen(open); if (!open) { setSelectedQuote(null); setPendingTemplateItems([]); } }}
         selectedQuote={selectedQuote}
         formData={formData}
         setFormData={setFormData}
@@ -140,6 +153,7 @@ export const Quotes: React.FC = () => {
         setSelectedQuote={setSelectedQuote}
         QuoteCalculator={QuoteCalculator}
         QuoteItemManager={QuoteItemManager}
+        onApplyTemplate={(_template, items) => setPendingTemplateItems(items)}
       />
 
       <div className="flex flex-col sm:flex-row items-start sm:items-center gap-4">

@@ -1,4 +1,6 @@
-import React from 'react';
+import React, { useEffect, useState } from 'react';
+import { supabase } from '@/integrations/supabase/client';
+import { toast } from 'sonner';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -32,13 +34,52 @@ interface QuoteFormDialogProps {
   setSelectedQuote: (q: any) => void;
   QuoteCalculator: React.FC<any>;
   QuoteItemManager: React.FC<any>;
+  onApplyTemplate?: (template: any, items: any[]) => void;
+}
+
+interface QuoteTemplateOption {
+  id: string;
+  name: string;
+  description?: string;
+  default_terms?: string;
+  default_items: any[];
 }
 
 export const QuoteFormDialog: React.FC<QuoteFormDialogProps> = ({
   dialogOpen, onDialogOpenChange, selectedQuote, formData, setFormData, onSubmit,
   contacts, events, artists, users = [], calculation, setCalculation, currentItems, setCurrentItems,
-  updateQuote, setSelectedQuote, QuoteCalculator, QuoteItemManager,
+  updateQuote, setSelectedQuote, QuoteCalculator, QuoteItemManager, onApplyTemplate,
 }) => {
+  const [templates, setTemplates] = useState<QuoteTemplateOption[]>([]);
+  const [selectedTemplateId, setSelectedTemplateId] = useState('');
+
+  useEffect(() => {
+    if (!dialogOpen) return;
+    (async () => {
+      const { data, error } = await supabase.from('quote_templates').select('*').order('name');
+      if (!error && data) setTemplates(data as QuoteTemplateOption[]);
+    })();
+  }, [dialogOpen]);
+
+  const applyTemplate = (templateId: string) => {
+    const template = templates.find(t => t.id === templateId);
+    if (!template) return;
+    const items = Array.isArray(template.default_items)
+      ? template.default_items
+      : typeof template.default_items === 'string'
+        ? JSON.parse(template.default_items)
+        : [];
+    setFormData({
+      ...formData,
+      title: formData.title || template.name,
+      description: template.description || formData.description,
+      terms: template.default_terms || formData.terms,
+    });
+    onApplyTemplate?.(template, items);
+    setSelectedTemplateId('');
+    toast.success(`Modèle « ${template.name} » appliqué (${items.length} ligne(s))`);
+  };
+
   return (
     <Dialog open={dialogOpen} onOpenChange={onDialogOpenChange}>
       <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto">
@@ -54,6 +95,24 @@ export const QuoteFormDialog: React.FC<QuoteFormDialogProps> = ({
 
           <TabsContent value="info" className="space-y-4">
             <form onSubmit={onSubmit} className="space-y-4">
+              {!selectedQuote && templates.length > 0 && (
+                <div className="rounded-lg border border-dashed p-3 flex flex-col sm:flex-row sm:items-end gap-2">
+                  <div className="flex-1 space-y-1.5">
+                    <Label>Appliquer un modèle</Label>
+                    <Select value={selectedTemplateId} onValueChange={setSelectedTemplateId}>
+                      <SelectTrigger><SelectValue placeholder="Choisir un modèle de devis..." /></SelectTrigger>
+                      <SelectContent>
+                        {templates.map(t => (
+                          <SelectItem key={t.id} value={t.id}>{t.name}</SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  </div>
+                  <Button type="button" variant="secondary" disabled={!selectedTemplateId} onClick={() => applyTemplate(selectedTemplateId)} className="w-full sm:w-auto">
+                    Appliquer
+                  </Button>
+                </div>
+              )}
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div className="space-y-2">
                   <Label>Titre *</Label>
