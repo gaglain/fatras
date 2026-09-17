@@ -228,21 +228,23 @@ const App = () => {
                         
                         {/* Routes du front-end - PUBLIC */}
                         <Route path="/front" element={<FrontHome />} />
-                        <Route path="/front/artists" element={<FrontLayout><FrontArtists /></FrontLayout>} />
-                        <Route path="/front/events" element={<FrontLayout><FrontEvents /></FrontLayout>} />
                         <Route path="/front/contact" element={<FrontLayout><FrontContact /></FrontLayout>} />
-                        <Route path="/front/shop" element={<FrontLayout><FrontShop /></FrontLayout>} />
                         <Route path="/front/*" element={<FrontDynamicPage />} />
-                        
+
+                        {/* Redirections des anciennes URLs vers les canoniques (SEO) */}
+                        <Route path="/front/artists" element={<Navigate to="/artistes" replace />} />
+                        <Route path="/front/events" element={<Navigate to="/tournee" replace />} />
+                        <Route path="/front/shop" element={<Navigate to="/boutique" replace />} />
+                        <Route path="/front-tour" element={<Navigate to="/tournee" replace />} />
+                        <Route path="/spectacles" element={<Navigate to="/artistes" replace />} />
+
                         {/* Routes publiques pour les artistes et tournées */}
                         <Route path="/artistes" element={<FrontLayout><FrontArtists /></FrontLayout>} />
                         <Route path="/artistes/:id" element={<FrontLayout><FrontArtistDetail /></FrontLayout>} />
                         <Route path="/tournee" element={<FrontLayout><FrontTour /></FrontLayout>} />
-                        <Route path="/front-tour" element={<FrontLayout><FrontTour /></FrontLayout>} />
                         <Route path="/feuille-de-route/:id" element={<RoadsheetPublic />} />
                         <Route path="/setlist/:token" element={<SetlistPublic />} />
-                        <Route path="/spectacles" element={<FrontLayout><FrontArtists /></FrontLayout>} />
-                        
+
                         <Route path="/artist-showcase" element={<FrontArtistShowcase />} />
                         <Route path="/auth" element={<Auth />} />
                         <Route path="/auth/reset-password" element={<ResetPassword />} />
