@@ -237,16 +237,14 @@ const App = () => {
                         <Route path="/front/shop" element={<Navigate to="/boutique" replace />} />
                         <Route path="/front-tour" element={<Navigate to="/tournee" replace />} />
                         <Route path="/spectacles" element={<Navigate to="/artistes" replace />} />
-                        
+
                         {/* Routes publiques pour les artistes et tournées */}
                         <Route path="/artistes" element={<FrontLayout><FrontArtists /></FrontLayout>} />
                         <Route path="/artistes/:id" element={<FrontLayout><FrontArtistDetail /></FrontLayout>} />
                         <Route path="/tournee" element={<FrontLayout><FrontTour /></FrontLayout>} />
-                        <Route path="/front-tour" element={<FrontLayout><FrontTour /></FrontLayout>} />
                         <Route path="/feuille-de-route/:id" element={<RoadsheetPublic />} />
                         <Route path="/setlist/:token" element={<SetlistPublic />} />
-                        <Route path="/spectacles" element={<FrontLayout><FrontArtists /></FrontLayout>} />
-                        
+
                         <Route path="/artist-showcase" element={<FrontArtistShowcase />} />
                         <Route path="/auth" element={<Auth />} />
                         <Route path="/auth/reset-password" element={<ResetPassword />} />
