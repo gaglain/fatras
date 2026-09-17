@@ -124,8 +124,17 @@ export const buildCanonicalUrl = (pathname?: string) => {
   if (!path.startsWith('/')) path = `/${path}`;
   // /front, /front/ -> /   |   /front/cgv -> /cgv
   path = path.replace(/^\/front(?=\/|$)/, '');
-  path = path.replace(/\/+$/, '');
-  return `${base}${path || '/'}`;
+  path = path.replace(/\/+$/, '') || '/';
+  // Anciennes URLs publiques : pointer la canonique vers la route actuelle
+  const legacyMap: Record<string, string> = {
+    '/artists': '/artistes',
+    '/events': '/tournee',
+    '/shop': '/boutique',
+    '/front-tour': '/tournee',
+    '/spectacles': '/artistes',
+  };
+  path = legacyMap[path] || path;
+  return `${base}${path}`;
 };
 
 export const SEOHead: React.FC<SEOHeadProps> = ({
