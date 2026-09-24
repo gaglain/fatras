@@ -7,6 +7,44 @@
   CI = "false"
   NPM_FLAGS = "--legacy-peer-deps"
 
+# Redirections 301 des anciennes URLs /front/* vers les URLs canoniques (SEO)
+[[redirects]]
+  from = "/front"
+  to = "/"
+  status = 301
+  force = true
+
+[[redirects]]
+  from = "/front/artists"
+  to = "/artistes"
+  status = 301
+  force = true
+
+[[redirects]]
+  from = "/front/events"
+  to = "/tournee"
+  status = 301
+  force = true
+
+[[redirects]]
+  from = "/front/shop"
+  to = "/boutique"
+  status = 301
+  force = true
+
+[[redirects]]
+  from = "/front/:slug"
+  to = "/:slug"
+  status = 301
+  force = true
+
+# Normalisation du slash final (ex: /boutique/ -> /boutique)
+[[redirects]]
+  from = "/boutique/"
+  to = "/boutique"
+  status = 301
+  force = true
+
 # SPA Routing
 [[redirects]]
   from = "/assets/*"

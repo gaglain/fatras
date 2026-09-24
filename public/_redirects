@@ -1,4 +1,14 @@
-# Netlify SPA redirects
-# All routes should be handled by index.html for React Router
+# Netlify redirects
 
+# Redirections 301 des anciennes URLs /front/* vers les URLs canoniques (SEO)
+/front              /              301!
+/front/artists      /artistes      301!
+/front/events       /tournee       301!
+/front/shop         /boutique      301!
+/front/:slug        /:slug         301!
+
+# Normalisation du slash final
+/boutique/          /boutique      301!
+
+# SPA Routing : toutes les autres routes sont gérées par index.html (React Router)
 /*    /index.html   200
