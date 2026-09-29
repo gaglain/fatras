@@ -59,3 +59,6 @@ verify_jwt = false
 
 [functions.get-shared-setlist]
 verify_jwt = false
+
+[functions.process-email-followups]
+verify_jwt = false
