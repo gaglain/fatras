@@ -1368,7 +1368,8 @@ export const ContactEmailHistory: React.FC<ContactEmailHistoryProps> = ({
         }}
         toEmail={composeTo}
         subject={composeSubject}
-        preText={quotedBody(composeEmail)}
+        preText=""
+        quotedHtml={quotedHtmlFor(composeEmail)}
         contactId={contactId}
         kind={composeMode ?? 'new'}
         sourceEmail={composeEmail ? {
