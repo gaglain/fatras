@@ -229,6 +229,7 @@ const App = () => {
                         {/* Routes du front-end - PUBLIC */}
                         <Route path="/front" element={<FrontHome />} />
                         <Route path="/front/contact" element={<FrontLayout><FrontContact /></FrontLayout>} />
+                        <Route path="/contact" element={<FrontLayout><FrontContact /></FrontLayout>} />
                         <Route path="/front/*" element={<FrontDynamicPage />} />
 
                         {/* Redirections des anciennes URLs vers les canoniques (SEO) */}
