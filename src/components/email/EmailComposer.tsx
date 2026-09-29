@@ -15,12 +15,16 @@ import { ImageGalleryPicker } from '@/components/website/ImageGalleryPicker';
 import { UniversalSearch } from '@/components/UniversalSearch';
 import { logger } from '@/lib/logger';
 import { addAvatarToEmailSignature } from '@/hooks/useEmailSignature';
+import { Checkbox } from '@/components/ui/checkbox';
+import { sanitizeEmailHtml } from '@/lib/sanitize';
 interface EmailComposerProps {
   isOpen: boolean;
   onClose: () => void;
   toEmail?: string;
   subject?: string;
   preText?: string;
+  /** HTML du message d'origine, affiché et cité avec sa mise en forme */
+  quotedHtml?: string;
   /** Contact auquel rattacher l'email dans l'historique */
   contactId?: string;
   /** Type d'envoi: nouveau, réponse ou transfert */
@@ -37,6 +41,7 @@ export const EmailComposer: React.FC<EmailComposerProps> = ({
   toEmail = '',
   subject = '',
   preText = '',
+  quotedHtml = '',
   contactId,
   kind = 'new',
   sourceEmail = null,
@@ -52,16 +57,22 @@ export const EmailComposer: React.FC<EmailComposerProps> = ({
   const [attachments, setAttachments] = useState<File[]>([]);
   const [uploading, setUploading] = useState(false);
   const [sending, setSending] = useState(false);
+  const [templates, setTemplates] = useState<Array<{ id: string; name: string; subject: string; content: string }>>([]);
+  const [followUp, setFollowUp] = useState(false);
+  const [followUpDays, setFollowUpDays] = useState(7);
 
   React.useEffect(() => {
     setTo(toEmail);
     setEmailSubject(subject);
     setContent(preText);
+    setFollowUp(false);
   }, [toEmail, subject, preText, isOpen]);
 
   React.useEffect(() => {
     if (isOpen) {
       loadAccounts();
+      supabase.from('email_templates').select('id, name, subject, content').order('name')
+        .then(({ data }) => setTemplates((data as any) || []));
     }
   }, [isOpen]);
 
@@ -70,6 +81,14 @@ export const EmailComposer: React.FC<EmailComposerProps> = ({
       setSelectedAccountId(accounts[0].id);
     }
   }, [accounts, selectedAccountId]);
+
+  const applyTemplate = (id: string) => {
+    const t = templates.find((x) => x.id === id);
+    if (!t) return;
+    setContent(t.content || '');
+    if (kind === 'new' && t.subject) setEmailSubject(t.subject);
+    toast.success(`Modèle « ${t.name} » appliqué`);
+  };
 
 
   const handleFileSelect = async (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -138,6 +157,9 @@ export const EmailComposer: React.FC<EmailComposerProps> = ({
         .single();
 
       const signature = addAvatarToEmailSignature(profileData?.email_signature || '', profileData?.avatar_url);
+      const quoteBlock = quotedHtml
+        ? `<br><blockquote style="margin: 16px 0 0 0; padding-left: 12px; border-left: 3px solid #d1d5db; color: #444;">${sanitizeEmailHtml(quotedHtml)}</blockquote>`
+        : '';
       let htmlContent = `
         <div style="font-family: Arial, sans-serif; line-height: 1.6;">
           ${content}
@@ -145,6 +167,7 @@ export const EmailComposer: React.FC<EmailComposerProps> = ({
           <div style="border-top: 1px solid #e5e7eb; margin-top: 20px; padding-top: 20px;">
             ${signature}
           </div>
+          ${quoteBlock}
         </div>
       `;
 
@@ -191,6 +214,24 @@ export const EmailComposer: React.FC<EmailComposerProps> = ({
           attachments: attachmentUrls.length ? attachmentUrls : null,
         })
         .eq('id', emailRecord.id);
+
+      if (followUp && currentUser?.id) {
+        const due = new Date();
+        due.setDate(due.getDate() + followUpDays);
+        const { error: taskError } = await supabase.from('tasks').insert({
+          user_id: currentUser.id,
+          assigned_to: currentUser.id,
+          contact_id: contactId || null,
+          title: `Relancer ${to} — ${emailSubject}`,
+          description: `Relance prévue suite à l'email « ${emailSubject} » envoyé le ${new Date().toLocaleDateString('fr-FR')}.`,
+          due_date: due.toISOString(),
+          priority: 'medium',
+          status: 'todo',
+          task_type: 'email',
+        });
+        if (taskError) toast.error(`Relance non créée : ${taskError.message}`);
+        else toast.success(`Relance programmée dans ${followUpDays} jour(s)`);
+      }
 
       toast.success('Email envoyé avec succès (tracking activé)');
       onSent?.();
@@ -301,6 +342,22 @@ export const EmailComposer: React.FC<EmailComposerProps> = ({
             />
           </div>
 
+          {templates.length > 0 && (
+            <div>
+              <Label>Appliquer un modèle</Label>
+              <Select onValueChange={applyTemplate}>
+                <SelectTrigger>
+                  <SelectValue placeholder="Choisir un modèle..." />
+                </SelectTrigger>
+                <SelectContent>
+                  {templates.map((t) => (
+                    <SelectItem key={t.id} value={t.id}>{t.name}</SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+          )}
+
           <div>
             <Label htmlFor="content">Message *</Label>
             <RichTextEditor
@@ -309,6 +366,33 @@ export const EmailComposer: React.FC<EmailComposerProps> = ({
               placeholder="Votre message..."
               className="min-h-[300px]"
             />
+          </div>
+
+          {quotedHtml && (
+            <div>
+              <Label>Message d'origine (conservé avec sa mise en forme)</Label>
+              <div
+                className="mt-1 max-h-72 overflow-y-auto rounded-md border border-l-4 border-l-primary/40 bg-muted/30 p-3 text-sm"
+                dangerouslySetInnerHTML={{ __html: sanitizeEmailHtml(quotedHtml) }}
+              />
+            </div>
+          )}
+
+          <div className="rounded-md border p-3 space-y-2">
+            <div className="flex items-center gap-2">
+              <Checkbox id="followup" checked={followUp} onCheckedChange={(v) => setFollowUp(!!v)} />
+              <Label htmlFor="followup" className="cursor-pointer">Programmer une relance</Label>
+            </div>
+            {followUp && (
+              <div className="flex flex-wrap items-center gap-2 text-sm">
+                <span>Me rappeler de relancer dans</span>
+                <Input type="number" min={1} max={90} value={followUpDays}
+                  onChange={(e) => setFollowUpDays(Math.max(1, Number(e.target.value) || 1))}
+                  className="w-20" />
+                <span>jours</span>
+                <span className="w-full text-xs text-muted-foreground">Une tâche de relance est créée avec cette échéance (rappels email/push habituels).</span>
+              </div>
+            )}
           </div>
 
           <div>

@@ -644,10 +644,14 @@ export const ContactEmailHistory: React.FC<ContactEmailHistoryProps> = ({
   };
 
 
-  const quotedBody = (email: any) =>
-    email
-      ? `\n\n---\nDe: ${email.from_name || email.from_email}\nÀ: ${email.to_name || email.to_email}\nDate: ${formatDate(email.received_at || email.sent_at || email.created_at)}\nObjet: ${decodeMimeHeader(email.subject) || '(Aucun sujet)'}\n\n${stripTags(email.html_content || email.content || '')}`
-      : '';
+  const escapeText = (s: string) => (s || '').replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+  const quotedHtmlFor = (email: any) => {
+    if (!email) return '';
+    const body = email.html_content
+      ? email.html_content
+      : escapeText(email.content || '').replace(/\n/g, '<br>');
+    return `<p style="color:#666;font-size:13px;">De : ${escapeText(email.from_name || email.from_email || '')}<br>À : ${escapeText(email.to_name || email.to_email || '')}<br>Date : ${escapeText(formatDate(email.received_at || email.sent_at || email.created_at))}<br>Objet : ${escapeText(decodeMimeHeader(email.subject) || '(Aucun sujet)')}</p>${body}`;
+  };
 
   const composeTo =
     composeMode === 'forward'
@@ -1364,7 +1368,8 @@ export const ContactEmailHistory: React.FC<ContactEmailHistoryProps> = ({
         }}
         toEmail={composeTo}
         subject={composeSubject}
-        preText={quotedBody(composeEmail)}
+        preText=""
+        quotedHtml={quotedHtmlFor(composeEmail)}
         contactId={contactId}
         kind={composeMode ?? 'new'}
         sourceEmail={composeEmail ? {
