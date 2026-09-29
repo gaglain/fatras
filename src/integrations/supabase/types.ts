@@ -1280,6 +1280,57 @@ export type Database = {
         }
         Relationships: []
       }
+      email_followups: {
+        Row: {
+          contact_id: string | null
+          created_at: string
+          error: string | null
+          from_email: string | null
+          html_content: string
+          id: string
+          original_email_id: string | null
+          send_at: string
+          sent_at: string | null
+          status: string
+          subject: string
+          to_email: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          contact_id?: string | null
+          created_at?: string
+          error?: string | null
+          from_email?: string | null
+          html_content: string
+          id?: string
+          original_email_id?: string | null
+          send_at: string
+          sent_at?: string | null
+          status?: string
+          subject: string
+          to_email: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          contact_id?: string | null
+          created_at?: string
+          error?: string | null
+          from_email?: string | null
+          html_content?: string
+          id?: string
+          original_email_id?: string | null
+          send_at?: string
+          sent_at?: string | null
+          status?: string
+          subject?: string
+          to_email?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       email_notifications: {
         Row: {
           created_at: string | null
