@@ -60,6 +60,8 @@ export const EmailComposer: React.FC<EmailComposerProps> = ({
   const [templates, setTemplates] = useState<Array<{ id: string; name: string; subject: string; content: string }>>([]);
   const [followUp, setFollowUp] = useState(false);
   const [followUpDays, setFollowUpDays] = useState(7);
+  const [followUpMode, setFollowUpMode] = useState<'auto' | 'task'>('auto');
+  const [followUpContent, setFollowUpContent] = useState('<p>Bonjour,</p><p>Je me permets de revenir vers vous concernant mon précédent message. Avez-vous pu en prendre connaissance ?</p><p>Bien cordialement,</p>');
 
   React.useEffect(() => {
     setTo(toEmail);
@@ -218,19 +220,46 @@ export const EmailComposer: React.FC<EmailComposerProps> = ({
       if (followUp && currentUser?.id) {
         const due = new Date();
         due.setDate(due.getDate() + followUpDays);
-        const { error: taskError } = await supabase.from('tasks').insert({
-          user_id: currentUser.id,
-          assigned_to: currentUser.id,
-          contact_id: contactId || null,
-          title: `Relancer ${to} — ${emailSubject}`,
-          description: `Relance prévue suite à l'email « ${emailSubject} » envoyé le ${new Date().toLocaleDateString('fr-FR')}.`,
-          due_date: due.toISOString(),
-          priority: 'medium',
-          status: 'todo',
-          task_type: 'email',
-        });
-        if (taskError) toast.error(`Relance non créée : ${taskError.message}`);
-        else toast.success(`Relance programmée dans ${followUpDays} jour(s)`);
+        if (followUpMode === 'auto') {
+          const fromEmail = accounts.find((a) => a.id === selectedAccountId)?.email || 'booking@fatras.net';
+          const followSubject = emailSubject.match(/^(re|tr|fwd)\s*:/i) ? emailSubject : `Re: ${emailSubject}`;
+          const followHtml = `
+            <div style="font-family: Arial, sans-serif; line-height: 1.6;">
+              ${followUpContent}
+              <br><br>
+              <div style="border-top: 1px solid #e5e7eb; margin-top: 20px; padding-top: 20px;">${signature}</div>
+              <br><blockquote style="margin: 16px 0 0 0; padding-left: 12px; border-left: 3px solid #d1d5db; color: #444;">
+                <p style="color:#666;font-size:13px;">Le ${new Date().toLocaleDateString('fr-FR')}, ${fromEmail} a écrit :</p>
+                ${content}${quoteBlock}
+              </blockquote>
+            </div>`;
+          const { error: fuError } = await supabase.from('email_followups').insert({
+            user_id: currentUser.id,
+            contact_id: contactId || null,
+            original_email_id: emailRecord.id,
+            to_email: to,
+            from_email: fromEmail,
+            subject: followSubject,
+            html_content: followHtml,
+            send_at: due.toISOString(),
+          });
+          if (fuError) toast.error(`Relance automatique non programmée : ${fuError.message}`);
+          else toast.success(`Relance automatique le ${due.toLocaleDateString('fr-FR')} (annulée si réponse)`);
+        } else {
+          const { error: taskError } = await supabase.from('tasks').insert({
+            user_id: currentUser.id,
+            assigned_to: currentUser.id,
+            contact_id: contactId || null,
+            title: `Relancer ${to} — ${emailSubject}`,
+            description: `Relance prévue suite à l'email « ${emailSubject} » envoyé le ${new Date().toLocaleDateString('fr-FR')}.`,
+            due_date: due.toISOString(),
+            priority: 'medium',
+            status: 'todo',
+            task_type: 'email',
+          });
+          if (taskError) toast.error(`Relance non créée : ${taskError.message}`);
+          else toast.success(`Rappel de relance dans ${followUpDays} jour(s)`);
+        }
       }
 
       toast.success('Email envoyé avec succès (tracking activé)');
@@ -378,19 +407,47 @@ export const EmailComposer: React.FC<EmailComposerProps> = ({
             </div>
           )}
 
-          <div className="rounded-md border p-3 space-y-2">
+          <div className="rounded-md border p-3 space-y-3">
             <div className="flex items-center gap-2">
               <Checkbox id="followup" checked={followUp} onCheckedChange={(v) => setFollowUp(!!v)} />
               <Label htmlFor="followup" className="cursor-pointer">Programmer une relance</Label>
             </div>
             {followUp && (
-              <div className="flex flex-wrap items-center gap-2 text-sm">
-                <span>Me rappeler de relancer dans</span>
-                <Input type="number" min={1} max={90} value={followUpDays}
-                  onChange={(e) => setFollowUpDays(Math.max(1, Number(e.target.value) || 1))}
-                  className="w-20" />
-                <span>jours</span>
-                <span className="w-full text-xs text-muted-foreground">Une tâche de relance est créée avec cette échéance (rappels email/push habituels).</span>
+              <div className="space-y-3 text-sm">
+                <div className="grid grid-cols-2 gap-2">
+                  <Button type="button" size="sm" variant={followUpMode === 'auto' ? 'default' : 'outline'} onClick={() => setFollowUpMode('auto')}>
+                    Envoi automatique
+                  </Button>
+                  <Button type="button" size="sm" variant={followUpMode === 'task' ? 'default' : 'outline'} onClick={() => setFollowUpMode('task')}>
+                    Simple rappel
+                  </Button>
+                </div>
+                <div className="flex flex-wrap items-center gap-2">
+                  <span>{followUpMode === 'auto' ? 'Relancer automatiquement dans' : 'Me rappeler de relancer dans'}</span>
+                  <Input type="number" min={1} max={90} value={followUpDays}
+                    onChange={(e) => setFollowUpDays(Math.max(1, Number(e.target.value) || 1))}
+                    className="w-20" />
+                  <span>jours</span>
+                </div>
+                {followUpMode === 'auto' ? (
+                  <>
+                    {templates.length > 0 && (
+                      <Select onValueChange={(id) => {
+                        const t = templates.find((x) => x.id === id);
+                        if (t) setFollowUpContent(t.content || '');
+                      }}>
+                        <SelectTrigger><SelectValue placeholder="Modèle de relance (optionnel)" /></SelectTrigger>
+                        <SelectContent>
+                          {templates.map((t) => <SelectItem key={t.id} value={t.id}>{t.name}</SelectItem>)}
+                        </SelectContent>
+                      </Select>
+                    )}
+                    <RichTextEditor value={followUpContent} onChange={setFollowUpContent} placeholder="Texte de la relance..." className="min-h-[150px]" />
+                    <p className="text-xs text-muted-foreground">La relance part toute seule à la date prévue, avec votre signature et le fil précédent. Elle est annulée si le contact vous répond d'ici là.</p>
+                  </>
+                ) : (
+                  <p className="text-xs text-muted-foreground">Une tâche de relance est créée avec cette échéance (rappels email/push habituels).</p>
+                )}
               </div>
             )}
           </div>
