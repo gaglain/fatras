@@ -59,7 +59,8 @@ export const EmailComposer: React.FC<EmailComposerProps> = ({
   const [sending, setSending] = useState(false);
   const [templates, setTemplates] = useState<Array<{ id: string; name: string; subject: string; content: string }>>([]);
   const [followUp, setFollowUp] = useState(false);
-  const [followUpDays, setFollowUpDays] = useState(7);
+  const [followUpDaysInput, setFollowUpDaysInput] = useState('7');
+  const followUpDays = Math.min(90, Math.max(1, parseInt(followUpDaysInput, 10) || 1));
   const [followUpMode, setFollowUpMode] = useState<'auto' | 'task'>('auto');
   const [followUpContent, setFollowUpContent] = useState('<p>Bonjour,</p><p>Je me permets de revenir vers vous concernant mon précédent message. Avez-vous pu en prendre connaissance ?</p><p>Bien cordialement,</p>');
 
@@ -424,11 +425,17 @@ export const EmailComposer: React.FC<EmailComposerProps> = ({
                 </div>
                 <div className="flex flex-wrap items-center gap-2">
                   <span>{followUpMode === 'auto' ? 'Relancer automatiquement dans' : 'Me rappeler de relancer dans'}</span>
-                  <Input type="number" min={1} max={90} value={followUpDays}
-                    onChange={(e) => setFollowUpDays(Math.max(1, Number(e.target.value) || 1))}
+                  <Input type="number" min={1} max={90} inputMode="numeric" value={followUpDaysInput}
+                    onChange={(e) => setFollowUpDaysInput(e.target.value.replace(/[^0-9]/g, ''))}
+                    onBlur={() => setFollowUpDaysInput(String(followUpDays))}
                     className="w-20" />
                   <span>jours</span>
                 </div>
+                <p className="text-xs text-muted-foreground">
+                  {followUpMode === 'auto' ? 'Envoi prévu le ' : 'Rappel le '}
+                  {new Date(Date.now() + followUpDays * 86400000).toLocaleDateString('fr-FR', { weekday: 'long', day: 'numeric', month: 'long' })}
+                  {' — programmé au moment où vous cliquez sur « Envoyer ».'}
+                </p>
                 {followUpMode === 'auto' ? (
                   <>
                     {templates.length > 0 && (
