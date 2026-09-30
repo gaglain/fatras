@@ -199,6 +199,10 @@ export const NotificationList: React.FC<NotificationListProps> = ({ onNotificati
         return <User className="h-4 w-4 text-orange-500" />;
       case 'message':
         return <MessageSquare className="h-4 w-4 text-cyan-500" />;
+      case 'email_opened':
+        return <Flame className="h-4 w-4 text-orange-500" />;
+      case 'email_clicked':
+        return <MousePointerClick className="h-4 w-4 text-orange-500" />;
       default:
         return <Mail className="h-4 w-4" />;
     }
