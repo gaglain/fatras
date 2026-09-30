@@ -32,7 +32,7 @@ const handler = async (req: Request): Promise<Response> => {
       .update({ 
         opened_at: new Date().toISOString(),
         is_read: true,
-        status: 'delivered'
+        status: 'opened'
       })
       .eq('id', emailId)
       .is('opened_at', null);
