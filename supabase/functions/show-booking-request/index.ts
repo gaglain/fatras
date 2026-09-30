@@ -151,7 +151,6 @@ serve(async (req) => {
         venue: organization,
         date: body.desired_date && /^\d{4}-\d{2}-\d{2}$/.test(body.desired_date) ? body.desired_date : null,
         status: 'open',
-        type: 'booking',
         requirements,
         contact: `${firstName} ${lastName} — ${email}`,
         probability_percentage: 20,
