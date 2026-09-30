@@ -27,6 +27,8 @@ const handler = async (req: Request): Promise<Response> => {
 
     console.log(`Individual email link clicked - Email ID: ${emailId}, URL: ${originalUrl}`);
 
+    const now = new Date().toISOString();
+    await supabase.from('emails').update({ status: 'clicked' }).eq('id', emailId);
     // Update the email to mark it as read if not already
     await supabase
       .from('emails')

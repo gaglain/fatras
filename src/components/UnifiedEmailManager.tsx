@@ -258,6 +258,15 @@ export const UnifiedEmailManager: React.FC = () => {
                         >
                           {email.direction === 'received' ? 'Reçu' : 'Envoyé'}
                         </Badge>
+                        {email.direction !== 'received' && (() => {
+                          const st = email.status;
+                          const e = st === 'bounced' || st === 'failed' ? { l: 'Rebond', v: 'destructive' as const }
+                            : st === 'clicked' ? { l: 'Cliqué', v: 'default' as const }
+                            : (email.opened_at || st === 'opened') ? { l: 'Ouvert', v: 'default' as const }
+                            : st === 'delivered' ? { l: 'Délivré', v: 'outline' as const }
+                            : { l: 'Non ouvert', v: 'outline' as const };
+                          return <Badge variant={e.v} className="text-xs" title={email.opened_at ? `Ouvert le ${new Date(email.opened_at).toLocaleString('fr-FR')}` : undefined}>{e.l}</Badge>;
+                        })()}
                         {email.direction === 'received' && !email.read_at && (
                           <Badge variant="outline" className="text-xs">
                             Nouveau
