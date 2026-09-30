@@ -71,7 +71,20 @@ Deno.serve(async (req) => {
       }
     }
 
-    return new Response(JSON.stringify({ stop, artists, lineupMembers }), {
+    // Fetch attached documents (tech sheets, lighting plans, contracts...)
+    const { data: docRows } = await supabase
+      .from('roadshow_documents')
+      .select('id, file_name, file_path, file_type, category, description')
+      .eq('roadshow_stop_id', stopId)
+      .order('created_at', { ascending: false });
+
+    const baseUrl = `${Deno.env.get('SUPABASE_URL')}/storage/v1/object/public/roadshow-documents/`;
+    const documents = (docRows || []).map((d: any) => ({
+      ...d,
+      url: `${baseUrl}${d.file_path.split('/').map(encodeURIComponent).join('/')}`,
+    }));
+
+    return new Response(JSON.stringify({ stop, artists, lineupMembers, documents }), {
       headers: { ...corsHeaders, 'Content-Type': 'application/json' },
     });
   } catch (err) {
