@@ -164,7 +164,7 @@ serve(async (req) => {
     // Reminder task for the booking team
     const dueDate = new Date();
     dueDate.setDate(dueDate.getDate() + 1);
-    await supabase.from('tasks').insert({
+    const { error: taskError } = await supabase.from('tasks').insert({
       user_id: ownerId,
       assigned_to: ownerId,
       contact_id: contactId,
@@ -172,11 +172,12 @@ serve(async (req) => {
       title: `Répondre à la demande de date — ${organization} (${artistName})`,
       description: requirements,
       priority: 'high',
-      status: 'pending',
+      status: 'todo',
       due_date: dueDate.toISOString(),
       task_type: 'booking',
       tags: ['Demande de date'],
     });
+    if (taskError) console.error('Task creation failed:', taskError);
 
     // In-app notification
     await supabase.from('notifications').insert({
