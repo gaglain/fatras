@@ -213,6 +213,14 @@ export const Contacts: React.FC = () => {
     });
   }, [contacts, debouncedSearch, statusFilter, roleFilter, tagFilters, sourceFilter, cityFilter, departmentFilter, eventFilter, artistFilter, contactEvents, contactArtists]);
 
+  // "Prospects chauds" : contacts ayant ouvert/cliqué un email dans les 48h sans avoir répondu
+  const displayedContacts = hotOnly ? hotProspects.map(h => h.contact) : filteredContacts;
+  const hotInfoByContactId = useMemo(() => {
+    const map = new Map<string, { engagement: 'opened' | 'clicked'; lastEngagementAt: string }>();
+    hotProspects.forEach(h => { if (h.contact.id) map.set(h.contact.id, { engagement: h.engagement, lastEngagementAt: h.lastEngagementAt }); });
+    return map;
+  }, [hotProspects]);
+
   const confirmAction = useConfirm();
   const handleDelete = async (id: string) => {
     const ok = await confirmAction({ title: 'Supprimer le contact', description: 'Êtes-vous sûr de vouloir supprimer ce contact ? Les événements, devis et tâches liés seront conservés mais désassociés.', variant: 'destructive' });
