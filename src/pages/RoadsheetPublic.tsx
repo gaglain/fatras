@@ -124,6 +124,11 @@ export const RoadsheetPublic: React.FC = () => {
             </Badge>
           </div>
 
+          {/* Mode sur la route : l'essentiel du jour */}
+          <OnTheRoadPanel stop={stop} documents={data.documents || []} />
+
+
+
           {/* Date & Lieu */}
           <Card>
             <CardContent className="p-6 space-y-4">
