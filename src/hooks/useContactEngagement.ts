@@ -125,8 +125,9 @@ export const useContactEngagement = (contactId?: string) => {
       });
 
       const emailsSent = (emails || []).filter(e => e.sent_at).length;
-      const emailsDelivered = (emails || []).filter(e => e.delivered_at || e.status === 'delivered' || e.status === 'sent').length;
-      const emailsOpened = (emails || []).filter(e => e.opened_at || e.status === 'opened').length;
+      // Un email ouvert ou cliqué a forcément été délivré
+      const emailsDelivered = (emails || []).filter(e => e.delivered_at || e.opened_at || ['delivered', 'sent', 'opened', 'clicked'].includes(e.status)).length;
+      const emailsOpened = (emails || []).filter(e => e.opened_at || e.status === 'opened' || e.status === 'clicked').length;
       const emailsBounced = (emails || []).filter(e => e.status === 'bounced' || e.status === 'failed').length;
 
       const finalSent = Math.max(totalSent, emailsSent);
