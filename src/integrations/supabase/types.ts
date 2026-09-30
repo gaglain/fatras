@@ -4873,6 +4873,7 @@ export type Database = {
         Args: { _channel_id: string }
         Returns: boolean
       }
+      is_team_member: { Args: { _user_id: string }; Returns: boolean }
       recompute_campaign_stats: {
         Args: { p_campaign_id: string }
         Returns: undefined
