@@ -23,9 +23,10 @@ interface ChatMessage {
 // Generate or retrieve visitor ID from localStorage
 const getVisitorId = (): string => {
   const stored = localStorage.getItem('chat_visitor_id');
-  if (stored) return stored;
-  
-  const newId = `visitor_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
+  // Secret, unguessable ID (used as a bearer token to read one's own conversation)
+  if (stored && stored.length >= 30) return stored;
+
+  const newId = `visitor_${crypto.randomUUID()}`;
   localStorage.setItem('chat_visitor_id', newId);
   return newId;
 };
@@ -43,65 +44,28 @@ export const PublicChatWidget: React.FC = () => {
   const [isLoading, setIsLoading] = useState(false);
   const [visitorId] = useState(getVisitorId);
 
-  // Load existing messages for this visitor
-  useEffect(() => {
-    if (!isOpen) return;
-
-    const loadMessages = async () => {
-      const { data, error } = await supabase
-        .from('public_chat_messages')
-        .select('*')
-        .eq('visitor_id', visitorId)
-        .order('created_at', { ascending: true });
-
-      if (data && !error) {
-        setMessages(data as ChatMessage[]);
-        // If there are existing messages, skip intro
-        if (data.length > 0) {
-          setIsIntroStep(false);
-          // Restore visitor info from first message
-          const firstMsg = data.find(m => !m.is_from_admin);
-          if (firstMsg) {
-            setVisitorName(firstMsg.visitor_name || '');
-            setVisitorEmail(firstMsg.visitor_email || '');
-          }
-        }
+  const loadMessages = React.useCallback(async (initial = false) => {
+    const { data, error } = await supabase.rpc('get_visitor_chat_messages' as any, { p_visitor_id: visitorId });
+    if (error || !Array.isArray(data)) return;
+    const list = data as ChatMessage[];
+    setMessages(prev => (prev.length === list.length && prev[prev.length - 1]?.id === list[list.length - 1]?.id ? prev : list));
+    if (initial && list.length > 0) {
+      setIsIntroStep(false);
+      const firstMsg = list.find(m => !m.is_from_admin);
+      if (firstMsg) {
+        setVisitorName(firstMsg.visitor_name || '');
+        setVisitorEmail(firstMsg.visitor_email || '');
       }
-    };
+    }
+  }, [visitorId]);
 
-    loadMessages();
-  }, [isOpen, visitorId]);
-
-  // Subscribe to realtime updates - use unique channel name per visitor
+  // Load messages, then poll for admin replies while the widget is open
   useEffect(() => {
     if (!isOpen) return;
-
-    const channelName = `public-chat-${visitorId}-${Date.now()}`;
-    const channel = supabase
-      .channel(channelName)
-      .on(
-        'postgres_changes',
-        {
-          event: 'INSERT',
-          schema: 'public',
-          table: 'public_chat_messages',
-          filter: `visitor_id=eq.${visitorId}`
-        },
-        (payload) => {
-          const newMsg = payload.new as ChatMessage;
-          setMessages(prev => {
-            // Avoid duplicates
-            if (prev.some(m => m.id === newMsg.id)) return prev;
-            return [...prev, newMsg];
-          });
-        }
-      )
-      .subscribe();
-
-    return () => {
-      supabase.removeChannel(channel);
-    };
-  }, [isOpen, visitorId]);
+    loadMessages(true);
+    const interval = setInterval(() => loadMessages(false), 5000);
+    return () => clearInterval(interval);
+  }, [isOpen, loadMessages]);
 
   // Auto-scroll to bottom
   useEffect(() => {
