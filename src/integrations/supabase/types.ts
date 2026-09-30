@@ -4821,6 +4821,26 @@ export type Database = {
           username: string
         }[]
       }
+      get_visitor_chat_messages: {
+        Args: { p_visitor_id: string }
+        Returns: {
+          admin_user_id: string | null
+          created_at: string
+          id: string
+          is_from_admin: boolean
+          is_read: boolean
+          message: string
+          visitor_email: string | null
+          visitor_id: string
+          visitor_name: string | null
+        }[]
+        SetofOptions: {
+          from: "*"
+          to: "public_chat_messages"
+          isOneToOne: false
+          isSetofReturn: true
+        }
+      }
       has_any_role: {
         Args: {
           _roles: Database["public"]["Enums"]["app_role"][]
