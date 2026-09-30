@@ -138,7 +138,7 @@ serve(async (req) => {
     ].filter(Boolean).join('\n');
 
     // Opportunity for the requested date
-    const { data: opportunity } = await supabase
+    const { data: opportunity, error: opportunityError } = await supabase
       .from('opportunities')
       .insert({
         user_id: ownerId,
@@ -157,7 +157,10 @@ serve(async (req) => {
         probability_percentage: 20,
       })
       .select('id')
-      .single();
+      .maybeSingle();
+    if (opportunityError) console.error('Opportunity creation failed:', opportunityError);
+
+
 
     // Reminder task for the booking team
     const dueDate = new Date();
