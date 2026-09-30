@@ -44,7 +44,7 @@ export const PublicChatWidget: React.FC = () => {
   const [isLoading, setIsLoading] = useState(false);
   const [visitorId] = useState(getVisitorId);
 
-  const loadMessages = React.useCallback(async (initial = false) => {
+  const loadMessages = useCallback(async (initial = false) => {
     const { data, error } = await supabase.rpc('get_visitor_chat_messages' as any, { p_visitor_id: visitorId });
     if (error || !Array.isArray(data)) return;
     const list = data as ChatMessage[];
@@ -99,7 +99,7 @@ export const PublicChatWidget: React.FC = () => {
       logger.error('Error sending message:', error);
       toast.error('Erreur lors de l\'envoi du message');
     } else {
-      setNewMessage('');
+      setNewMessage(''); loadMessages(false);
     }
     
     setIsLoading(false);
