@@ -10,7 +10,8 @@ import { EmailAnalytics } from '@/components/EmailAnalytics';
 import { EmailSender } from '@/components/EmailSender';
 import { EmailTemplateManager } from '@/components/email/EmailTemplateManager';
 import { EmailTemplateComposer } from '@/components/email/EmailTemplateComposer';
-import { Settings, Inbox, Gauge, RefreshCw, TrendingUp, Send, Mail, FileText } from 'lucide-react';
+import { FollowupStatusView } from '@/components/email/FollowupStatusView';
+import { Clock, Settings, Inbox, Gauge, RefreshCw, TrendingUp, Send, Mail, FileText } from 'lucide-react';
 
 const Email: React.FC = () => {
   const [activeTab, setActiveTab] = useState('inbox');
@@ -29,7 +30,7 @@ const Email: React.FC = () => {
 
       <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-4 md:space-y-6">
         <div className="overflow-x-auto -mx-4 px-4 md:mx-0 md:px-0">
-          <TabsList className="inline-flex w-auto min-w-full md:grid md:w-full md:grid-cols-7 gap-1">
+          <TabsList className="inline-flex w-auto min-w-full md:grid md:w-full md:grid-cols-8 gap-1">
             <TabsTrigger value="inbox" className="flex items-center gap-1.5 px-3 shrink-0">
               <Inbox className="h-4 w-4" />
               <span className="hidden sm:inline">Boîte</span>
@@ -37,6 +38,10 @@ const Email: React.FC = () => {
             <TabsTrigger value="send" className="flex items-center gap-1.5 px-3 shrink-0">
               <Send className="h-4 w-4" />
               <span className="hidden sm:inline">Envoyer</span>
+            </TabsTrigger>
+            <TabsTrigger value="followups" className="flex items-center gap-1.5 px-3 shrink-0">
+              <Clock className="h-4 w-4" />
+              <span className="hidden sm:inline">Relances</span>
             </TabsTrigger>
             <TabsTrigger value="sync" className="flex items-center gap-1.5 px-3 shrink-0">
               <RefreshCw className="h-4 w-4" />
@@ -85,6 +90,18 @@ const Email: React.FC = () => {
             </CardHeader>
             <CardContent>
               <EmailTemplateComposer />
+            </CardContent>
+          </Card>
+        </TabsContent>
+
+        <TabsContent value="followups" className="space-y-6">
+          <Card>
+            <CardHeader>
+              <CardTitle>Relances automatiques</CardTitle>
+              <CardDescription>Suivez les relances programmées, envoyées ou échouées</CardDescription>
+            </CardHeader>
+            <CardContent>
+              <FollowupStatusView />
             </CardContent>
           </Card>
         </TabsContent>
