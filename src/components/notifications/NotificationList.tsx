@@ -3,7 +3,7 @@ import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Separator } from '@/components/ui/separator';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { BellOff, Check, Mail, Clock, CheckSquare, Calendar, User, MessageSquare, AlertTriangle } from 'lucide-react';
+import { BellOff, Check, Mail, Clock, CheckSquare, Calendar, User, MessageSquare, AlertTriangle, Flame, MousePointerClick } from 'lucide-react';
 import { useEmailNotifications } from '@/hooks/useEmailNotifications';
 import { useNotifications } from '@/hooks/useNotifications';
 import { useTaskNotifications } from '@/hooks/useTaskNotifications';
@@ -11,7 +11,7 @@ import { useNavigate } from 'react-router-dom';
 
 interface UnifiedNotification {
   id: string;
-  type: 'email' | 'task' | 'event' | 'contact' | 'message' | 'general' | 'roadshow_assignment';
+  type: 'email' | 'task' | 'event' | 'contact' | 'message' | 'general' | 'roadshow_assignment' | 'email_opened' | 'email_clicked';
   title: string;
   message?: string;
   is_read: boolean;
@@ -139,6 +139,12 @@ export const NotificationList: React.FC<NotificationListProps> = ({ onNotificati
       case 'contact':
         navigate('/contacts');
         break;
+      case 'email_opened':
+      case 'email_clicked': {
+        const contactId = notification.data?.contact_id;
+        navigate(contactId ? `/contacts/${contactId}` : '/email');
+        break;
+      }
       case 'message': {
         const channelId = notification.data?.channel_id;
         const channelName = notification.data?.channel_name;
@@ -193,6 +199,10 @@ export const NotificationList: React.FC<NotificationListProps> = ({ onNotificati
         return <User className="h-4 w-4 text-orange-500" />;
       case 'message':
         return <MessageSquare className="h-4 w-4 text-cyan-500" />;
+      case 'email_opened':
+        return <Flame className="h-4 w-4 text-orange-500" />;
+      case 'email_clicked':
+        return <MousePointerClick className="h-4 w-4 text-orange-500" />;
       default:
         return <Mail className="h-4 w-4" />;
     }

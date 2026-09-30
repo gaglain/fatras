@@ -11,6 +11,56 @@ const supabase = createClient(
   Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? ''
 );
 
+const PIXEL = Uint8Array.from(atob('R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7'), c => c.charCodeAt(0));
+
+async function notifyEngagement(emailId: string, kind: 'opened' | 'clicked') {
+  const { data: email } = await supabase
+    .from('emails')
+    .select('id, user_id, subject, to_email, to_name, contact_id, direction')
+    .eq('id', emailId)
+    .maybeSingle();
+
+  if (!email?.user_id) return;
+
+  let displayName = email.to_name || email.to_email || 'Un contact';
+  let contactId = email.contact_id as string | null;
+
+  if (!contactId && email.to_email) {
+    const { data: contact } = await supabase
+      .from('contacts')
+      .select('id, first_name, last_name, company')
+      .ilike('email', email.to_email)
+      .limit(1)
+      .maybeSingle();
+    if (contact) {
+      contactId = contact.id;
+      displayName = [contact.first_name, contact.last_name].filter(Boolean).join(' ') || contact.company || displayName;
+    }
+  } else if (contactId) {
+    const { data: contact } = await supabase
+      .from('contacts')
+      .select('first_name, last_name, company')
+      .eq('id', contactId)
+      .maybeSingle();
+    if (contact) {
+      displayName = [contact.first_name, contact.last_name].filter(Boolean).join(' ') || contact.company || displayName;
+    }
+  }
+
+  const title = kind === 'opened' ? '🔥 Prospect chaud : email ouvert' : '🎯 Prospect chaud : lien cliqué';
+  const message = kind === 'opened'
+    ? `${displayName} vient d'ouvrir votre email « ${email.subject || 'sans objet'} »`
+    : `${displayName} a cliqué sur un lien de votre email « ${email.subject || 'sans objet'} »`;
+
+  await supabase.from('notifications').insert({
+    user_id: email.user_id,
+    type: kind === 'opened' ? 'email_opened' : 'email_clicked',
+    title,
+    message,
+    data: { email_id: email.id, contact_id: contactId, engagement: kind },
+  });
+}
+
 const handler = async (req: Request): Promise<Response> => {
   if (req.method === 'OPTIONS') {
     return new Response(null, { headers: corsHeaders });
@@ -26,37 +76,36 @@ const handler = async (req: Request): Promise<Response> => {
 
     console.log(`Individual email opened - Email ID: ${emailId}`);
 
-    // Update the email to mark it as opened
-    await supabase
+    // Only the first open triggers an alert
+    const { data: updated } = await supabase
       .from('emails')
-      .update({ 
+      .update({
         opened_at: new Date().toISOString(),
         is_read: true,
         status: 'opened'
       })
       .eq('id', emailId)
-      .is('opened_at', null);
+      .is('opened_at', null)
+      .select('id');
 
-    // Return 1x1 transparent pixel
-    const pixel = new Uint8Array([
-      0x47, 0x49, 0x46, 0x38, 0x39, 0x61, 0x01, 0x00, 0x01, 0x00, 0x80, 0x00, 0x00,
-      0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x21, 0xF9, 0x04, 0x01, 0x00, 0x00, 0x00,
-      0x00, 0x2C, 0x00, 0x00, 0x00, 0x00, 0x01, 0x00, 0x01, 0x00, 0x00, 0x02, 0x02,
-      0x0C, 0x0A, 0x00, 0x3B
-    ]);
+    if (updated && updated.length > 0) {
+      try {
+        await notifyEngagement(emailId, 'opened');
+      } catch (notifyError) {
+        console.error('Failed to create open notification:', notifyError);
+      }
+    }
 
-    return new Response(pixel, {
+    return new Response(PIXEL, {
       headers: {
-        'Content-Type': 'image/gif',
-        'Cache-Control': 'no-cache, no-store, must-revalidate',
-        'Pragma': 'no-cache',
-        'Expires': '0',
         ...corsHeaders,
+        'Content-Type': 'image/gif',
+        'Cache-Control': 'no-store, no-cache, must-revalidate, private',
       },
     });
   } catch (error: any) {
     console.error('Error tracking individual email open:', error);
-    return new Response('Error', { status: 500, headers: corsHeaders });
+    return new Response(PIXEL, { headers: { ...corsHeaders, 'Content-Type': 'image/gif' } });
   }
 };
 

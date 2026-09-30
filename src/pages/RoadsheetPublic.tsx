@@ -5,11 +5,13 @@ import { Card, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Calendar, MapPin, Clock, Users, Building2, Phone, Car, Music, FileText, UserCheck } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
+import { OnTheRoadPanel } from '@/components/roadshow/OnTheRoadPanel';
 
 interface RoadsheetData {
   stop: any;
   artists: any[];
   lineupMembers: any[];
+  documents?: any[];
 }
 
 export const RoadsheetPublic: React.FC = () => {
@@ -121,6 +123,11 @@ export const RoadsheetPublic: React.FC = () => {
               {getStatusLabel(stop.status)}
             </Badge>
           </div>
+
+          {/* Mode sur la route : l'essentiel du jour */}
+          <OnTheRoadPanel stop={stop} documents={data.documents || []} />
+
+
 
           {/* Date & Lieu */}
           <Card>

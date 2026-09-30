@@ -1,7 +1,8 @@
 import React, { useEffect, useMemo, useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { Plus, Upload, Download, Mail, List, Grid, LayoutList, Loader2, Merge, Users, MailWarning } from 'lucide-react';
+import { Plus, Upload, Download, Mail, List, Grid, LayoutList, Loader2, Merge, Users, MailWarning, Flame, RefreshCw } from 'lucide-react';
+import { useHotProspects } from '@/hooks/useHotProspects';
 import { useConfirm } from '@/components/ui/confirm-dialog';
 import { ContactCard } from '@/components/contacts/ContactCard';
 import { ContactDialog } from '@/components/contacts/ContactDialog';
@@ -61,6 +62,8 @@ export const Contacts: React.FC = () => {
   const [isLoadingMore, setIsLoadingMore] = useState(false);
   const [totalContactsCount, setTotalContactsCount] = useState<number>(0);
   const [contactStats, setContactStats] = useState({ total: 0, clients: 0, prospects: 0, inactifs: 0 });
+  const [hotOnly, setHotOnly] = useState(false);
+  const { hotProspects, loading: hotLoading, refresh: refreshHotProspects } = useHotProspects();
 
   useEffect(() => { if (user?.id) { fetchContacts({ reset: true }); fetchEvents(); fetchArtists(); } }, [user?.id]);
 
@@ -213,6 +216,14 @@ export const Contacts: React.FC = () => {
     });
   }, [contacts, debouncedSearch, statusFilter, roleFilter, tagFilters, sourceFilter, cityFilter, departmentFilter, eventFilter, artistFilter, contactEvents, contactArtists]);
 
+  // "Prospects chauds" : contacts ayant ouvert/cliqué un email dans les 48h sans avoir répondu
+  const displayedContacts = hotOnly ? hotProspects.map(h => h.contact) : filteredContacts;
+  const hotInfoByContactId = useMemo(() => {
+    const map = new Map<string, { engagement: 'opened' | 'clicked'; lastEngagementAt: string }>();
+    hotProspects.forEach(h => { if (h.contact.id) map.set(h.contact.id, { engagement: h.engagement, lastEngagementAt: h.lastEngagementAt }); });
+    return map;
+  }, [hotProspects]);
+
   const confirmAction = useConfirm();
   const handleDelete = async (id: string) => {
     const ok = await confirmAction({ title: 'Supprimer le contact', description: 'Êtes-vous sûr de vouloir supprimer ce contact ? Les événements, devis et tâches liés seront conservés mais désassociés.', variant: 'destructive' });
@@ -269,9 +280,18 @@ export const Contacts: React.FC = () => {
 
         <TabsContent value="contacts" className="space-y-6">
           <div className="flex flex-col space-y-2 sm:flex-row sm:justify-between sm:space-y-0 sm:space-x-2">
-            <div className="flex space-x-2">
+            <div className="flex flex-wrap gap-2">
               <Button variant={viewMode === 'grid' ? 'default' : 'outline'} size="sm" onClick={() => setViewMode('grid')}><Grid className="h-4 w-4 mr-2" />Grille</Button>
               <Button variant={viewMode === 'list' ? 'default' : 'outline'} size="sm" onClick={() => setViewMode('list')}><LayoutList className="h-4 w-4 mr-2" />Liste</Button>
+              <Button variant={hotOnly ? 'default' : 'outline'} size="sm" onClick={() => { setHotOnly(v => !v); setSelectedContactIds([]); }}>
+                <Flame className={`h-4 w-4 mr-2 ${hotOnly ? '' : 'text-orange-500'}`} />
+                Prospects chauds{hotProspects.length > 0 ? ` (${hotProspects.length})` : ''}
+              </Button>
+              {hotOnly && (
+                <Button variant="ghost" size="sm" onClick={refreshHotProspects} disabled={hotLoading}>
+                  <RefreshCw className={`h-4 w-4 ${hotLoading ? 'animate-spin' : ''}`} />
+                </Button>
+              )}
             </div>
             <div className="flex space-x-2">
               <Button onClick={() => setCsvImportOpen(true)} variant="outline" size="sm"><Upload className="h-4 w-4 mr-2" /><span className="hidden sm:inline">Importer CSV</span><span className="sm:hidden">Import</span></Button>
@@ -279,9 +299,16 @@ export const Contacts: React.FC = () => {
             </div>
           </div>
 
-          <ContactFilters searchTerm={searchTerm} onSearchChange={setSearchTerm} statusFilter={statusFilter} onStatusFilterChange={setStatusFilter} tagFilters={tagFilters} onTagFiltersChange={setTagFilters} sourceFilter={sourceFilter} onSourceFilterChange={setSourceFilter} cityFilter={cityFilter} onCityFilterChange={setCityFilter} departmentFilter={departmentFilter} onDepartmentFilterChange={setDepartmentFilter} eventFilter={eventFilter} onEventFilterChange={setEventFilter} artistFilter={artistFilter} onArtistFilterChange={setArtistFilter} availableTags={availableTags} availableSources={availableSources} availableCities={availableCities} availableEvents={events} availableArtists={artists} totalContacts={totalContactsCount || contacts.length} filteredCount={filteredContacts.length} onClearFilters={clearAllFilters} />
+          {hotOnly ? (
+            <div className="rounded-lg border border-orange-500/40 bg-orange-500/5 p-4">
+              <p className="text-sm font-medium flex items-center gap-2"><Flame className="h-4 w-4 text-orange-500" />Ont ouvert ou cliqué un de vos emails ces 48 dernières heures, sans avoir répondu.</p>
+              <p className="text-xs text-muted-foreground mt-1">{hotLoading ? 'Recherche en cours…' : `${hotProspects.length} contact(s) à rappeler en priorité.`}</p>
+            </div>
+          ) : (
+            <ContactFilters searchTerm={searchTerm} onSearchChange={setSearchTerm} statusFilter={statusFilter} onStatusFilterChange={setStatusFilter} tagFilters={tagFilters} onTagFiltersChange={setTagFilters} sourceFilter={sourceFilter} onSourceFilterChange={setSourceFilter} cityFilter={cityFilter} onCityFilterChange={setCityFilter} departmentFilter={departmentFilter} onDepartmentFilterChange={setDepartmentFilter} eventFilter={eventFilter} onEventFilterChange={setEventFilter} artistFilter={artistFilter} onArtistFilterChange={setArtistFilter} availableTags={availableTags} availableSources={availableSources} availableCities={availableCities} availableEvents={events} availableArtists={artists} totalContacts={totalContactsCount || contacts.length} filteredCount={filteredContacts.length} onClearFilters={clearAllFilters} />
+          )}
 
-          {filteredContacts.length > 0 && <BulkContactActions selectedContacts={selectedContactIds} totalContacts={filteredContacts.length} onSelectAll={(s) => s ? setSelectedContactIds(filteredContacts.map(c => c.id!).filter(Boolean)) : setSelectedContactIds([])} onClearSelection={() => setSelectedContactIds([])} onBulkDelete={handleBulkDelete} isDeleting={isDeleting} />}
+          {displayedContacts.length > 0 && <BulkContactActions selectedContacts={selectedContactIds} totalContacts={displayedContacts.length} onSelectAll={(s) => s ? setSelectedContactIds(displayedContacts.map(c => c.id!).filter(Boolean)) : setSelectedContactIds([])} onClearSelection={() => setSelectedContactIds([])} onBulkDelete={handleBulkDelete} isDeleting={isDeleting} />}
 
           {selectedContactIds.length > 0 && (
             <div className="flex flex-col space-y-2 sm:flex-row sm:space-y-0 sm:gap-2">
@@ -289,21 +316,29 @@ export const Contacts: React.FC = () => {
             </div>
           )}
 
-          {filteredContacts.length === 0 ? (
+          {displayedContacts.length === 0 ? (
             <div className="text-center py-12">
-              <Users className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
-              <h3 className="text-lg font-semibold mb-2">{contacts.length === 0 ? 'Aucun contact' : 'Aucun résultat'}</h3>
-              <p className="text-muted-foreground mb-4">{contacts.length === 0 ? 'Commencez par ajouter votre premier contact' : 'Essayez de modifier vos filtres de recherche'}</p>
-              {contacts.length === 0 && <Button onClick={() => setDialogOpen(true)}><Plus className="h-4 w-4 mr-2" />Ajouter un contact</Button>}
+              {hotOnly ? <Flame className="h-12 w-12 text-orange-500/50 mx-auto mb-4" /> : <Users className="h-12 w-12 text-muted-foreground mx-auto mb-4" />}
+              <h3 className="text-lg font-semibold mb-2">{hotOnly ? 'Aucun prospect chaud' : (contacts.length === 0 ? 'Aucun contact' : 'Aucun résultat')}</h3>
+              <p className="text-muted-foreground mb-4">{hotOnly ? 'Personne n\'a ouvert vos emails ces 48 dernières heures.' : (contacts.length === 0 ? 'Commencez par ajouter votre premier contact' : 'Essayez de modifier vos filtres de recherche')}</p>
+              {!hotOnly && contacts.length === 0 && <Button onClick={() => setDialogOpen(true)}><Plus className="h-4 w-4 mr-2" />Ajouter un contact</Button>}
             </div>
           ) : (
             <>
               <div className={viewMode === 'grid' ? "grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4 md:gap-6" : "space-y-2"}>
-                {filteredContacts.map((contact) => (
-                  <ContactCard key={contact.id} contact={contact} onEdit={(c) => { setEditingContact(c); setDialogOpen(true); }} onDelete={handleDelete} onContact={handleContact} isSelected={selectedContactIds.includes(contact.id!)} onSelect={(s) => s ? setSelectedContactIds(prev => [...prev, contact.id!]) : setSelectedContactIds(prev => prev.filter(id => id !== contact.id!))} viewMode={viewMode} />
+                {displayedContacts.map((contact) => (
+                  <div key={contact.id} className="relative">
+                    {hotInfoByContactId.has(contact.id!) && (
+                      <span className="absolute -top-2 -right-2 z-10 flex items-center gap-1 rounded-full bg-orange-500 px-2 py-0.5 text-[10px] font-semibold text-white shadow">
+                        <Flame className="h-3 w-3" />
+                        {hotInfoByContactId.get(contact.id!)!.engagement === 'clicked' ? 'A cliqué' : 'A ouvert'}
+                      </span>
+                    )}
+                    <ContactCard contact={contact} onEdit={(c) => { setEditingContact(c); setDialogOpen(true); }} onDelete={handleDelete} onContact={handleContact} isSelected={selectedContactIds.includes(contact.id!)} onSelect={(s) => s ? setSelectedContactIds(prev => [...prev, contact.id!]) : setSelectedContactIds(prev => prev.filter(id => id !== contact.id!))} viewMode={viewMode} />
+                  </div>
                 ))}
               </div>
-              {hasMore && (
+              {hasMore && !hotOnly && (
                 <div className="flex flex-col items-center gap-2 py-6">
                   <p className="text-sm text-muted-foreground">
                     {contacts.length} sur {totalContactsCount} contacts chargés

@@ -7,6 +7,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { supabase } from '@/integrations/supabase/client';
 import { SEOHead } from '@/components/SEOHead';
 import { sanitizeHtml } from '@/lib/sanitize';
+import { ShowBookingRequestDialog } from '@/components/front/ShowBookingRequestDialog';
 import { 
   Mail, 
   Phone, 
@@ -171,6 +172,17 @@ export const FrontArtistDetail: React.FC = () => {
                 {artist.short_description && (
                   <div className="text-xl text-muted-foreground leading-relaxed prose prose-lg max-w-none" dangerouslySetInnerHTML={{ __html: sanitizeHtml(artist.short_description) }} />
                 )}
+
+                {/* Demande de date */}
+                <div className="rounded-lg border-2 border-primary/30 bg-primary/5 p-4 sm:p-5">
+                  <p className="font-semibold mb-1">Vous programmez {artist.name} ?</p>
+                  <p className="text-sm text-muted-foreground mb-3">
+                    Indiquez votre date ou votre période, nous revenons vers vous avec nos disponibilités et un devis.
+                  </p>
+                  <ShowBookingRequestDialog artistId={artist.id} artistName={artist.name} />
+                </div>
+
+
 
                 {/* Contact & Social */}
                 <div className="flex flex-wrap gap-3">
