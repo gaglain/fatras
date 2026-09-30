@@ -1,7 +1,8 @@
 import React, { useEffect, useMemo, useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { Plus, Upload, Download, Mail, List, Grid, LayoutList, Loader2, Merge, Users, MailWarning } from 'lucide-react';
+import { Plus, Upload, Download, Mail, List, Grid, LayoutList, Loader2, Merge, Users, MailWarning, Flame, RefreshCw } from 'lucide-react';
+import { useHotProspects } from '@/hooks/useHotProspects';
 import { useConfirm } from '@/components/ui/confirm-dialog';
 import { ContactCard } from '@/components/contacts/ContactCard';
 import { ContactDialog } from '@/components/contacts/ContactDialog';
@@ -61,6 +62,8 @@ export const Contacts: React.FC = () => {
   const [isLoadingMore, setIsLoadingMore] = useState(false);
   const [totalContactsCount, setTotalContactsCount] = useState<number>(0);
   const [contactStats, setContactStats] = useState({ total: 0, clients: 0, prospects: 0, inactifs: 0 });
+  const [hotOnly, setHotOnly] = useState(false);
+  const { hotProspects, loading: hotLoading, refresh: refreshHotProspects } = useHotProspects();
 
   useEffect(() => { if (user?.id) { fetchContacts({ reset: true }); fetchEvents(); fetchArtists(); } }, [user?.id]);
 
