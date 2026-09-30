@@ -21,6 +21,7 @@ import { ContactOverviewTab, getAllConnections } from './contacts/ContactOvervie
 import { ContactLinkedEntities } from './contacts/ContactLinkedEntities';
 import { ContactQuickActions } from './contacts/ContactQuickActions';
 import { ContactNotesPanel } from './contacts/ContactNotesPanel';
+import { ContactEngagementTimeline } from './contacts/ContactEngagementTimeline';
 
 export const ContactDetail: React.FC = () => {
   const { id } = useParams<{ id: string }>();
@@ -172,6 +173,7 @@ export const ContactDetail: React.FC = () => {
           <TabsTrigger value="overview">Vue d'ensemble</TabsTrigger>
           <TabsTrigger value="activity">Activité ({allConnections.length})</TabsTrigger>
           <TabsTrigger value="email"><Mail className="h-4 w-4 mr-2" />Emails</TabsTrigger>
+          <TabsTrigger value="engagement"><Clock className="h-4 w-4 mr-2" />Engagement</TabsTrigger>
           <TabsTrigger value="details">Détails</TabsTrigger>
         </TabsList>
 
@@ -207,6 +209,10 @@ export const ContactDetail: React.FC = () => {
               )}
             </CardContent>
           </Card>
+        </TabsContent>
+
+        <TabsContent value="engagement" className="space-y-4">
+          <ContactEngagementTimeline contactId={id!} contactEmail={contact.email} />
         </TabsContent>
 
         <TabsContent value="email" className="space-y-4">
