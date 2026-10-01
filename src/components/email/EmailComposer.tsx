@@ -301,7 +301,7 @@ export const EmailComposer: React.FC<EmailComposerProps> = ({
   return (
     <>
       <Dialog open={isOpen} onOpenChange={onClose}>
-        <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
+        <DialogContent className="w-[calc(100vw-1rem)] sm:w-full max-w-2xl max-h-[90vh] overflow-y-auto overflow-x-hidden">
         <DialogHeader>
           <DialogTitle className="flex items-center gap-2">
             <Mail className="h-5 w-5" />
@@ -309,7 +309,7 @@ export const EmailComposer: React.FC<EmailComposerProps> = ({
           </DialogTitle>
         </DialogHeader>
 
-        <div className="space-y-4">
+        <div className="space-y-4 min-w-0 [&>*]:min-w-0">
           {accounts.length === 0 ? (
             <div className="p-4 bg-destructive/10 border border-destructive/20 rounded-lg">
               <p className="text-sm text-destructive">
@@ -402,7 +402,7 @@ export const EmailComposer: React.FC<EmailComposerProps> = ({
             <div>
               <Label>Message d'origine (conservé avec sa mise en forme)</Label>
               <div
-                className="mt-1 max-h-72 overflow-y-auto rounded-md border border-l-4 border-l-primary/40 bg-muted/30 p-3 text-sm"
+                className="mt-1 max-h-72 overflow-auto break-words [overflow-wrap:anywhere] [&_*]:max-w-full [&_img]:h-auto [&_table]:w-full rounded-md border border-l-4 border-l-primary/40 bg-muted/30 p-3 text-sm min-w-0"
                 dangerouslySetInnerHTML={{ __html: sanitizeEmailHtml(quotedHtml) }}
               />
             </div>
@@ -522,7 +522,7 @@ export const EmailComposer: React.FC<EmailComposerProps> = ({
             <p>• Le tracking des ouvertures et clics est activé automatiquement.</p>
           </div>
 
-          <div className="flex justify-end space-x-2">
+          <div className="sticky bottom-0 -mx-6 -mb-6 px-6 py-3 bg-background border-t flex justify-end gap-2">
             <Button variant="outline" onClick={onClose}>
               Annuler
             </Button>
