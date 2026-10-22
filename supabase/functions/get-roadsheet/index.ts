@@ -78,11 +78,23 @@ Deno.serve(async (req) => {
       .eq('roadshow_stop_id', stopId)
       .order('created_at', { ascending: false });
 
-    const baseUrl = `${Deno.env.get('SUPABASE_URL')}/storage/v1/object/public/roadshow-documents/`;
-    const documents = (docRows || []).map((d: any) => ({
-      ...d,
-      url: `${baseUrl}${d.file_path.split('/').map(encodeURIComponent).join('/')}`,
-    }));
+    // The roadshow-documents bucket is private: hand out time-limited signed links
+    // (regenerated each time the shared roadsheet is opened).
+    const rows = (docRows || []).filter((d: any) => d.file_path);
+    let signedMap = new Map<string, string>();
+    if (rows.length > 0) {
+      const { data: signed } = await supabase.storage
+        .from('roadshow-documents')
+        .createSignedUrls(rows.map((d: any) => d.file_path), 60 * 60 * 24 * 7);
+      signedMap = new Map(
+        (signed || [])
+          .filter((s: any) => s.signedUrl && s.path)
+          .map((s: any) => [s.path as string, s.signedUrl as string])
+      );
+    }
+    const documents = rows
+      .map((d: any) => ({ ...d, url: signedMap.get(d.file_path) || null }))
+      .filter((d: any) => d.url);
 
     return new Response(JSON.stringify({ stop, artists, lineupMembers, documents }), {
       headers: { ...corsHeaders, 'Content-Type': 'application/json' },
