@@ -257,7 +257,19 @@ const handler = async (req: Request): Promise<Response> => {
               for (let i = 0; i < decoded.length; i++) bytes[i] = decoded.charCodeAt(i) & 0xff;
             }
             return makeDecoder(charset).decode(bytes);
-...
+          } catch (_e) {}
+          return m;
+        });
+      };
+
+      const decodeBodyContent = (body: string, encoding = '', charset = 'utf-8'): string => {
+        try {
+          const normalizedEncoding = encoding.toLowerCase();
+          let bytes: Uint8Array;
+          if (normalizedEncoding.includes('base64')) {
+            const binary = atob(body.replace(/\s/g, ''));
+            bytes = new Uint8Array(binary.length);
+            for (let i = 0; i < binary.length; i++) bytes[i] = binary.charCodeAt(i);
           } else if (normalizedEncoding.includes('quoted-printable')) {
             const qp = body.replace(/=\r?\n/g, '').replace(/=([0-9A-F]{2})/gi, (_m, hex) => String.fromCharCode(parseInt(hex, 16)));
             bytes = new Uint8Array(qp.length);
