@@ -251,36 +251,22 @@ const handler = async (req: Request): Promise<Response> => {
               bytes = new Uint8Array(binary.length);
               for (let i = 0; i < binary.length; i++) bytes[i] = binary.charCodeAt(i);
             } else {
-              // Quoted-Printable
+              // Quoted-Printable : chaque =XX est un octet brut dans le charset annoncé
               const decoded = encoded.replace(/_/g, ' ').replace(/=([0-9A-F]{2})/gi, (_: string, hex: string) => String.fromCharCode(parseInt(hex, 16)));
-              const binary = unescape(encodeURIComponent(decoded));
-              bytes = new Uint8Array(binary.length);
-              for (let i = 0; i < binary.length; i++) bytes[i] = binary.charCodeAt(i);
+              bytes = new Uint8Array(decoded.length);
+              for (let i = 0; i < decoded.length; i++) bytes[i] = decoded.charCodeAt(i) & 0xff;
             }
-            // Decode bytes as UTF-8
-            const td = new TextDecoder(charset.toLowerCase().replace('windows-', 'windows').replace('iso-8859-1', 'latin1') || 'utf-8', { fatal: false });
-            return td.decode(bytes);
-          } catch (_e) {}
-          return m;
-        });
-      };
-
-      const decodeBodyContent = (body: string, encoding = '', charset = 'utf-8'): string => {
-        try {
-          const normalizedEncoding = encoding.toLowerCase();
-          let bytes: Uint8Array;
-          if (normalizedEncoding.includes('base64')) {
-            const binary = atob(body.replace(/\s/g, ''));
-            bytes = new Uint8Array(binary.length);
-            for (let i = 0; i < binary.length; i++) bytes[i] = binary.charCodeAt(i);
+            return makeDecoder(charset).decode(bytes);
+...
           } else if (normalizedEncoding.includes('quoted-printable')) {
             const qp = body.replace(/=\r?\n/g, '').replace(/=([0-9A-F]{2})/gi, (_m, hex) => String.fromCharCode(parseInt(hex, 16)));
             bytes = new Uint8Array(qp.length);
-            for (let i = 0; i < qp.length; i++) bytes[i] = qp.charCodeAt(i);
+            for (let i = 0; i < qp.length; i++) bytes[i] = qp.charCodeAt(i) & 0xff;
           } else {
-            bytes = new TextEncoder().encode(body);
+            // 7bit / 8bit : le texte est déjà lisible tel quel
+            return body.trim();
           }
-          return new TextDecoder(charset.toLowerCase().replace('windows-', 'windows').replace('iso-8859-1', 'latin1'), { fatal: false }).decode(bytes).trim();
+          return makeDecoder(charset).decode(bytes).trim();
         } catch (_e) {
           return body.trim();
         }
