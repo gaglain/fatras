@@ -228,6 +228,17 @@ const handler = async (req: Request): Promise<Response> => {
         });
       }
 
+      // Crée un décodeur tolérant : "Windows-1252", "windows-1258", "iso-8859-1"…
+      // Les noms de charset sont passés tels quels (TextDecoder les connaît),
+      // avec repli sur windows-1252 puis utf-8.
+      const makeDecoder = (charset?: string): TextDecoder => {
+        const cs = (charset || 'utf-8').trim().replace(/^["']|["']$/g, '').toLowerCase();
+        for (const candidate of [cs, 'windows-1252', 'utf-8']) {
+          try { return new TextDecoder(candidate, { fatal: false }); } catch (_e) { /* try next */ }
+        }
+        return new TextDecoder();
+      };
+
       // Fonction pour décoder les encoded-words MIME (RFC 2047)
       const decodeMimeWord = (text: string): string => {
         if (!text) return text;
