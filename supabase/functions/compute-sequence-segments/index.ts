@@ -85,7 +85,7 @@ serve(async (req) => {
       const cid = (ev as any).contact_id;
       if (!cid) continue;
       const type = (ev as any).event_type;
-      if (type === "sent") sent.add(cid);
+      if (["sent", "delivered", "opened", "clicked", "bounced", "complained"].includes(type)) sent.add(cid);
       if (type === "bounced" || type === "complained") bounced.add(cid);
       if (type === "opened") opened.add(cid);
       if (type === "clicked") { clicked.add(cid); opened.add(cid); }
@@ -93,7 +93,15 @@ serve(async (req) => {
 
     // Recipients = contacts who actually received this campaign (whatever the source lists),
     // minus anyone now in an exclusion list.
-    const sentRecipients = Array.from(sent).filter((contactId) => !excludedContactIds.has(contactId));
+    const candidateIds = Array.from(sent).filter((contactId) => !excludedContactIds.has(contactId));
+    // Keep only contacts that still exist (deleted contacts would break list inserts)
+    const existingIds = new Set<string>();
+    for (let i = 0; i < candidateIds.length; i += 200) {
+      const { data, error } = await supabase.from("contacts").select("id").in("id", candidateIds.slice(i, i + 200));
+      if (error) throw error;
+      for (const row of data ?? []) existingIds.add((row as any).id);
+    }
+    const sentRecipients = candidateIds.filter((id) => existingIds.has(id));
     const segments: Record<string, string[]> = {
       bounced: sentRecipients.filter((c) => bounced.has(c)),
       clicked: sentRecipients.filter((c) => clicked.has(c) && !bounced.has(c)),
@@ -132,7 +140,8 @@ serve(async (req) => {
         const rows = contactIds.map((cid) => ({ contact_list_id: listId!, contact_id: cid }));
         // chunk inserts
         for (let i = 0; i < rows.length; i += 500) {
-          await supabase.from("contact_list_members").insert(rows.slice(i, i + 500));
+          const { error: insErr } = await supabase.from("contact_list_members").insert(rows.slice(i, i + 500));
+          if (insErr) throw new Error("Failed to fill list: " + insErr.message);
         }
       }
 
