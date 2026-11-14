@@ -96,6 +96,11 @@ export function BookingEmailAssistant({ contactId, toEmail = '', hasContent, onA
   return <div className="min-w-0 border-y border-border py-3">
     <Button type="button" variant="ghost" className="w-full justify-between whitespace-normal text-left" onClick={() => setOpen(o => !o)} aria-expanded={open}><span className="flex items-center gap-2"><Sparkles className="h-4 w-4 shrink-0" />Email de réservation · Lovable AI</span><ChevronDown className="h-4 w-4 shrink-0" /></Button>
     {open && <div className="min-w-0 space-y-4 pt-4">
+      <div>
+        <Label>Programmateur depuis vos contacts</Label>
+        <ContactSearchCombobox value={pickedContactId} onValueChange={setPickedContactId} placeholder="Choisir un contact du CRM…" />
+        <p className="mt-1 text-xs text-muted-foreground">Les champs ci-dessous se remplissent automatiquement et restent modifiables.</p>
+      </div>
       <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
         <div><Label htmlFor="ai-programmer">Programmateur *</Label><Input id="ai-programmer" maxLength={200} disabled={busy} value={programmer.name} onChange={e => setProgrammer(p => ({ ...p, name: e.target.value }))} /></div>
         <div><Label htmlFor="ai-email">Email *</Label><Input id="ai-email" type="email" disabled={busy} value={programmer.email} onChange={e => setProgrammer(p => ({ ...p, email: e.target.value }))} /></div>
