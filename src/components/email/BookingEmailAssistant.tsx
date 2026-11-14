@@ -7,6 +7,8 @@ import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { RichTextEditor } from '@/components/RichTextEditor';
+import { ContactSearchCombobox } from '@/components/contacts/ContactSearchCombobox';
+import { useContacts } from '@/hooks/useContacts';
 import { useUnifiedAuth } from '@/contexts/UnifiedAuthContext';
 import { Sparkles, Square, Check, ChevronDown, Loader2 } from 'lucide-react';
 import { sanitizeEmailHtml } from '@/lib/sanitize';
@@ -18,7 +20,9 @@ export function BookingEmailAssistant({ contactId, toEmail = '', hasContent, onA
   const { currentUser } = useUnifiedAuth();
   const allowed = ['admin', 'super_admin', 'manager'].includes(currentUser?.role ?? '') || String(currentUser?.role) === 'collaborator';
   const [open, setOpen] = useState(false);
+  const [pickedContactId, setPickedContactId] = useState(contactId ?? '');
   const [programmer, setProgrammer] = useState({ name: '', email: toEmail, organization: '', city: '', context: '' });
+  const { contacts } = useContacts();
   const [showId, setShowId] = useState('');
   const [templateId, setTemplateId] = useState('none');
   const [period, setPeriod] = useState('');
@@ -36,14 +40,12 @@ export function BookingEmailAssistant({ contactId, toEmail = '', hasContent, onA
     if (error) throw error; return data;
   } });
   useEffect(() => { setProgrammer(p => ({ ...p, email: toEmail })); }, [toEmail]);
+  useEffect(() => { if (contactId) setPickedContactId(contactId); }, [contactId]);
   useEffect(() => {
-    if (!open || !contactId) return;
-    let live = true;
-    supabase.from('contacts').select('first_name,last_name,email,company,city').eq('id', contactId).single().then(({ data }) => {
-      if (live && data) setProgrammer(p => ({ ...p, name: `${data.first_name} ${data.last_name}`.trim(), email: data.email ?? toEmail, organization: data.company ?? '', city: data.city ?? '' }));
-    });
-    return () => { live = false; };
-  }, [contactId, open]);
+    if (!open || !pickedContactId) return;
+    const contact = (Array.isArray(contacts) ? contacts : []).find(c => c.id === pickedContactId);
+    if (contact) setProgrammer(p => ({ ...p, name: `${contact.first_name} ${contact.last_name}`.trim(), email: contact.email ?? toEmail, organization: contact.company ?? '', city: contact.city ?? '' }));
+  }, [pickedContactId, contacts, open]);
   useEffect(() => () => abortRef.current?.abort(), []);
 
   const generate = async () => {
@@ -94,6 +96,11 @@ export function BookingEmailAssistant({ contactId, toEmail = '', hasContent, onA
   return <div className="min-w-0 border-y border-border py-3">
     <Button type="button" variant="ghost" className="w-full justify-between whitespace-normal text-left" onClick={() => setOpen(o => !o)} aria-expanded={open}><span className="flex items-center gap-2"><Sparkles className="h-4 w-4 shrink-0" />Email de réservation · Lovable AI</span><ChevronDown className="h-4 w-4 shrink-0" /></Button>
     {open && <div className="min-w-0 space-y-4 pt-4">
+      <div>
+        <Label>Programmateur depuis vos contacts</Label>
+        <ContactSearchCombobox value={pickedContactId} onValueChange={setPickedContactId} placeholder="Choisir un contact du CRM…" />
+        <p className="mt-1 text-xs text-muted-foreground">Les champs ci-dessous se remplissent automatiquement et restent modifiables.</p>
+      </div>
       <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
         <div><Label htmlFor="ai-programmer">Programmateur *</Label><Input id="ai-programmer" maxLength={200} disabled={busy} value={programmer.name} onChange={e => setProgrammer(p => ({ ...p, name: e.target.value }))} /></div>
         <div><Label htmlFor="ai-email">Email *</Label><Input id="ai-email" type="email" disabled={busy} value={programmer.email} onChange={e => setProgrammer(p => ({ ...p, email: e.target.value }))} /></div>
