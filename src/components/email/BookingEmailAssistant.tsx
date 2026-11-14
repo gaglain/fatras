@@ -7,6 +7,8 @@ import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { RichTextEditor } from '@/components/RichTextEditor';
+import { ContactSearchCombobox } from '@/components/contacts/ContactSearchCombobox';
+import { useContacts } from '@/hooks/useContacts';
 import { useUnifiedAuth } from '@/contexts/UnifiedAuthContext';
 import { Sparkles, Square, Check, ChevronDown, Loader2 } from 'lucide-react';
 import { sanitizeEmailHtml } from '@/lib/sanitize';
@@ -18,7 +20,9 @@ export function BookingEmailAssistant({ contactId, toEmail = '', hasContent, onA
   const { currentUser } = useUnifiedAuth();
   const allowed = ['admin', 'super_admin', 'manager'].includes(currentUser?.role ?? '') || String(currentUser?.role) === 'collaborator';
   const [open, setOpen] = useState(false);
+  const [pickedContactId, setPickedContactId] = useState(contactId ?? '');
   const [programmer, setProgrammer] = useState({ name: '', email: toEmail, organization: '', city: '', context: '' });
+  const { contacts } = useContacts();
   const [showId, setShowId] = useState('');
   const [templateId, setTemplateId] = useState('none');
   const [period, setPeriod] = useState('');
