@@ -1,0 +1,55 @@
+import { createOpenAI } from "npm:@ai-sdk/openai@3";
+import { streamText, Output, jsonSchema, type ModelMessage } from "npm:ai@6";
+
+import {
+  createLovableAiGatewayRunIdFetch,
+  getLovableAiGatewayRunId,
+  withLovableAiGatewayRunIdHeader,
+} from "./run-id.ts";
+
+export function createResponsesCall(
+  request: Request,
+  config: { baseURL: string; apiKey: string; model: string },
+  messages: ModelMessage[],
+  instructions?: string,
+) {
+  const runIdFetch = createLovableAiGatewayRunIdFetch(getLovableAiGatewayRunId(request));
+  const provider = createOpenAI({
+    baseURL: `${config.baseURL.replace(/\/+$/, "").replace(/\/v1$/, "")}/v1`,
+    apiKey: config.apiKey,
+    headers: { "Lovable-API-Key": config.apiKey, "X-Lovable-AIG-SDK": "vercel-ai-sdk" },
+    fetch: runIdFetch.fetch,
+  });
+  const reasoning = config.model !== "openai/chat-latest";
+  const result = streamText({
+    model: provider.responses(config.model),
+    // AI SDK 6 lacks `instructions`: rename this key to `system` there.
+    ...(instructions ? { system: instructions } : {}),
+    messages,
+    maxRetries: 0,
+    output: Output.object({ schema: jsonSchema<{ subject: string; paragraphs: string[] }>({
+      type: "object", additionalProperties: false, required: ["subject", "paragraphs"],
+      properties: { subject: { type: "string" }, paragraphs: { type: "array", items: { type: "string" } } },
+    }) }),
+    abortSignal: request.signal,
+    providerOptions: {
+      openai: {
+        store: false,
+        ...(reasoning
+          ? {
+              forceReasoning: true,
+              reasoningEffort: "low",
+              reasoningSummary: "auto",
+              include: ["reasoning.encrypted_content"],
+            }
+          : {}),
+      },
+    },
+  });
+  return {
+    result,
+    gateway: runIdFetch,
+    response: () =>
+      withLovableAiGatewayRunIdHeader(result.toUIMessageStreamResponse({ sendReasoning: true }), runIdFetch),
+  };
+}
