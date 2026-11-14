@@ -2,6 +2,7 @@ import { serve } from "https://deno.land/std@0.190.0/http/server.ts";
 import { createClient } from 'npm:@supabase/supabase-js@2';
 import { Webhook } from "https://esm.sh/svix@1.24.0";
 import { normalizeEmail, canonicalEmail, findContactByEmail } from "../_shared/emailMatching.ts";
+import { getResendEventsSecret } from "../_shared/resendWebhookConfig.ts";
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
@@ -13,10 +14,19 @@ const handler = async (req: Request): Promise<Response> => {
     return new Response(null, { headers: corsHeaders });
   }
 
+  if (req.method === 'GET' || req.method === 'HEAD') {
+    return new Response(req.method === 'HEAD' ? null : JSON.stringify({ success: true }), {
+      headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+    });
+  }
+  if (req.method !== 'POST') {
+    return new Response('Method not allowed', { status: 405, headers: corsHeaders });
+  }
+
   try {
     const supabaseUrl = Deno.env.get('SUPABASE_URL');
     const supabaseServiceKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY');
-    const webhookSecret = Deno.env.get('RESEND_WEBHOOK_SECRET');
+    const webhookSecret = getResendEventsSecret((name) => Deno.env.get(name));
 
     if (!supabaseUrl || !supabaseServiceKey) {
       throw new Error('Missing Supabase environment variables');
@@ -24,7 +34,7 @@ const handler = async (req: Request): Promise<Response> => {
 
     const supabase = createClient(supabaseUrl, supabaseServiceKey);
 
-    // Verify webhook signature if secret is provided
+    // All event deliveries must be signed; never process an unverified payload.
     if (webhookSecret) {
       const svixId = req.headers.get('svix-id');
       const svixTimestamp = req.headers.get('svix-timestamp');
@@ -55,15 +65,8 @@ const handler = async (req: Request): Promise<Response> => {
       return new Response(JSON.stringify({ success: true }), {
         headers: { ...corsHeaders, 'Content-Type': 'application/json' },
       });
-    } else {
-      // No webhook secret, process without verification
-      const body = await req.json();
-      await processWebhookEvent(supabase, body);
-      
-      return new Response(JSON.stringify({ success: true }), {
-        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-      });
     }
+    throw new Error('Missing Resend webhook signing secret');
   } catch (error: any) {
     console.error('Error processing webhook:', error);
     return new Response(JSON.stringify({ error: error.message }), {
