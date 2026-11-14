@@ -40,14 +40,12 @@ export function BookingEmailAssistant({ contactId, toEmail = '', hasContent, onA
     if (error) throw error; return data;
   } });
   useEffect(() => { setProgrammer(p => ({ ...p, email: toEmail })); }, [toEmail]);
+  useEffect(() => { if (contactId) setPickedContactId(contactId); }, [contactId]);
   useEffect(() => {
-    if (!open || !contactId) return;
-    let live = true;
-    supabase.from('contacts').select('first_name,last_name,email,company,city').eq('id', contactId).single().then(({ data }) => {
-      if (live && data) setProgrammer(p => ({ ...p, name: `${data.first_name} ${data.last_name}`.trim(), email: data.email ?? toEmail, organization: data.company ?? '', city: data.city ?? '' }));
-    });
-    return () => { live = false; };
-  }, [contactId, open]);
+    if (!open || !pickedContactId) return;
+    const contact = (Array.isArray(contacts) ? contacts : []).find(c => c.id === pickedContactId);
+    if (contact) setProgrammer(p => ({ ...p, name: `${contact.first_name} ${contact.last_name}`.trim(), email: contact.email ?? toEmail, organization: contact.company ?? '', city: contact.city ?? '' }));
+  }, [pickedContactId, contacts, open]);
   useEffect(() => () => abortRef.current?.abort(), []);
 
   const generate = async () => {
