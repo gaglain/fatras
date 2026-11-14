@@ -17,6 +17,7 @@ import { logger } from '@/lib/logger';
 import { addAvatarToEmailSignature } from '@/hooks/useEmailSignature';
 import { Checkbox } from '@/components/ui/checkbox';
 import { sanitizeEmailHtml } from '@/lib/sanitize';
+import { BookingEmailAssistant } from './BookingEmailAssistant';
 interface EmailComposerProps {
   isOpen: boolean;
   onClose: () => void;
@@ -371,6 +372,8 @@ export const EmailComposer: React.FC<EmailComposerProps> = ({
               required
             />
           </div>
+
+          {kind === 'new' && <BookingEmailAssistant contactId={contactId} toEmail={to} hasContent={Boolean(content || emailSubject)} onApply={draft => { setTo(draft.to); setEmailSubject(draft.subject); setContent(draft.html); }} />}
 
           {templates.length > 0 && (
             <div>
