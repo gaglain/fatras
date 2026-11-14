@@ -7,7 +7,6 @@ import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { RichTextEditor } from '@/components/RichTextEditor';
-import { useConfirm } from '@/components/ui/confirm-dialog';
 import { useUnifiedAuth } from '@/contexts/UnifiedAuthContext';
 import { Sparkles, Square, Check, ChevronDown, Loader2 } from 'lucide-react';
 import { sanitizeEmailHtml } from '@/lib/sanitize';
@@ -26,8 +25,8 @@ export function BookingEmailAssistant({ contactId, toEmail = '', hasContent, onA
   const [draft, setDraft] = useState<Draft | null>(null);
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState('');
+  const [confirmReplace, setConfirmReplace] = useState(false);
   const abortRef = useRef<AbortController | null>(null);
-  const confirm = useConfirm();
   const shows = useQuery({ queryKey: ['booking-assistant-shows', currentUser?.id], enabled: open && allowed, queryFn: async () => {
     const { data, error } = await supabase.from('centralized_artists').select('id,name,email_template_id').order('name');
     if (error) throw error; return data;
@@ -84,10 +83,12 @@ export function BookingEmailAssistant({ contactId, toEmail = '', hasContent, onA
       if (!controller.signal.aborted) setError(err instanceof Error ? err.message : 'La rédaction a échoué');
     } finally { if (abortRef.current === controller) { abortRef.current = null; setBusy(false); } }
   };
-  const apply = async () => {
+  const apply = (force = false) => {
     if (!draft) return;
-    if (hasContent && !await confirm({ title: 'Remplacer le brouillon actuel ?', description: 'L’objet et le texte actuels seront remplacés par le brouillon relu.', confirmText: 'Remplacer' })) return;
-    onApply({ ...draft, html: sanitizeEmailHtml(draft.html) }); setOpen(false);
+    if (hasContent && !force) { setConfirmReplace(true); return; }
+    const final = { ...draft, html: sanitizeEmailHtml(draft.html) };
+    setConfirmReplace(false); setOpen(false);
+    setTimeout(() => onApply(final), 0);
   };
   if (!allowed) return null;
   return <div className="min-w-0 border-y border-border py-3">
@@ -105,7 +106,7 @@ export function BookingEmailAssistant({ contactId, toEmail = '', hasContent, onA
       <div><Label htmlFor="ai-context">Informations complémentaires sur la programmation</Label><Textarea id="ai-context" maxLength={3000} disabled={busy} rows={3} value={programmer.context} onChange={e => setProgrammer(p => ({ ...p, context: e.target.value }))} /></div>
       {(shows.error || templates.error || error) && <p role="alert" className="break-words text-sm text-destructive">{error || shows.error?.message || templates.error?.message}</p>}
       <div className="flex flex-wrap gap-2"><Button type="button" disabled={busy || !showId || !programmer.name.trim() || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(programmer.email)} onClick={() => void generate()}>{busy ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <Sparkles className="mr-2 h-4 w-4" />}{busy ? 'Rédaction…' : draft ? 'Rédiger une autre version' : 'Rédiger le brouillon'}</Button>{busy && <Button type="button" variant="outline" onClick={() => abortRef.current?.abort()}><Square className="mr-2 h-4 w-4" />Arrêter</Button>}</div>
-      {draft && <div className="space-y-3 border-t border-border pt-4"><h3 className="font-medium">Brouillon à relire</h3><div><Label htmlFor="ai-draft-subject">Objet</Label><Input id="ai-draft-subject" value={draft.subject} onChange={e => setDraft(d => d ? { ...d, subject: e.target.value } : d)} /></div><RichTextEditor value={draft.html} onChange={html => setDraft(d => d ? { ...d, html } : d)} className="min-h-[180px]" /><Button type="button" disabled={busy || !draft.subject.trim() || !draft.html.trim()} onClick={() => void apply()}><Check className="mr-2 h-4 w-4" />Utiliser ce brouillon</Button></div>}
+      {draft && <div className="space-y-3 border-t border-border pt-4"><h3 className="font-medium">Brouillon à relire</h3><div><Label htmlFor="ai-draft-subject">Objet</Label><Input id="ai-draft-subject" value={draft.subject} onChange={e => setDraft(d => d ? { ...d, subject: e.target.value } : d)} /></div><RichTextEditor value={draft.html} onChange={html => setDraft(d => d ? { ...d, html } : d)} className="min-h-[180px]" /><Button type="button" disabled={busy || !draft.subject.trim() || !draft.html.trim()} onClick={() => apply()}><Check className="mr-2 h-4 w-4" />Utiliser ce brouillon</Button>{confirmReplace && <div className="space-y-2 rounded-md border border-border p-3 text-sm"><p>L’objet et le texte actuels seront remplacés par ce brouillon.</p><div className="flex flex-wrap gap-2"><Button type="button" size="sm" onClick={() => apply(true)}>Remplacer</Button><Button type="button" size="sm" variant="outline" onClick={() => setConfirmReplace(false)}>Annuler</Button></div></div>}</div>}
     </div>}
   </div>;
 }
