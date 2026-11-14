@@ -1,0 +1,1 @@
+CREATE UNIQUE INDEX IF NOT EXISTS email_analytics_resend_event_unique ON public.email_analytics ((event_data->>'resend_event_id')) WHERE event_data->>'resend_event_id' IS NOT NULL;
