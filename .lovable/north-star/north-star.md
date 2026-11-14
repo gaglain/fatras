@@ -2,7 +2,7 @@
 
 # Cap
 
-Les programmateurs réservent les spectacles de Fatras pour leurs festivals et salles
+Le site permet a la fois de présenter les spectacles de Fatras aux programmateurs et public sur le front office mais le back office sert à gérer toutes les activités du groupe
 
 ## Indicateur
 
