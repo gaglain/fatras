@@ -81,9 +81,12 @@ async function processWebhookEvent(supabase: any, body: any, eventId: string) {
   const { type, data } = body;
   const timestamp = eventTimestamp(body.created_at);
   const { data: existing, error: existingError } = await supabase.from('email_analytics')
-    .select('id').eq('event_data->>resend_event_id', eventId).maybeSingle();
+    .select('id,campaign_id').eq('event_data->>resend_event_id', eventId).maybeSingle();
   if (existingError) throw existingError;
-  if (existing) return;
+  if (existing) {
+    if (existing.campaign_id) await updateCampaignStats(supabase, existing.campaign_id, type);
+    return;
+  }
 
   console.log('Processing webhook event:', type, data);
 
