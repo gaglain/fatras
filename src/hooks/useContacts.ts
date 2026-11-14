@@ -16,6 +16,7 @@ export interface Contact {
   email?: string;
   phone?: string;
   position?: string;
+  company?: string;
   address?: string;
   city?: string;
   postal_code?: string;
@@ -43,6 +44,7 @@ const mapDbToContact = (data: DbContact): Contact => ({
   email: data.email || '',
   phone: data.phone || '',
   position: data.position || '',
+  company: data.company || '',
   address: data.address || '',
   city: data.city || '',
   postal_code: data.postal_code || '',
