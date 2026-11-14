@@ -21,6 +21,8 @@ import { AccountTab } from "./preferences/AccountTab";
 import { ContactSettingsTab } from '@/components/preferences/ContactSettingsTab';
 import { useSearchParams } from 'react-router-dom';
 import { useIsMobile } from '@/hooks/use-mobile';
+import { ResendWebhooksTab } from './preferences/ResendWebhooksTab';
+import { useUnifiedAuth } from '@/contexts/UnifiedAuthContext';
 
 const tabOptions = [
   { value: 'account', label: 'Compte', icon: User },
@@ -38,6 +40,9 @@ const tabOptions = [
 ];
 
 export const Preferences: React.FC = () => {
+  const { currentUser } = useUnifiedAuth();
+  const canManageWebhooks = currentUser?.role === 'admin' || currentUser?.role === 'super_admin';
+  const visibleTabs = canManageWebhooks ? [...tabOptions, { value: 'resend-webhooks', label: 'Webhooks Resend', icon: Mail }] : tabOptions;
   const [searchParams] = useSearchParams();
   const defaultTab = searchParams.get('tab') || 'account';
   const isMobile = useIsMobile();
@@ -58,7 +63,7 @@ export const Preferences: React.FC = () => {
               <SelectValue />
             </SelectTrigger>
             <SelectContent>
-              {tabOptions.map(tab => (
+              {visibleTabs.map(tab => (
                 <SelectItem key={tab.value} value={tab.value}>
                   <span className="flex items-center gap-2">
                     <tab.icon className="h-4 w-4" />
@@ -70,7 +75,7 @@ export const Preferences: React.FC = () => {
           </Select>
         ) : (
           <TabsList className="flex flex-wrap h-auto gap-1 p-1 bg-muted/50 w-full mb-4">
-            {tabOptions.map(tab => (
+            {visibleTabs.map(tab => (
               <TabsTrigger key={tab.value} value={tab.value} className="text-xs sm:text-sm px-2 sm:px-3 py-1.5 data-[state=active]:bg-background whitespace-nowrap">
                 <tab.icon className="h-3.5 w-3.5 sm:h-4 sm:w-4 mr-1 sm:mr-2" />
                 <span>{tab.label}</span>
@@ -102,6 +107,7 @@ export const Preferences: React.FC = () => {
         <TabsContent value="smtp" className="space-y-6">
           <SmtpTab />
         </TabsContent>
+        {canManageWebhooks && <TabsContent value="resend-webhooks"><ResendWebhooksTab /></TabsContent>}
         <TabsContent value="roadshow-emails" className="space-y-4">
           <RoadshowEmailsTab />
         </TabsContent>
