@@ -77,7 +77,7 @@ Deno.serve(async req => {
           else send({ type: 'error', ...errorMessage(err) });
         } finally { controller.close(); }
       },
-      cancel() { return reader.return?.(); },
+      async cancel() { await reader.return?.(); },
     });
     const headers = getLovableAiGatewayResponseHeaders(gateway.getRunId() ? { 'X-Lovable-AIG-Run-ID': gateway.getRunId() ?? '' } : undefined, { ...corsHeaders, 'Content-Type': 'application/x-ndjson', 'Cache-Control': 'no-cache' });
     return new Response(body, { headers });
