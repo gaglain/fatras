@@ -2,6 +2,8 @@
 
 ## Personalized booking emails
 
+- [x] Expose the shared assistant in the contact's new-message form and the inline email compose tab, preserving reviewable HTML drafts.
+
 - [x] Add programmer/show inputs and a reviewable AI draft in the email composer.
 - [x] Generate through authenticated server-side Lovable AI with cancellation and visible errors.
 - [x] Test draft safety rules (2 passing tests), actual SDK generation, function authentication rejection, and isolated desktop/mobile presentation. Authenticated end-to-end checks are unavailable for this external Supabase project.

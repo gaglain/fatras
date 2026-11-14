@@ -150,13 +150,14 @@ export const EmailTemplateComposer: React.FC<EmailTemplateComposerProps> = ({ de
   const [open, setOpen] = useState(false);
 
   const formProps = {
+    contactId: contactData?.id,
     accounts, selectedAccount, onSelectedAccountChange: setSelectedAccount,
     fromName, onFromNameChange: setFromName,
     to, onToChange: setTo, subject, onSubjectChange: setSubject,
     content, onContentChange: setContent,
     selectedTemplate, onClearTemplate: () => { setSelectedTemplate(null); setSubject(''); setContent(''); },
     templates: sortedTemplates, highlightedArtistIds: contactArtistIds, showTemplates, onShowTemplatesChange: setShowTemplates, onApplyTemplate: applyTemplate,
-    attachments, onFileSelect: (e: React.ChangeEvent<HTMLInputElement>) => { if (e.target.files) setAttachments(prev => [...prev, ...Array.from(e.target.files!)]); },
+    attachments, onFileSelect: (e: React.ChangeEvent<HTMLInputElement>) => { const files = e.target.files; if (files) setAttachments(prev => [...prev, ...Array.from(files)]); },
     onRemoveAttachment: (i: number) => setAttachments(prev => prev.filter((_, idx) => idx !== i)),
     onMediaBankSelect: handleMediaBankSelect, addingFromMediaBank,
     includeSignature, onIncludeSignatureChange: setIncludeSignature,

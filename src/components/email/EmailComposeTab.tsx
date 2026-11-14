@@ -6,6 +6,8 @@ import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Send } from 'lucide-react';
+import { BookingEmailAssistant } from './BookingEmailAssistant';
+import { RichTextEditor } from '@/components/RichTextEditor';
 
 interface EmailDraft {
   to: string;
@@ -46,6 +48,9 @@ export const EmailComposeTab: React.FC<EmailComposeTabProps> = ({
         </CardDescription>
       </CardHeader>
       <CardContent className="space-y-4">
+        <BookingEmailAssistant toEmail={draft.to} hasContent={Boolean(draft.subject || draft.body)} onApply={(generated) => onDraftChange({
+          ...draft, to: generated.to, subject: generated.subject, body: generated.html, isHtml: true,
+        })} />
         <div>
           <Label htmlFor="to">Destinataire(s) *</Label>
           <Input id="to" type="email" value={draft.to}
@@ -94,9 +99,9 @@ export const EmailComposeTab: React.FC<EmailComposeTabProps> = ({
 
         <div>
           <Label htmlFor="body">Message</Label>
-          <Textarea id="body" value={draft.body}
+          {draft.isHtml ? <RichTextEditor value={draft.body} onChange={(value) => update('body', value)} className="min-h-[240px]" /> : <Textarea id="body" value={draft.body}
             onChange={(e) => update('body', e.target.value)}
-            placeholder="Contenu de votre email..." rows={12} />
+            placeholder="Contenu de votre email..." rows={12} />}
         </div>
 
         <div className="flex items-center justify-between">

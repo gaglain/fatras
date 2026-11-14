@@ -11,6 +11,7 @@ import { ImageGalleryPicker } from '@/components/website/ImageGalleryPicker';
 import { UniversalSearch } from '@/components/UniversalSearch';
 import { VariableInserter } from './VariableInserter';
 import { toast } from 'sonner';
+import { BookingEmailAssistant } from './BookingEmailAssistant';
 
 interface EmailTemplate {
   id: string;
@@ -24,6 +25,7 @@ interface EmailTemplate {
 }
 
 interface EmailComposerFormProps {
+  contactId?: string;
   accounts: any[];
   selectedAccount: string;
   onSelectedAccountChange: (v: string) => void;
@@ -58,6 +60,12 @@ interface EmailComposerFormProps {
 export const EmailComposerForm: React.FC<EmailComposerFormProps> = (props) => {
   return (
     <>
+      <BookingEmailAssistant contactId={props.contactId} toEmail={props.to} hasContent={Boolean(props.subject || props.content)} onApply={(draft) => {
+        props.onClearTemplate();
+        props.onToChange(draft.to);
+        props.onSubjectChange(draft.subject);
+        props.onContentChange(draft.html);
+      }} />
       {props.accounts.length > 0 && (
         <div>
           <Label htmlFor="account">Envoyer depuis</Label>
