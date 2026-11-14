@@ -1,5 +1,11 @@
 # Resend webhook monitoring
 
+## Personalized booking emails
+
+- [ ] Add programmer/show inputs and a reviewable AI draft in the email composer.
+- [ ] Generate through authenticated server-side Lovable AI with cancellation and visible errors.
+- [ ] Test draft safety rules, live generation, and desktop/mobile presentation.
+
 - [x] Add an administrator-only Resend event monitor in Preferences.
 - [x] Show delivery statuses, pagination and attempt errors from Resend.
 - [x] Replay failed events through Resend with confirmation and deduplicated analytics.
