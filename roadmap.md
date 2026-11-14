@@ -2,9 +2,9 @@
 
 ## Personalized booking emails
 
-- [ ] Add programmer/show inputs and a reviewable AI draft in the email composer.
-- [ ] Generate through authenticated server-side Lovable AI with cancellation and visible errors.
-- [ ] Test draft safety rules, live generation, and desktop/mobile presentation.
+- [x] Add programmer/show inputs and a reviewable AI draft in the email composer.
+- [x] Generate through authenticated server-side Lovable AI with cancellation and visible errors.
+- [x] Test draft safety rules (2 passing tests), actual SDK generation, function authentication rejection, and isolated desktop/mobile presentation. Authenticated end-to-end checks are unavailable for this external Supabase project.
 
 - [x] Add an administrator-only Resend event monitor in Preferences.
 - [x] Show delivery statuses, pagination and attempt errors from Resend.
