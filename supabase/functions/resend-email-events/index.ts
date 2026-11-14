@@ -3,6 +3,7 @@ import { createClient } from 'npm:@supabase/supabase-js@2';
 import { Webhook } from "https://esm.sh/svix@1.24.0";
 import { normalizeEmail, canonicalEmail, findContactByEmail } from "../_shared/emailMatching.ts";
 import { getResendEventsSecret } from "../_shared/resendWebhookConfig.ts";
+import { eventTimestamp } from "../_shared/resendMonitorRules.ts";
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
@@ -60,7 +61,7 @@ const handler = async (req: Request): Promise<Response> => {
       }
 
       const body = JSON.parse(payload);
-      await processWebhookEvent(supabase, body);
+      await processWebhookEvent(supabase, body, svixId);
       
       return new Response(JSON.stringify({ success: true }), {
         headers: { ...corsHeaders, 'Content-Type': 'application/json' },
@@ -76,8 +77,16 @@ const handler = async (req: Request): Promise<Response> => {
   }
 };
 
-async function processWebhookEvent(supabase: any, body: any) {
+async function processWebhookEvent(supabase: any, body: any, eventId: string) {
   const { type, data } = body;
+  const timestamp = eventTimestamp(body.created_at);
+  const { data: existing, error: existingError } = await supabase.from('email_analytics')
+    .select('id,campaign_id').eq('event_data->>resend_event_id', eventId).maybeSingle();
+  if (existingError) throw existingError;
+  if (existing) {
+    if (existing.campaign_id) await updateCampaignStats(supabase, existing.campaign_id, type);
+    return;
+  }
 
   console.log('Processing webhook event:', type, data);
 
@@ -126,18 +135,20 @@ async function processWebhookEvent(supabase: any, body: any) {
     .select('*')
     .eq('message_id', data.email_id)
     .maybeSingle();
+  if (findError) throw findError;
 
   let resolvedUserId: string | null = null;
   let resolvedToEmail: string | null = null;
 
   if (email) {
     // Update email status in emails table
-    const updateData: any = { status };
+    const ranks: Record<string, number> = { pending: 0, sent: 1, delivered: 2, opened: 3, clicked: 4, bounced: 5 };
+    const updateData: any = (ranks[status] ?? 0) >= (ranks[email.status] ?? 0) ? { status } : {};
 
     if (type === 'email.delivered') {
-      updateData.delivered_at = new Date().toISOString();
+      updateData.delivered_at = email.delivered_at || timestamp;
     } else if (type === 'email.opened') {
-      updateData.opened_at = new Date().toISOString();
+      updateData.opened_at = email.opened_at || timestamp;
       updateData.is_read = true;
     }
 
@@ -148,6 +159,7 @@ async function processWebhookEvent(supabase: any, body: any) {
 
     if (updateError) {
       console.error('Error updating email:', updateError);
+      throw updateError;
     }
 
     // Use campaign_id from email record if available
@@ -215,43 +227,48 @@ async function processWebhookEvent(supabase: any, body: any) {
   // If this is a campaign email (from tags or email record), update campaign stats
   if (campaignId) {
     console.log('Updating campaign stats for campaign:', campaignId);
-    await updateCampaignStats(supabase, campaignId, type);
     
     // Also log the event in email_analytics
     if (contactId) {
       try {
         // Get campaign to find user_id
-        const { data: campaign } = await supabase
+        const { data: campaign, error: campaignError } = await supabase
           .from('email_campaigns')
           .select('user_id')
           .eq('id', campaignId)
           .single();
+        if (campaignError) throw campaignError;
 
         if (campaign) {
-          await supabase.from('email_analytics').insert({
+          const { error: analyticsError } = await supabase.from('email_analytics').insert({
             user_id: campaign.user_id,
             campaign_id: campaignId,
             contact_id: contactId,
             event_type: status,
-            event_data: { email_id: data.email_id, timestamp: new Date().toISOString() }
+            event_data: { email_id: data.email_id, timestamp, resend_event_id: eventId }
           });
+          if (analyticsError && analyticsError.code !== '23505') throw analyticsError;
         }
       } catch (analyticsError) {
         console.error('Error logging analytics:', analyticsError);
+        throw analyticsError;
       }
     }
+    await updateCampaignStats(supabase, campaignId, type);
   } else if (contactId && resolvedUserId) {
     // Pas de campagne mais ouverture/clic individuel : on log quand même pour l'historique d'engagement
     try {
-      await supabase.from('email_analytics').insert({
+      const { error: analyticsError } = await supabase.from('email_analytics').insert({
         user_id: resolvedUserId,
         campaign_id: null,
         contact_id: contactId,
         event_type: status,
-        event_data: { email_id: data.email_id, timestamp: new Date().toISOString() },
+        event_data: { email_id: data.email_id, timestamp, resend_event_id: eventId },
       });
+      if (analyticsError && analyticsError.code !== '23505') throw analyticsError;
     } catch (e) {
       console.error('Erreur log email_analytics individuel:', e);
+      throw e;
     }
   }
 
@@ -264,6 +281,7 @@ async function updateCampaignStats(supabase: any, campaignId: string, _eventType
   const { error } = await supabase.rpc('recompute_campaign_stats', { p_campaign_id: campaignId });
   if (error) {
     console.error('Erreur recompute_campaign_stats:', error);
+    throw error;
   } else {
     console.log('Campaign stats recomputed for', campaignId);
   }
