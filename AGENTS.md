@@ -5,3 +5,4 @@
 - Persist the provider event ID and original timestamp in Resend analytics, with a unique index on that ID, so retries do not inflate engagement or change its chronology.
 - Booking email drafting uses an authenticated management-team Edge Function with request-local Lovable AI Responses streaming and server-resolved show/template facts; generated plain text is escaped into a reviewable draft and never sent automatically.
 - All new-message entry points reuse BookingEmailAssistant, including the contact template form and inline compose tab, so drafting is discoverable regardless of the email screen.
+- All Resend calls in Edge Functions go through _shared/resendClient.ts (connector gateway), because RESEND_API_KEY is a gateway connection key, not a provider key.
