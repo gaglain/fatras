@@ -1,3 +1,4 @@
+import { resendFetch } from "../_shared/resendClient.ts";
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 
 const corsHeaders = {
@@ -74,7 +75,7 @@ serve(async (req) => {
     `;
 
     // Send via Resend
-    const res = await fetch("https://api.resend.com/emails", {
+    const res = await resendFetch("/emails", {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
