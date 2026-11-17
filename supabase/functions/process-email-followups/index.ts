@@ -1,3 +1,4 @@
+import { resendFetch } from "../_shared/resendClient.ts";
 import { createClient } from "npm:@supabase/supabase-js@2";
 
 const corsHeaders = {
@@ -52,7 +53,7 @@ Deno.serve(async (req) => {
       }
 
       const from = `Fatras <${f.from_email || "booking@fatras.net"}>`;
-      const res = await fetch("https://api.resend.com/emails", {
+      const res = await resendFetch("/emails", {
         method: "POST",
         headers: { Authorization: `Bearer ${RESEND_API_KEY}`, "Content-Type": "application/json" },
         body: JSON.stringify({ from, to: [f.to_email], subject: f.subject, html: f.html_content }),

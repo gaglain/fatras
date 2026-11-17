@@ -1,3 +1,4 @@
+import { resendFetch } from "../_shared/resendClient.ts";
 import { createClient } from 'npm:@supabase/supabase-js@2';
 
 const corsHeaders = {
@@ -239,7 +240,7 @@ async function sendEmailSummary(
   const totalCount = overdueTasks.length + dueSoonTasks.length;
 
   try {
-    const res = await fetch('https://api.resend.com/emails', {
+    const res = await resendFetch("/emails", {
       method: 'POST',
       headers: {
         'Authorization': `Bearer ${resendApiKey}`,
