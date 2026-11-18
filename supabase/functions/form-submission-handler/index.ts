@@ -1,4 +1,5 @@
 import { serve } from "https://deno.land/std@0.190.0/http/server.ts";
+import { isSpam, fieldsText } from "../_shared/antispam.ts";
 import { createClient } from "npm:@supabase/supabase-js@2";
 import { Resend } from "../_shared/resendClient.ts";
 
@@ -73,7 +74,12 @@ serve(async (req: Request) => {
       });
     }
 
-    const { formId, data, honeypot }: FormSubmissionPayload = await req.json();
+    const payloadRaw = await req.json();
+    const { formId, data, honeypot }: FormSubmissionPayload = payloadRaw;
+    if (data && isSpam({ text: fieldsText(Object.fromEntries(Object.entries(data).filter(([, v]) => typeof v === 'string' && !/^[^\s@]+@[^\s@]+$/.test(v as string)))), honeypot, elapsedMs: payloadRaw.elapsedMs })) {
+      console.log('🛡️ Soumission filtrée comme spam');
+      return new Response(JSON.stringify({ success: true, submissionId: 'filtered', emailSent: false }), { status: 200, headers: { 'Content-Type': 'application/json', ...corsHeaders } });
+    }
 
     // Honeypot anti-spam check — only reject when the rest of the payload is empty.
     // Browser / password-manager autofill fills the hidden trap on legitimate submissions,

@@ -30,6 +30,8 @@ const emptyForm = {
 
 export const ShowBookingRequestDialog: React.FC<ShowBookingRequestDialogProps> = ({ artistId, artistName, trigger }) => {
   const [open, setOpen] = useState(false);
+  const [startedAt, setStartedAt] = useState(() => Date.now());
+  React.useEffect(() => { if (open) setStartedAt(Date.now()); }, [open]);
   const [submitting, setSubmitting] = useState(false);
   const [form, setForm] = useState(emptyForm);
 
@@ -45,7 +47,7 @@ export const ShowBookingRequestDialog: React.FC<ShowBookingRequestDialogProps> =
     setSubmitting(true);
     try {
       const { data, error } = await supabase.functions.invoke('show-booking-request', {
-        body: { ...form, artist_id: artistId, artist_name: artistName },
+        body: { ...form, artist_id: artistId, artist_name: artistName, elapsedMs: Date.now() - startedAt },
       });
       if (error) throw error;
       if (data && data.success === false) throw new Error(data.error || 'Envoi impossible');

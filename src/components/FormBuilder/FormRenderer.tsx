@@ -25,6 +25,7 @@ export const FormRenderer: React.FC<FormRendererProps> = ({ form, onSubmit }) =>
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isComplete, setIsComplete] = useState(false);
   const [honeypot, setHoneypot] = useState('');
+  const [startedAt] = useState(() => Date.now());
 
   // Delegate to stepped renderer if display mode is "stepped"
   if (form.settings.displayMode === 'stepped') {
@@ -65,6 +66,7 @@ export const FormRenderer: React.FC<FormRendererProps> = ({ form, onSubmit }) =>
           formId: form.id,
           data: formData,
           honeypot: honeypot,
+          elapsedMs: Date.now() - startedAt,
         }
       });
 

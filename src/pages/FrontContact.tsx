@@ -33,6 +33,7 @@ export const FrontContact: React.FC = () => {
     message: ''
   });
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [startedAt] = useState(() => Date.now());
   const [errors, setErrors] = useState<Record<string, string>>({});
   const [contactInfo, setContactInfo] = useState<ContactInfo>({
     email: 'Booking@fatras.net',
@@ -102,7 +103,8 @@ export const FrontContact: React.FC = () => {
           email: formData.email.trim(),
           phone: formData.phone?.trim() || undefined,
           subject: formData.subject.trim(),
-          message: formData.message.trim()
+          message: formData.message.trim(),
+          elapsedMs: Date.now() - startedAt,
         }
       });
 

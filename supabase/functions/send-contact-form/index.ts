@@ -1,5 +1,6 @@
 import { serve } from "https://deno.land/std@0.190.0/http/server.ts";
 import { Resend } from "../_shared/resendClient.ts";
+import { isSpam } from "../_shared/antispam.ts";
 import { createClient } from 'npm:@supabase/supabase-js@2';
 
 const corsHeaders = {
@@ -21,7 +22,12 @@ const handler = async (req: Request): Promise<Response> => {
   }
 
   try {
-    const { name, email, phone, subject, message }: ContactFormRequest = await req.json();
+    const payload = await req.json();
+    const { name, email, phone, subject, message }: ContactFormRequest = payload;
+    if (isSpam({ text: [name, subject, message].join(' \n '), honeypot: payload.honeypot, elapsedMs: payload.elapsedMs })) {
+      console.log('🛡️ Message filtré comme spam (contact)');
+      return new Response(JSON.stringify({ success: true }), { status: 200, headers: { 'Content-Type': 'application/json', ...corsHeaders } });
+    }
 
     console.log('📧 Nouvelle soumission formulaire contact:', { name, email, subject });
 

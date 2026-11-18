@@ -1,4 +1,5 @@
 import { serve } from "https://deno.land/std@0.190.0/http/server.ts";
+import { isSpam, fieldsText } from "../_shared/antispam.ts";
 import { createClient } from 'npm:@supabase/supabase-js@2';
 import { Resend } from "../_shared/resendClient.ts";
 
@@ -38,6 +39,11 @@ serve(async (req) => {
 
   try {
     const body: Payload = await req.json();
+    const raw = body as any;
+    if (isSpam({ text: fieldsText({ ...raw, artist_id: '', email: '', elapsedMs: '', honeypot: '' }), honeypot: raw.honeypot, elapsedMs: raw.elapsedMs })) {
+      console.log('🛡️ Demande filtrée comme spam (booking)');
+      return new Response(JSON.stringify({ success: true }), { status: 200, headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
+    }
     const email = (body.email || '').trim().toLowerCase();
     const firstName = (body.first_name || '').trim();
     const lastName = (body.last_name || '').trim();

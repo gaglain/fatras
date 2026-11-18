@@ -25,6 +25,7 @@ export const FormRendererStepped: React.FC<FormRendererSteppedProps> = ({ form, 
   const [isComplete, setIsComplete] = useState(false);
   const [direction, setDirection] = useState<'up' | 'down'>('down');
   const [honeypot, setHoneypot] = useState('');
+  const [startedAt] = useState(() => Date.now());
   const containerRef = useRef<HTMLDivElement>(null);
 
   const visibleInputFields = useMemo(() => {
@@ -80,7 +81,7 @@ export const FormRendererStepped: React.FC<FormRendererSteppedProps> = ({ form, 
     if (missingFields.length > 0) { toast.error(`Champs obligatoires manquants: ${missingFields.join(', ')}`); return; }
     setIsSubmitting(true);
     try {
-      const { data: response, error } = await supabase.functions.invoke('form-submission-handler', { body: { formId: form.id, data: formData, honeypot } });
+      const { data: response, error } = await supabase.functions.invoke('form-submission-handler', { body: { formId: form.id, data: formData, honeypot, elapsedMs: Date.now() - startedAt } });
       if (error) throw error;
       const submission: FormSubmission = { id: response?.submissionId || `submission_${Date.now()}`, formId: form.id, data: formData, submittedAt: new Date().toISOString() };
       onSubmit?.(submission);

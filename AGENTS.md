@@ -6,3 +6,4 @@
 - Booking email drafting uses an authenticated management-team Edge Function with request-local Lovable AI Responses streaming and server-resolved show/template facts; generated plain text is escaped into a reviewable draft and never sent automatically.
 - All new-message entry points reuse BookingEmailAssistant, including the contact template form and inline compose tab, so drafting is discoverable regardless of the email screen.
 - All Resend calls in Edge Functions go through _shared/resendClient.ts (connector gateway), because RESEND_API_KEY is a gateway connection key, not a provider key.
+- Public website forms filter spam server-side via _shared/antispam.ts (timing + content signals; a filled trap field alone never rejects, due to autofill) and answer bots with a fake success.
