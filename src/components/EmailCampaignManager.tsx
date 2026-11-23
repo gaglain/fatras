@@ -155,7 +155,19 @@ export const EmailCampaignManager: React.FC<EmailCampaignManagerProps> = ({ camp
     const template = templates.find(t => t.id === templateId);
     if (template) {
       try {
-        const parsedContent = typeof template.content === 'string' ? JSON.parse(template.content || '[]') : template.content || [];
+        const raw = template.content as unknown;
+        let parsedContent: any[] = [];
+        if (Array.isArray(raw)) parsedContent = raw;
+        else if (typeof raw === 'string' && raw.trim()) {
+          let json: unknown = null;
+          try { json = JSON.parse(raw); } catch { json = null; }
+          if (Array.isArray(json)) parsedContent = json;
+          else {
+            // Modèle enregistré en HTML / texte : on le transforme en bloc texte
+            const html = /<[a-z][\s\S]*>/i.test(raw) ? raw : raw.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/\n/g, '<br>');
+            parsedContent = [{ id: `block-${Date.now()}`, type: 'text', content: { text: html, html, style: 'normal' } }];
+          }
+        }
         setCampaignData(prev => ({ ...prev, templateId, content: parsedContent, subject: prev.subject || template.subject }));
       } catch { toast.error('Erreur lors du chargement du template'); }
     }
