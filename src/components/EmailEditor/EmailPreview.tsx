@@ -4,6 +4,7 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { ArrowLeft, Send } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
+import { addAvatarToEmailSignature } from '@/hooks/useEmailSignature';
 
 const sanitizeHtml = (html: string): string => {
   return DOMPurify.sanitize(html, {
@@ -23,9 +24,10 @@ const formatSignature = (raw: string): string => {
     .replace(/(^|[\s>])([\w.+-]+@[\w-]+\.[\w.-]+)(?![^<]*<\/a>)/g, '$1<a href="mailto:$2" style="color:#8b5cf6;text-decoration:underline;">$2</a>')
     .replace(/(^|[\s>])(\+?\d[\d\s().-]{7,}\d)(?![^<]*<\/a>)/g, '$1<a href="tel:$2" style="color:#8b5cf6;text-decoration:underline;">$2</a>');
   // Always convert newlines unless content already uses block tags
-  if (!hasBlockHtml) {
-    html = html.replace(/\r?\n/g, '<br/>');
-  }
+  void hasBlockHtml;
+  html = html
+    .replace(/(<\/?(?:div|p|ul|ol|li|h[1-6]|table|tr|td|br)\b[^>]*>)[ \t]*\r?\n/gi, '$1')
+    .replace(/\r?\n/g, '<br/>');
   return html;
 };
 
@@ -46,10 +48,10 @@ export const EmailPreview: React.FC<EmailPreviewProps> = ({ blocks, onClose, onS
       if (!user) return;
       const { data } = await supabase
         .from('user_profiles')
-        .select('email_signature')
+        .select('email_signature, avatar_url')
         .eq('user_id', user.id)
         .maybeSingle();
-      setSignature((data as any)?.email_signature?.trim() || '');
+      setSignature(addAvatarToEmailSignature((data as any)?.email_signature || '', (data as any)?.avatar_url));
     })();
   }, [includeSignature]);
   const renderBlockForPreview = (block: any) => {

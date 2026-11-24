@@ -289,7 +289,9 @@ const handler = async (req: Request): Promise<Response> => {
         .select('email_signature, avatar_url')
         .eq('user_id', campaign.user_id)
         .maybeSingle();
-      let signatureHtml = profile?.email_signature?.trim();
+      let signatureHtml = profile?.email_signature?.trim()
+        ?.replace(/(<\/?(?:div|p|ul|ol|li|h[1-6]|table|tr|td|br)\b[^>]*>)[ \t]*\r?\n/gi, '$1')
+        .replace(/\r?\n/g, '<br/>');
       if (signatureHtml && profile?.avatar_url && !/<img\b/i.test(signatureHtml)) {
         const safeAvatarUrl = profile.avatar_url.replace(/&/g, '&amp;').replace(/"/g, '&quot;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
         signatureHtml = `<div style="display:flex;align-items:flex-start;gap:14px;"><img src="${safeAvatarUrl}" alt="Photo de profil" width="72" height="72" style="width:72px;height:72px;border-radius:50%;object-fit:cover;display:block;" /><div>${signatureHtml}</div></div>`;
