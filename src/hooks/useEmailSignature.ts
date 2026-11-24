@@ -12,7 +12,10 @@ const escapeAttribute = (value: string) => value
   .replace(/>/g, '&gt;');
 
 export const addAvatarToEmailSignature = (signature: string, avatarUrl?: string | null) => {
-  const trimmedSignature = signature.trim();
+  // Keep the line breaks typed in the signature, even when it mixes text and HTML
+  const trimmedSignature = signature.trim()
+    .replace(/(<\/?(?:div|p|ul|ol|li|h[1-6]|table|tr|td|br)\b[^>]*>)[ \t]*\r?\n/gi, '$1')
+    .replace(/\r?\n/g, '<br/>');
   if (!avatarUrl || hasImage(trimmedSignature)) return trimmedSignature;
   const safeAvatarUrl = escapeAttribute(avatarUrl);
 
